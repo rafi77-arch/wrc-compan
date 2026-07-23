@@ -132,33 +132,6 @@ textarea:focus{outline:none;border-color:var(--ap);}
 .tabbtn .ic{font-size:18px;line-height:1;}
 .tabbtn.on{color:var(--ay);}
 
-/* ═══════ CHECKLIST TAB ═══════ */
-.cl-wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 12px 24px;}
-.cl-toolbar{display:flex;gap:6px;padding:10px 12px 4px;flex-shrink:0;flex-wrap:wrap;}
-.cl-progress{padding:0 12px 8px;flex-shrink:0;}
-.cl-progress-bar{height:6px;border-radius:3px;background:var(--bg3);overflow:hidden;}
-.cl-progress-fill{height:100%;background:var(--ag);transition:width .2s;}
-.cl-progress-txt{font-size:10px;color:var(--text2);font-family:var(--f-mono);margin-top:3px;}
-.cl-phase{background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;}
-.cl-phase.done{border-color:var(--ag);}
-.cl-phase-hdr{display:flex;align-items:center;gap:8px;padding:11px 12px;cursor:pointer;}
-.cl-phase-num{font-family:var(--f-mono);font-size:11px;color:var(--text2);background:var(--bg3);border-radius:4px;padding:2px 6px;flex-shrink:0;}
-.cl-phase.done .cl-phase-num{color:var(--ag);}
-.cl-phase-title{flex:1;font-size:13px;font-weight:700;letter-spacing:.02em;}
-.cl-phase-count{font-size:10px;color:var(--text2);font-family:var(--f-mono);flex-shrink:0;}
-.cl-phase-chev{color:var(--text2);font-size:11px;flex-shrink:0;transition:transform .15s;}
-.cl-phase.open .cl-phase-chev{transform:rotate(90deg);}
-.cl-phase-body{display:none;padding:0 12px 10px;}
-.cl-phase.open .cl-phase-body{display:block;}
-.cl-item{display:flex;align-items:flex-start;gap:9px;padding:7px 2px;border-top:1px dashed var(--border);cursor:pointer;}
-.cl-item:first-child{border-top:none;}
-.cl-check{flex-shrink:0;width:20px;height:20px;border-radius:5px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;margin-top:1px;color:transparent;}
-.cl-item.chk .cl-check{background:var(--ag);border-color:var(--ag);color:#0d1a12;}
-.cl-item.chk .cl-txt{color:var(--text2);text-decoration:line-through;text-decoration-color:var(--border);}
-.cl-txt{font-size:12.5px;line-height:1.4;}
-.cl-sub{font-size:11px;color:var(--text2);margin-top:3px;line-height:1.4;padding-left:2px;}
-.cl-sub div{margin-top:2px;}
-
 /* ═══════ GAME-STATE TAB ═══════ */
 .gs-wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px;}
 .gs-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;}
@@ -200,9 +173,8 @@ textarea:focus{outline:none;border-color:var(--ap);}
   .tabbar{display:none;}
   .tabpanels{flex-direction:row;}
   .tabpanel{display:flex;}
-  #tabMapa{flex:2.6;min-width:0;border-right:1px solid var(--border);}
-  #tabChecklist{flex:1;min-width:300px;max-width:400px;}
-  #tabGame{flex:1;min-width:320px;max-width:420px;border-left:1px solid var(--border);}
+  #tabMapa{flex:2.4;min-width:0;border-right:1px solid var(--border);}
+  #tabGame{flex:1;min-width:340px;max-width:440px;}
   header span{white-space:normal;overflow:visible;text-overflow:clip;}
   .toolbar{flex-wrap:wrap;overflow-x:visible;}
   .app-body{flex-direction:row;}
@@ -304,19 +276,6 @@ textarea:focus{outline:none;border-color:var(--ap);}
   </div>
 </div>
 
-<!-- ═══════ TAB: CHECKLIST ═══════ -->
-<div class="tabpanel" id="tabChecklist">
-  <div class="cl-toolbar">
-    <button class="exp" onclick="resetChecklistActivation()">↺ Nowa aktywacja</button>
-    <button onclick="resetChecklistAll()">↺↺ Wyczyść wszystko</button>
-  </div>
-  <div class="cl-progress">
-    <div class="cl-progress-bar"><div class="cl-progress-fill" id="clFill"></div></div>
-    <div class="cl-progress-txt" id="clProgressTxt">0 / 0 zaznaczone</div>
-  </div>
-  <div class="cl-wrap" id="clList"></div>
-</div>
-
 <!-- ═══════ TAB: STAN GRY ═══════ -->
 <div class="tabpanel" id="tabGame">
   <div class="gs-wrap">
@@ -360,7 +319,6 @@ textarea:focus{outline:none;border-color:var(--ap);}
 <!-- ═══════ BOTTOM TAB BAR (tylko wąski ekran) ═══════ -->
 <nav class="tabbar" id="tabbar">
   <button class="tabbtn on" id="tabbtnMapa" onclick="showTab('Mapa')"><span class="ic">🗺️</span>Mapa</button>
-  <button class="tabbtn" id="tabbtnChecklist" onclick="showTab('Checklist')"><span class="ic">✅</span>Checklist</button>
   <button class="tabbtn" id="tabbtnGame" onclick="showTab('Game')"><span class="ic">🎲</span>Stan gry</button>
 </nav>
 
@@ -1890,7 +1848,7 @@ function doImport(){
     const ver=applyImportedState(st);
     document.getElementById('importPanel').style.display='none';
     sts(`✓ Mapa wczytana (format v${ver}).`);
-    updateGameUI();renderChecklist();gsRenderModelList();
+    updateGameUI();gsRenderModelList();
     draw();
   }catch(e){sts('❌ Błąd JSON: '+e.message);}
 }
@@ -2043,179 +2001,13 @@ function renderLegend(){
 // TABS
 // ═══════════════════════════════════════════════
 function showTab(name){
-  ['Mapa','Checklist','Game'].forEach(n=>{
+  ['Mapa','Game'].forEach(n=>{
     document.getElementById('tab'+n).classList.toggle('active',n===name);
     document.getElementById('tabbtn'+n).classList.toggle('on',n===name);
   });
-  if(name==='Checklist')renderChecklist();
   if(name==='Game'){gsRenderModelList();updateGameUI();}
 }
 
-// ═══════════════════════════════════════════════
-// CHECKLIST (na podstawie warcry_checklist.txt)
-// ═══════════════════════════════════════════════
-const CHECKLIST=[
- {t:"INIT PHASE (faza inicjatywy)",scope:"round",items:[
-   "Rzuć 6 kośćmi dla każdego gracza.",
-   "Policz układy: pojedyncze (singles) / dublety / triplety / kwarty.",
-   "Zapytaj OBU graczy o deklarację Dzikich Kości (Wild Dice).",
-   "Zastosuj modyfikacje i zaktualizuj pulę kości.",
-   "Ponownie przelicz singles.",
-   "Inicjatywa: porównaj wyłącznie singles. Remis → roll-off."]},
- {t:"START ACTIVATION (ekonomia akcji i reakcje)",scope:"activation",items:[
-   "Weryfikacja stanu: model żyje.",
-   "Pobranie puli akcji: bazowo 2 akcje.",
-   {x:"Weryfikacja reakcji: czy model użył reakcji przed swoją aktywacją?",sub:["Jeśli TAK → pula akcji −1 (tylko 1 akcja do dyspozycji)."]},
-   "Sprawdź, czy w poprzednim podetapie użyto WAIT.",
-   "Zapisz pozycję startową: (X,Y) i poziom.",
-   "Aktualizacja licznika: Remaining = 2 − użyte − reakcje.",
-   {x:"Rygor akcji WAIT:",sub:["Action 1 = WAIT → status Waiting, aktywacja zawieszona (można wrócić z 1 akcją).","Action 2 = WAIT → status Finished, Remaining=0, koniec aktywacji na tę rundę."]},
-   "Reaction Lock: jeśli model musi zachować zdolność defensywną — zakaz 2. akcji innej niż WAIT jako pierwszej."]},
- {t:"BEFORE ACTION (weryfikacja celu i ostrzału)",scope:"activation",items:[
-   "Zweryfikuj HP oraz Toughness celu.",
-   "Sprawdź stan zwarcia (Engagement).",
-   "Potwierdź dostępność zdolności.",
-   {x:"Weryfikacja LoS:",sub:["Ściany na poziomach 1+ NIE blokują LoS.","Platformy (podłogi) są nieprzezroczyste — blokują widok pionowy."]},
-   {x:"Zakaz strzelania w zwarcie:",sub:["Jeśli cel <1\" od sojusznika strzelca → atak dystansowy (>3\") NIEMOŻLIWY."]}]},
- {t:"TARGET VERIFICATION v2 (krytyczna weryfikacja celu)",scope:"activation",items:[
-   "MUSISZ sprawdzić aktualne HP oraz Toughness celu.",
-   "Zweryfikuj buffy/debuffy, zdolności specjalne (np. Omni Scrambler), blokady reakcji.",
-   "Potwierdź: czy engaged i czy reakcja już wykorzystana w tej rundzie.",
-   "Uwzględnij modyfikatory obronne (redukcje dmg, hit modifiers).",
-   "ZAKAZ zakładania wartości domyślnych dla celu! ❌"]},
- {t:"ABILITIES (zdolności)",scope:"activation",items:[
-   "Maksymalnie 1 zdolność na aktywację modelu.",
-   "Użycie zdolności NIE zużywa akcji.",
-   "Zweryfikuj koszt w kościach (Double / Triple / Quad).",
-   "Decyzja: użyć teraz vs oszczędzać na później."]},
- {t:"ACTION EXECUTION (geometria ruchu i przeszkody)",scope:"activation",items:[
-   "Dla KAŻDEJ akcji ruchu potwierdź: dystans | pełna ścieżka | obrys terenu na właściwym poziomie | ściany | climb/drop | legalność pozycji końcowej.",
-   "Wykorzystaj geometrię makiet (np. V1) z mapy.",
-   "State Path Segments: rozbij ruch na wektory (x1,y1)→(x2,y2).",
-   "Wall Intersection Check: segment ruchu nie może przecinać ściany z pliku mapy — zakaz skrótów przez ściany!",
-   "Poziom 0: ściany lite — przejście tylko przez oznaczone drzwi, inaczej wspinaczka górą.",
-   {x:"Climb vs Drop:",sub:["Wspinaczka w górę: +3\" do dystansu poziomego.","Zeskok w dół: kosztuje 0\" ruchu poziomego."]},
-   "ZAKAZ pomijania kroków składowych! ❌",
-   "Ruch niezatwierdzony bez przejścia wszystkich testów geometrii ❌."]},
- {t:"COMBAT RESOLUTION (rozstrzygnięcie walki)",scope:"activation",items:[
-   "Wykonaj rzut kośćmi ataku.",
-   "Zlicz trafienia zwykłe (hits) i krytyczne (crits).",
-   "Oblicz surowe obrażenia (raw damage).",
-   "Zastosuj modyfikacje (reakcje / aktywne buffy).",
-   "Potwierdź poprawność przypisania obrażeń do celu."]},
- {t:"DAMAGE VALIDATION (weryfikacja obrażeń)",scope:"activation",items:[
-   "Uwzględnij i zsumuj wszystkie wykonane ataki.",
-   "Zweryfikuj, czy reakcja została w pełni rozliczona.",
-   "Udokumentuj HP: przed atakiem → po ataku."]},
- {t:"END ACTIVATION CHECK (kontrola końca aktywacji)",scope:"activation",items:[
-   "Akcje skonsumowane prawidłowo i sprawiedliwie.",
-   "Odnotuj użytą zdolność.",
-   "Odnotuj wykorzystaną reakcję.",
-   "Potwierdź finalne HP modeli.",
-   "Zaktualizuj pozycje modeli na mapie.",
-   "Zaktualizuj stan związania walką (Engagement)."]},
- {t:"GLOBAL CONTROL (kontrola globalna bitwy)",scope:"round",items:[
-   "Kontroluj listę i liczbę żywych modeli na polu bitwy.",
-   "Śledź wykorzystane w rundzie reakcje.",
-   "Monitoruj stan i zużycie Dzikich Kości.",
-   "Zadbaj o spójność i chronologię raportu bitewnego."]},
- {t:"TERRAIN GEOMETRY (geometria terenu)",scope:"ref",items:[
-   "Każdy element terenu ma zdefiniowany punkt (ox, oy).",
-   "LEVEL 0: zamknięty prostokątny obrys, 4 ściany.",
-   "LEVEL 1: polygon A–B–C–D; ściany DA, AB, BC; krawędź otwarta CD.",
-   "Sprawdź, czy model po ruchu fizycznie jest wewnątrz obrysu terenu.",
-   "Ściany bezwzględnie blokują ruch, chyba że legalna wspinaczka."]},
- {t:"STRATEGIC CHECK (ocena strategiczna)",scope:"round",items:[
-   "Przeanalizuj opłacalność i moment użycia Dzikich Kości.",
-   "Oceń stan inicjatywy na podstawie singles.",
-   "Zidentyfikuj i uszereguj priorytety zagrożeń na polu bitwy."]},
- {t:"ABILITY EFFECT VERIFICATION (weryfikacja efektów zdolności)",scope:"activation",items:[
-   "Przeczytaj dokładny, oryginalny opis zdolności.",
-   "Określ dokładny moment aktywacji (trigger timing).",
-   "Określ fazę gry, na którą wpływa.",
-   "Potwierdź legalność celu i wymagany zasięg.",
-   "Sprawdź, czy modyfikuje: ataki / reakcje / akcje.",
-   "ZAKAZ domyślania się efektów działania zdolności! ❌"]},
- {t:"WEAPON VERIFICATION (weryfikacja oręża)",scope:"activation",items:[
-   "Jednoznacznie zidentyfikuj broń używaną do ataku.",
-   "Odczytaj profil broni: Ataki (A), Siła (S), dmg hit/crit.",
-   "Potwierdź typ ataku: melee vs dystansowy.",
-   "Potwierdź, że cel jest w zasięgu broni.",
-   "Zweryfikuj obostrzenia broni dystansowej (brak sojuszników <1\" od celu).",
-   "ZAKAZ zakładania domyślnych statystyk broni! ❌"]},
- {t:"REACTION ELIGIBILITY (uprawnienie do reakcji)",scope:"activation",items:[
-   "Wojownik NIE MOŻE reagować, jeśli: już aktywowany ORAZ 0 akcji pozostałych.",
-   "Sprawdź: pozostałe akcje, czy reakcja już użyta w tej rundzie (limit 1×), brak blokady (np. Omni Scrambler).",
-   "Reakcja dozwolona TYLKO gdy wszystkie testy ✅."]},
- {t:"VERTICAL MOVEMENT & FALL DAMAGE v2 (upadki i obrażenia)",scope:"ref",items:[
-   "Określ poziom startowy i końcowy ruchu.",
-   "Jeśli model przekracza krawędź terenu → CLIMB lub DROP.",
-   "Ściany jednego poziomu = dokładnie 3\" wysokości.",
-   "Safe Drop: zeskok do 3\" włącznie — bez testu obrażeń (ruch dobrowolny).",
-   "Punitive Fall: test K6 tylko gdy spadek >3\" I jest skutkiem ataku/zepchnięcia."]},
- {t:"HORIZONTAL MOVEMENT (ruch poziomy)",scope:"ref",items:[
-   "Ruch na jednym poziomie = dowolna liczba segmentów.",
-   "Suma dystansu wszystkich segmentów w limicie Move.",
-   "Każdy segment sprawdzony pod kątem przeszkód i kolizji."]},
- {t:"NIEZALEŻNE JEDNOSTKI — STALKING (np. Hormagaunty)",scope:"ref",items:[
-   "Trigger LoS: sprawdź, czy fighter wszedł w LoS bestii.",
-   "Rzut na opóźnienie K6 — liczba aktywacji do agresywnego uderzenia.",
-   "Licznik agresji: aktywacja, w której model wszedł w LoS, się NIE liczy.",
-   {x:"Activation Resolution — licznik dobiegł końca:",sub:["Jeśli bestia straciła LoS do celu → WAIT, aktywacja przesuwa się na koniec rundy."]}]},
- {t:"KONTROLA CELÓW (Objective Control)",scope:"ref",items:[
-   {x:"Zasada Ścisłej Nierówności:",sub:["Kontrolę przyznaje się tylko gdy Sojusznicy > Wrogowie + Niezależni."]},
-   {x:"Blokada Hormagauntów:",sub:["Niezależni liczą się jako wrogowie dla OBU stron; w 3\" od objective blokują przejęcie przy remisie."]}]}
-];
-let clState={}, clOpen=new Set([0]);
-
-function clKey(p,i){return p+'-'+i;}
-function renderChecklist(){
-  const wrap=document.getElementById('clList');
-  let totalItems=0, checkedItems=0;
-  let html='';
-  CHECKLIST.forEach((phase,pi)=>{
-    const n=phase.items.length;totalItems+=n;
-    let cCount=0;
-    const itemsHtml=phase.items.map((it,ii)=>{
-      const isObj=typeof it==='object';
-      const text=isObj?it.x:it;
-      const sub=isObj?it.sub:null;
-      const key=clKey(pi,ii);
-      const chk=!!clState[key];if(chk)cCount++;
-      return `<div class="cl-item${chk?' chk':''}" onclick="toggleClItem(${pi},${ii})">
-        <span class="cl-check">✓</span>
-        <span><span class="cl-txt">${text}</span>${sub?`<div class="cl-sub">${sub.map(s=>`<div>• ${s}</div>`).join('')}</div>`:''}</span>
-      </div>`;
-    }).join('');
-    checkedItems+=cCount;
-    const isOpen=clOpen.has(pi), isDone=cCount===n;
-    html+=`<div class="cl-phase${isOpen?' open':''}${isDone?' done':''}">
-      <div class="cl-phase-hdr" onclick="togglePhaseOpen(${pi})">
-        <span class="cl-phase-num">${pi+1}</span>
-        <span class="cl-phase-title">${phase.t}</span>
-        <span class="cl-phase-count">${cCount}/${n}</span>
-        <span class="cl-phase-chev">▶</span>
-      </div>
-      <div class="cl-phase-body">${itemsHtml}</div>
-    </div>`;
-  });
-  wrap.innerHTML=html;
-  document.getElementById('clFill').style.width=(totalItems?checkedItems/totalItems*100:0)+'%';
-  document.getElementById('clProgressTxt').textContent=checkedItems+' / '+totalItems+' zaznaczone';
-}
-function toggleClItem(pi,ii){
-  const key=clKey(pi,ii);clState[key]=!clState[key];renderChecklist();scheduleSave();
-}
-function togglePhaseOpen(pi){
-  if(clOpen.has(pi))clOpen.delete(pi);else clOpen.add(pi);renderChecklist();
-}
-function resetChecklistActivation(){
-  CHECKLIST.forEach((phase,pi)=>{if(phase.scope==='activation')phase.items.forEach((it,ii)=>{delete clState[clKey(pi,ii)];});});
-  renderChecklist();sts('✓ Checklista aktywacji wyczyszczona.');scheduleSave();
-}
-function resetChecklistAll(){
-  clState={};renderChecklist();sts('✓ Cała checklista wyczyszczona.');scheduleSave();
-}
 
 // ═══════════════════════════════════════════════
 // STAN GRY (runda / wild dice / inicjatywa / ekonomia akcji)
@@ -2296,8 +2088,7 @@ function gsRenderModelList(){
 function newRound(){
   gameState.round++;
   models.forEach(m=>{m.activated=false;m.actionsLeft=2;m.reactionUsed=false;m.waiting=false;});
-  clState={};
-  updateGameUI();renderChecklist();gsRenderModelList();
+  updateGameUI();gsRenderModelList();
   if(sel&&sel._type==='model'){const m=models.find(mm=>mm.id===sel.id);if(m)showStats(m);}
   sts('✓ Nowa runda R'+gameState.round+': aktywacje, akcje, reakcje i checklista zresetowane.');
   draw();
@@ -2306,8 +2097,7 @@ function confirmResetAll(){
   if(!confirm('To usunie cały teren, modele i objectives z mapy oraz zresetuje rundę. Kontynuować?'))return;
   resetAll();
   gameState={round:1,wildP:0,wildL:0};
-  clState={};
-  updateGameUI();renderChecklist();gsRenderModelList();
+  updateGameUI();gsRenderModelList();
   sts('✓ Pełny reset wykonany.');
 }
 
@@ -2322,7 +2112,7 @@ let saveTimer=null;
 function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveLocal,600);scheduleGhSave();}
 
 function localSessionObj(){
-  return {terrain,models,objectives,level,checklist:{state:clState,open:[...clOpen]},game:gameState};
+  return {terrain,models,objectives,level,game:gameState};
 }
 async function saveLocal(){
   try{
@@ -2342,7 +2132,6 @@ async function loadLocal(){
     models=(st.models||[]).map(m=>({...m}));
     objectives=st.objectives||[];
     level=st.level||0;
-    if(st.checklist){clState=st.checklist.state||{};clOpen=new Set(st.checklist.open||[0]);}
     if(st.game)gameState=Object.assign({round:1,wildP:0,wildL:0},st.game);
     nid=Math.max(11,...models.map(m=>m.id+1));
     ntid=Math.max(100,...terrain.map(t=>t.id+1),...objectives.map(o=>o.id+1));
@@ -2371,7 +2160,7 @@ async function ghTestAndLoad(){
     if(!file){setGhStatus('ℹ️ Połączono, ale brak pliku "'+ghConfig.filename+'" w tym Giście — powstanie przy pierwszym zapisie.');return true;}
     const st=JSON.parse(file.content);
     applyImportedState(st);
-    updateGameUI();renderChecklist();gsRenderModelList();draw();
+    updateGameUI();gsRenderModelList();draw();
     setGhStatus('✓ Wczytano z GitHub Gist · '+new Date().toLocaleTimeString('pl-PL').slice(0,5));
     return true;
   }catch(e){setGhStatus('⚠️ Nie udało się połączyć z GitHub (sieć/CORS).');return false;}
@@ -2425,7 +2214,7 @@ function updateGhBadge(){
   if(!loaded)resetAll();
   models.forEach(ensureModelFields);
   setLevel(level||0);setTool('move');
-  updateGameUI();renderChecklist();gsRenderModelList();updateGhBadge();
+  updateGameUI();gsRenderModelList();updateGhBadge();
   if(!ghConfig)setGhStatus('Sesja zapisywana lokalnie. Podłącz GitHub, by dzielić się stanem z Claude.');
   sts(loaded?'✓ Wczytano zapisany stan.':'Gotowy. Nowa sesja.');
   draw();
