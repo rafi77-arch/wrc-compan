@@ -1,0 +1,2435 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warcry — Edytor Mapy</title>
+<style>
+:root{--bg:#18181e;--bg2:#1e1e26;--bg3:#24242e;--border:#34344a;--text:#e0dff0;--text2:#8886a0;--ap:#4a9eff;--al:#e05050;--ag:#50c878;--ay:#f0b840;--av:#9b6dff;--safe-b:env(safe-area-inset-bottom,0px);--safe-t:env(safe-area-inset-top,0px);--f-ui:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;--f-mono:'SF Mono','Cascadia Mono','Roboto Mono','Consolas','Courier New',monospace;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{overscroll-behavior:none;}
+body{background:var(--bg);color:var(--text);font-family:var(--f-ui);height:100dvh;overflow:hidden;display:flex;flex-direction:column;}
+header{background:var(--bg2);border-bottom:1px solid var(--border);padding:calc(6px + var(--safe-t)) 12px 6px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0;}
+header .htitle{display:flex;align-items:baseline;gap:8px;min-width:0;}
+header h1{font-size:15px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ay);white-space:nowrap;}
+header span{font-size:10px;color:var(--text2);font-family:var(--f-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.roundpill{flex-shrink:0;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-family:var(--f-mono);font-size:12px;color:var(--ay);font-weight:700;white-space:nowrap;}
+.ghbadge{flex-shrink:0;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text2);white-space:nowrap;}
+.ghbadge.connected{background:#0f2a18;color:var(--ag);border-color:var(--ag);}
+.toolbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:6px 10px;display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0;scrollbar-width:none;}
+.toolbar::-webkit-scrollbar{display:none;}
+.tg{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+.tl{font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);margin-right:2px;white-space:nowrap;}
+.ts{width:1px;height:24px;background:var(--border);margin:0 4px;flex-shrink:0;}
+button{font-family:var(--f-ui);font-size:12px;font-weight:600;padding:7px 10px;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text2);cursor:pointer;transition:all .12s;white-space:nowrap;touch-action:manipulation;}
+button:hover:not(:disabled){background:var(--border);color:var(--text);}
+button.on{background:#2e2a14;color:var(--ay);border-color:var(--ay);}
+button.bp{background:#142030;color:var(--ap);border-color:var(--ap);}
+button.lv0{background:#142030;color:var(--ap);border-color:var(--ap);}
+button.lv1{background:#142014;color:var(--ag);border-color:var(--ag);}
+button.lv2{background:#2a1e0a;color:var(--ay);border-color:var(--ay);}
+button.exp{background:#1e1430;color:var(--av);border-color:var(--av);}
+button:disabled{opacity:.3;cursor:not-allowed;}
+.statusbar{background:var(--bg3);border-bottom:1px solid var(--border);padding:5px 14px;font-size:10.5px;color:var(--text2);font-family:var(--f-mono);flex-shrink:0;min-height:24px;}
+.legend-bar{background:var(--bg2);border-bottom:1px solid var(--border);padding:4px 14px;display:flex;gap:10px;flex-wrap:wrap;flex-shrink:0;align-items:center;}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--text2);font-family:var(--f-mono);}
+.legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,.2);}
+.app-body{flex:1;display:flex;overflow:hidden;position:relative;}
+.canvas-wrap{flex:1;overflow:auto;background:#101014;}
+canvas{display:block;width:100%;max-width:1080px;height:auto;margin:0 auto;touch-action:none;cursor:crosshair;}
+/* Bottom-sheet stats panel */
+.sp{position:fixed;left:0;right:0;bottom:0;max-height:64vh;background:var(--bg2);border-top:1px solid var(--border);border-radius:14px 14px 0 0;box-shadow:0 -8px 28px rgba(0,0,0,.5);display:flex;flex-direction:column;transform:translateY(105%);transition:transform .22s ease;z-index:60;padding-bottom:var(--safe-b);}
+.sp.open{transform:translateY(0);}
+.sp-drag{width:36px;height:4px;border-radius:2px;background:var(--border);margin:8px auto 2px;flex-shrink:0;}
+.sp-scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.sp-close{position:absolute;top:6px;right:8px;background:none;border:none;color:var(--text2);font-size:18px;padding:6px 8px;z-index:2;}
+.sp-empty{display:none;}
+.sp-head{padding:10px 12px 6px;border-bottom:1px solid var(--border);}
+.sp-name{font-size:45px;font-weight:700;}
+.sp-band{font-size:30px;color:var(--text2);font-family:var(--f-mono);margin-top:2px;}
+.sp-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px;}
+.sp-tag{font-size:27px;padding:1px 5px;border-radius:3px;background:var(--bg3);color:var(--text2);border:1px solid var(--border);}
+.sp-sec{padding:8px 12px;border-bottom:1px solid var(--border);}
+.sp-sec-t{font-size:27px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ay);margin-bottom:6px;}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;}
+.stat-box{background:var(--bg3);border-radius:4px;padding:5px 4px;text-align:center;}
+.stat-val{font-size:48px;font-weight:700;font-family:var(--f-mono);}
+.stat-lbl{font-size:24px;color:var(--text2);margin-top:1px;}
+.act-row{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);cursor:pointer;background:var(--bg3);transition:background .15s;}
+.act-row:hover{background:var(--border);}
+.act-row.act-on{background:#2a1414;}
+.act-icon{font-size:18px;font-weight:700;color:var(--text2);width:20px;text-align:center;}
+.act-row.act-on .act-icon{color:var(--al);}
+.act-label{font-size:11px;font-weight:600;color:var(--text2);flex:1;}
+.act-row.act-on .act-label{color:var(--al);}
+.act-hint{font-size:9px;color:var(--text2);font-style:italic;}
+.pts-row{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;border-bottom:1px solid var(--border);}
+.pts-val{font-size:54px;font-weight:700;color:var(--ay);font-family:var(--f-mono);}
+.hp-row{display:flex;align-items:center;gap:6px;padding:8px 12px;border-bottom:1px solid var(--border);}
+.hp-label{font-size:27px;color:var(--text2);white-space:nowrap;}
+.hp-bar-wrap{flex:1;height:24px;background:var(--bg3);border-radius:4px;overflow:hidden;}
+.hp-bar{height:100%;border-radius:4px;transition:width .2s;}
+.hp-ctrl{display:flex;align-items:center;gap:4px;}
+.hp-ctrl button{padding:6px 14px;font-size:28px;}
+.hp-inp{width:90px;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--f-mono);font-size:30px;padding:4px 6px;}
+.hp-max{font-size:30px;color:var(--text2);font-family:var(--f-mono);}
+.wpn-row{padding:4px 0;border-bottom:1px dashed var(--border);}
+.wpn-row:last-child{border-bottom:none;}
+.wpn-name{font-size:33px;font-weight:600;}
+.wpn-stats{font-size:30px;color:var(--text2);font-family:var(--f-mono);margin-top:1px;}
+.wpn-note{font-size:27px;color:var(--ag);font-style:italic;}
+.react-text{font-size:30px;color:var(--text2);line-height:1.4;}
+.ab-item{font-size:30px;color:var(--ap);padding:2px 0;border-bottom:1px dashed var(--border);}
+.ab-item:last-child{border-bottom:none;}
+.stat-tip{font-size:18px;color:var(--text2);margin-top:2px;font-family:var(--f-mono);}
+.stat-tip-box{background:var(--bg3);border-radius:6px;padding:8px 10px;}
+.stat-tip-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px dashed var(--border);}
+.stat-tip-row:last-child{border-bottom:none;}
+.tip-label{font-size:21px;font-weight:700;color:var(--ay);min-width:80px;}
+.tip-val{font-size:21px;color:var(--text2);font-family:var(--f-mono);text-align:right;}
+.stat-box{cursor:help;}
+/* Picker modal */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:flex-end;justify-content:center;}
+.modal-ov.open{display:flex;}
+.modal-box{background:var(--bg2);border:1px solid var(--border);border-radius:14px 14px 0 0;width:100%;max-width:640px;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 -12px 48px rgba(0,0,0,.7);padding-bottom:var(--safe-b);}
+.modal-hdr{padding:12px 16px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-hdr h3{font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ay);}
+.modal-close{background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;padding:0 6px;line-height:1;}
+.modal-close:hover{color:var(--text);}
+.pk-bands{display:flex;gap:4px;padding:8px 12px;border-bottom:1px solid var(--border);flex-wrap:wrap;flex-shrink:0;}
+.bk-btn{font-size:10px;padding:3px 7px;}
+.bk-btn.active{background:var(--ay);color:#18181e;border-color:var(--ay);}
+.pk-search{padding:7px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.pk-search input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:5px 10px;font-family:var(--f-mono);font-size:11px;}
+.pk-search input:focus{outline:none;border-color:var(--ap);}
+.pk-list{overflow-y:auto;flex:1;padding:4px;}
+.fi-item{display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:5px;cursor:pointer;border:1px solid transparent;margin-bottom:2px;}
+.fi-item:hover{background:var(--bg3);border-color:var(--border);}
+.fi-item.sel{background:#1e2a14;border-color:var(--ag);}
+.fi-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.fi-name{font-size:12px;font-weight:600;flex:1;}
+.fi-meta{font-size:9px;color:var(--text2);font-family:var(--f-mono);}
+.fi-pts{font-size:11px;font-weight:700;color:var(--ay);font-family:var(--f-mono);min-width:38px;text-align:right;}
+.bnd-hdr{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ay);padding:8px 10px 3px;border-top:1px solid var(--border);}
+.pk-footer{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;}
+.pk-sel{flex:1;font-size:11px;color:var(--ag);font-family:var(--f-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* Import */
+.imp-panel{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;width:92vw;max-width:460px;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,.6);}
+.imp-panel h3{font-size:13px;color:var(--ay);margin-bottom:10px;}
+textarea{width:100%;height:180px;font-family:var(--f-mono);font-size:10px;background:var(--bg);color:var(--ag);border:1px solid var(--border);border-radius:4px;padding:8px;resize:vertical;}
+textarea:focus{outline:none;border-color:var(--ap);}
+.gh-field{margin-bottom:8px;}
+.gh-field label{display:block;font-size:10px;color:var(--text2);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;}
+.gh-field input{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:5px;padding:8px;font-size:13px;font-family:var(--f-mono);}
+.gh-field input:focus{outline:none;border-color:var(--ap);}
+
+/* ═══════ TAB SYSTEM ═══════ */
+.tabpanels{flex:1;display:flex;min-height:0;overflow:hidden;}
+.tabpanel{display:none;flex:1;min-height:0;flex-direction:column;overflow:hidden;}
+.tabpanel.active{display:flex;}
+.tabbar{display:flex;background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0;padding-bottom:var(--safe-b);z-index:70;}
+.tabbtn{flex:1;background:none;border:none;border-radius:0;color:var(--text2);padding:8px 4px 7px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:600;letter-spacing:.03em;}
+.tabbtn .ic{font-size:18px;line-height:1;}
+.tabbtn.on{color:var(--ay);}
+
+/* ═══════ CHECKLIST TAB ═══════ */
+.cl-wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 12px 24px;}
+.cl-toolbar{display:flex;gap:6px;padding:10px 12px 4px;flex-shrink:0;flex-wrap:wrap;}
+.cl-progress{padding:0 12px 8px;flex-shrink:0;}
+.cl-progress-bar{height:6px;border-radius:3px;background:var(--bg3);overflow:hidden;}
+.cl-progress-fill{height:100%;background:var(--ag);transition:width .2s;}
+.cl-progress-txt{font-size:10px;color:var(--text2);font-family:var(--f-mono);margin-top:3px;}
+.cl-phase{background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;}
+.cl-phase.done{border-color:var(--ag);}
+.cl-phase-hdr{display:flex;align-items:center;gap:8px;padding:11px 12px;cursor:pointer;}
+.cl-phase-num{font-family:var(--f-mono);font-size:11px;color:var(--text2);background:var(--bg3);border-radius:4px;padding:2px 6px;flex-shrink:0;}
+.cl-phase.done .cl-phase-num{color:var(--ag);}
+.cl-phase-title{flex:1;font-size:13px;font-weight:700;letter-spacing:.02em;}
+.cl-phase-count{font-size:10px;color:var(--text2);font-family:var(--f-mono);flex-shrink:0;}
+.cl-phase-chev{color:var(--text2);font-size:11px;flex-shrink:0;transition:transform .15s;}
+.cl-phase.open .cl-phase-chev{transform:rotate(90deg);}
+.cl-phase-body{display:none;padding:0 12px 10px;}
+.cl-phase.open .cl-phase-body{display:block;}
+.cl-item{display:flex;align-items:flex-start;gap:9px;padding:7px 2px;border-top:1px dashed var(--border);cursor:pointer;}
+.cl-item:first-child{border-top:none;}
+.cl-check{flex-shrink:0;width:20px;height:20px;border-radius:5px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;margin-top:1px;color:transparent;}
+.cl-item.chk .cl-check{background:var(--ag);border-color:var(--ag);color:#0d1a12;}
+.cl-item.chk .cl-txt{color:var(--text2);text-decoration:line-through;text-decoration-color:var(--border);}
+.cl-txt{font-size:12.5px;line-height:1.4;}
+.cl-sub{font-size:11px;color:var(--text2);margin-top:3px;line-height:1.4;padding-left:2px;}
+.cl-sub div{margin-top:2px;}
+
+/* ═══════ GAME-STATE TAB ═══════ */
+.gs-wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px;}
+.gs-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;}
+.gs-card-t{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ay);margin-bottom:9px;}
+.gs-round{display:flex;align-items:center;justify-content:center;gap:16px;}
+.gs-round button{width:38px;height:38px;font-size:18px;border-radius:8px;}
+.gs-round-val{font-family:var(--f-mono);font-size:30px;font-weight:700;min-width:44px;text-align:center;}
+.gs-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.gs-side{background:var(--bg3);border-radius:8px;padding:9px;}
+.gs-side-t{font-size:11px;font-weight:700;margin-bottom:6px;}
+.gs-side.p .gs-side-t{color:var(--ap);}
+.gs-side.l .gs-side-t{color:var(--al);}
+.gs-ctr{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.gs-ctr button{width:30px;height:30px;padding:0;font-size:15px;}
+.gs-ctr-val{font-family:var(--f-mono);font-size:20px;font-weight:700;}
+.gs-init-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.gs-init-row label{flex:1;font-size:12px;}
+.gs-init-row input{width:56px;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--f-mono);font-size:15px;padding:6px 2px;}
+.gs-init-result{font-size:12px;text-align:center;padding:8px;border-radius:6px;background:var(--bg3);margin-top:2px;}
+.gs-mlist{display:flex;flex-direction:column;gap:6px;}
+.gs-mrow{display:flex;align-items:center;gap:8px;background:var(--bg3);border-radius:8px;padding:7px 9px;}
+.gs-mrow.finished{opacity:.45;}
+.gs-mdot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.gs-mname{flex:1;font-size:12.5px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.gs-mstatus{font-size:9px;color:var(--text2);font-family:var(--f-mono);}
+.gs-pips{display:flex;gap:3px;}
+.gs-pip{width:20px;height:20px;border-radius:5px;border:1.5px solid var(--border);background:var(--bg);}
+.gs-pip.on{background:var(--ap);border-color:var(--ap);}
+.gs-reactbtn{width:26px;height:26px;border-radius:6px;font-size:12px;padding:0;}
+.gs-reactbtn.on{background:#2a1e0a;color:var(--ay);border-color:var(--ay);}
+.gs-empty{text-align:center;color:var(--text2);font-size:11px;padding:20px;font-family:var(--f-mono);}
+.gs-save{font-size:9.5px;color:var(--text2);text-align:center;padding:6px 0 2px;font-family:var(--f-mono);}
+
+/* ═══════════════════════════════════════════════
+   SZEROKI EKRAN (tablet poziomo / laptop / desktop)
+   Wszystkie 3 panele widoczne naraz, bez dolnych zakładek.
+   ═══════════════════════════════════════════════ */
+@media (min-width:860px){
+  .tabbar{display:none;}
+  .tabpanels{flex-direction:row;}
+  .tabpanel{display:flex;}
+  #tabMapa{flex:2.6;min-width:0;border-right:1px solid var(--border);}
+  #tabChecklist{flex:1;min-width:300px;max-width:400px;}
+  #tabGame{flex:1;min-width:320px;max-width:420px;border-left:1px solid var(--border);}
+  header span{white-space:normal;overflow:visible;text-overflow:clip;}
+  .toolbar{flex-wrap:wrap;overflow-x:visible;}
+  .app-body{flex-direction:row;}
+  .sp{position:static;left:auto;right:auto;bottom:auto;max-height:none;width:380px;flex-shrink:0;
+      border-top:none;border-left:1px solid var(--border);border-radius:0;box-shadow:none;
+      transform:none;padding-bottom:0;}
+  .sp-drag{display:none;}
+  .sp-close{top:8px;right:10px;}
+  .sp-scroll{flex:1;overflow-y:auto;}
+  .sp-empty{display:flex;flex:1;align-items:center;justify-content:center;color:var(--text2);
+      font-size:12px;font-family:var(--f-mono);text-align:center;padding:20px;}
+}
+@media (min-width:1300px){
+  #tabMapa{flex:3.4;}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="htitle">
+    <h1>⚔ Warcry</h1>
+    <span>Volkus | 22"×30" | dotknij model = statystyki</span>
+  </div>
+  <button class="ghbadge" id="ghBadge" onclick="openGhSettings()">🔗 GitHub</button>
+  <div class="roundpill" id="roundPill">R1</div>
+</header>
+
+<div class="tabpanels">
+<!-- ═══════ TAB: MAPA ═══════ -->
+<div class="tabpanel active" id="tabMapa">
+  <div class="toolbar">
+    <div class="tg"><span class="tl">Poziom</span>
+      <button class="lv0" id="bL0" onclick="setLevel(0)">● 0</button>
+      <button id="bL1" onclick="setLevel(1)">● 1</button>
+      <button id="bL2" onclick="setLevel(2)">● 2</button>
+    </div>
+    <div class="ts"></div>
+    <div class="tg"><span class="tl">Mury</span>
+      <button id="bHW" onclick="setTool('hw')">Heavy</button>
+      <button id="bLW" onclick="setTool('lw')">Light</button>
+    </div>
+    <div class="ts"></div>
+    <div class="tg"><span class="tl">Stronghold</span>
+      <button id="bV1" onclick="setTool('v1')">V1</button>
+      <button id="bV2" onclick="setTool('v2')">V2</button>
+    </div>
+    <div class="ts"></div>
+    <div class="tg"><span class="tl">Bastion</span>
+      <button id="bB1" onclick="setTool('b1')">B1 L</button>
+      <button id="bB2" onclick="setTool('b2')">B2 L</button>
+      <button id="bB3" onclick="setTool('b3')">B3 ⌐</button>
+      <button id="bB4" onclick="setTool('b4')">B4 ⌐</button>
+    </div>
+    <div class="ts"></div>
+    <div class="tg"><span class="tl">Teren</span>
+      <button id="bRB" onclick="setTool('rb')">Rubble</button>
+      <button id="bFS" onclick="setTool('fs')">Fire Step</button>
+    </div>
+    <div class="ts"></div>
+    <div class="tg"><span class="tl">Edycja</span>
+      <button class="on" id="bMV" onclick="setTool('move')">✦ Przesuń</button>
+      <button onclick="rotSel()">↻ Obróć</button>
+      <button onclick="delSel()">✕ Usuń</button>
+    </div>
+    <div class="ts"></div>
+    <div class="tg"><span class="tl">Cel</span>
+      <button id="bOBJ" onclick="setTool('obj')">⛳ Objective</button>
+    </div>
+    <div class="ts"></div>
+    <div class="tg"><span class="tl">Modele</span>
+      <button class="bp" onclick="openPicker()">+ Dodaj model</button>
+    </div>
+    <div class="ts"></div>
+    <div class="tg"><span class="tl">Pomiar</span>
+      <button id="bLOS" onclick="setTool('los')">LoS</button>
+      <button id="bRNG" onclick="setTool('range')">Dystans</button>
+    </div>
+    <div class="ts"></div>
+    <div class="tg"><span class="tl">Mapa</span>
+      <button class="bp" onclick="copyJsonForClaude()">📋 Kopiuj dla Claude</button>
+      <button class="exp" onclick="exportMap()">⬇ JSON</button>
+      <button class="exp" onclick="openImport()">⬆ Import</button>
+      <button onclick="newRound()" title="Nowa runda: reset aktywacji, akcji, reakcji i checklisty">⟳ Nowa runda</button>
+      <button onclick="confirmResetAll()">Reset</button>
+    </div>
+  </div>
+  <div class="statusbar" id="statusBar">Gotowy. Narzędzie Objective = dotknij mapę. Dotknij model = statystyki.</div>
+  <div class="legend-bar" id="legendBar"></div>
+  <div class="app-body">
+    <div class="canvas-wrap"><canvas id="cv"></canvas></div>
+    <div class="sp" id="statsPanel">
+      <div class="sp-drag"></div>
+      <button class="sp-close" onclick="closeStats()">✕</button>
+      <div class="sp-scroll">
+        <div class="sp-empty" id="spEmpty">Dotknij model<br>aby zobaczyć<br>statystyki</div>
+        <div id="spContent" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TAB: CHECKLIST ═══════ -->
+<div class="tabpanel" id="tabChecklist">
+  <div class="cl-toolbar">
+    <button class="exp" onclick="resetChecklistActivation()">↺ Nowa aktywacja</button>
+    <button onclick="resetChecklistAll()">↺↺ Wyczyść wszystko</button>
+  </div>
+  <div class="cl-progress">
+    <div class="cl-progress-bar"><div class="cl-progress-fill" id="clFill"></div></div>
+    <div class="cl-progress-txt" id="clProgressTxt">0 / 0 zaznaczone</div>
+  </div>
+  <div class="cl-wrap" id="clList"></div>
+</div>
+
+<!-- ═══════ TAB: STAN GRY ═══════ -->
+<div class="tabpanel" id="tabGame">
+  <div class="gs-wrap">
+    <div class="gs-card">
+      <div class="gs-card-t">Runda</div>
+      <div class="gs-round">
+        <button onclick="adjRound(-1)">−</button>
+        <div class="gs-round-val" id="gsRoundVal">1</div>
+        <button onclick="adjRound(1)">+</button>
+      </div>
+    </div>
+    <div class="gs-card">
+      <div class="gs-card-t">Dzikie kości (Wild Dice)</div>
+      <div class="gs-2col">
+        <div class="gs-side p">
+          <div class="gs-side-t">Gracz P</div>
+          <div class="gs-ctr"><button onclick="adjWild('p',-1)">−</button><span class="gs-ctr-val" id="wildP">0</span><button onclick="adjWild('p',1)">+</button></div>
+        </div>
+        <div class="gs-side l">
+          <div class="gs-side-t">Gracz L</div>
+          <div class="gs-ctr"><button onclick="adjWild('l',-1)">−</button><span class="gs-ctr-val" id="wildL">0</span><button onclick="adjWild('l',1)">+</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="gs-card">
+      <div class="gs-card-t">Faza inicjatywy — kto ma singles?</div>
+      <div class="gs-init-row"><label>Gracz P — singles</label><input type="number" id="initP" min="0" max="6" value="0" oninput="calcInit()"></div>
+      <div class="gs-init-row"><label>Gracz L — singles</label><input type="number" id="initL" min="0" max="6" value="0" oninput="calcInit()"></div>
+      <div class="gs-init-result" id="initResult">Wpisz liczbę singli obu graczy.</div>
+    </div>
+    <div class="gs-card">
+      <div class="gs-card-t">Ekonomia akcji modeli</div>
+      <div class="gs-mlist" id="gsModelList"></div>
+    </div>
+    <div class="gs-save" id="gsSaveStatus">Sesja zapisywana automatycznie na tym urządzeniu.</div>
+  </div>
+</div>
+
+</div>
+
+<!-- ═══════ BOTTOM TAB BAR (tylko wąski ekran) ═══════ -->
+<nav class="tabbar" id="tabbar">
+  <button class="tabbtn on" id="tabbtnMapa" onclick="showTab('Mapa')"><span class="ic">🗺️</span>Mapa</button>
+  <button class="tabbtn" id="tabbtnChecklist" onclick="showTab('Checklist')"><span class="ic">✅</span>Checklist</button>
+  <button class="tabbtn" id="tabbtnGame" onclick="showTab('Game')"><span class="ic">🎲</span>Stan gry</button>
+</nav>
+
+<!-- Fighter Picker Modal -->
+<div class="modal-ov" id="pickerModal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <h3>Wybierz Fightera</h3>
+      <button class="modal-close" onclick="closePicker()">✕</button>
+    </div>
+    <div class="pk-bands" id="pkBands"></div>
+    <div class="pk-search"><input type="text" id="pkSearch" placeholder="Szukaj po nazwie, bandzie, tagu..." oninput="renderPkList()"></div>
+    <div class="pk-list" id="pkList"></div>
+    <div class="pk-footer">
+      <div class="pk-sel" id="pkSelName">Wybierz fightera...</div>
+      <button class="exp" id="pkConfBtn" onclick="confirmPicker()" disabled>✓ Dodaj na mapę</button>
+      <button onclick="closePicker()">Anuluj</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Panel -->
+<div class="imp-panel" id="importPanel">
+  <h3>⬆ Importuj JSON Mapy</h3>
+  <textarea id="importJson" placeholder="Wklej JSON tutaj..."></textarea>
+  <div style="display:flex;gap:6px;margin-top:8px;">
+    <button style="flex:1;" onclick="doImport()">✓ Wczytaj</button>
+    <button style="flex:1;" onclick="document.getElementById('importPanel').style.display='none'">✕ Zamknij</button>
+  </div>
+</div>
+
+<!-- Copy fallback Panel -->
+<div class="imp-panel" id="copyModal" style="display:none;">
+  <h3>📋 JSON dla Claude</h3>
+  <div style="font-size:11px;color:var(--text2);margin-bottom:6px;">Automatyczne kopiowanie nie zadziałało. Dotknij pole, zaznacz wszystko i skopiuj ręcznie.</div>
+  <textarea id="copyJsonText" readonly onclick="this.select()"></textarea>
+  <div style="display:flex;gap:6px;margin-top:8px;">
+    <button style="flex:1;" onclick="selectAllCopyText()">Zaznacz wszystko</button>
+    <button style="flex:1;" onclick="closeCopyFallback()">✕ Zamknij</button>
+  </div>
+</div>
+
+<!-- GitHub Sync Panel -->
+<div class="imp-panel" id="ghModal" style="display:none;max-width:420px;">
+  <h3>🔗 Synchronizacja z GitHub (Secret Gist)</h3>
+  <div style="font-size:11px;color:var(--text2);margin-bottom:10px;">Stan mapy zapisuje się automatycznie do Twojego sekretnego Gista — nieindeksowany, nie do znalezienia przez przypadek. Claude odczyta go bezpośrednio, bez wklejania.</div>
+  <div class="gh-field"><label>ID Gista</label><input type="text" id="ghGistId" placeholder="np. 8f3a1b2c9d4e5f6a7b8c9d0e1f2a3b4c"></div>
+  <div class="gh-field"><label>Nazwa pliku w Giście</label><input type="text" id="ghFilename" placeholder="warcry_map.json"></div>
+  <div class="gh-field"><label>Personal Access Token (classic, zakres "gist")</label><input type="password" id="ghToken" placeholder="ghp_…"></div>
+  <div id="ghStatus" style="font-size:11px;color:var(--text2);margin:8px 0;min-height:16px;"></div>
+  <div style="display:flex;gap:6px;">
+    <button class="exp" style="flex:1;" onclick="ghConnect()">✓ Połącz i wczytaj</button>
+    <button style="flex:1;" onclick="closeGhSettings()">Zamknij</button>
+  </div>
+  <button style="width:100%;margin-top:6px;color:var(--al);" onclick="ghDisconnect()">Rozłącz</button>
+</div>
+
+<script>
+"use strict";
+// ═══════════════════════════════════════════════
+// BAZA FIGHTERÓW
+// ═══════════════════════════════════════════════
+const DB = [
+  // PHOBOS
+  {key:"PhobosCpt",n:"Phobos Captain",band:"Phobos Strike Team",side:'p',tags:["PHOBOS","LEADER","REIVER"],M:5,T:5,W:28,P:255,
+   wpn:[{name:"Heavy Bolt Pistol",r:'6"',A:4,S:4,d:"2/5"},{name:"Power Sword",r:'1"',A:5,S:5,d:"2/5"}],
+   react:"Shadow Tactics — po ataku wroga (0-3\") → Move 3\" (może disengage) LUB +1T do końca rundy ; 1×/runda",
+   ab:["Tactical Discipline D [PHOBOS] — +1 Attack wszystkich broni do końca aktywacji",
+       "Grapnel Advance D [REIVER] — darmowy Move 6\", ignoruje teren pionowy; w tej aktywacji brak dodatkowego Move",
+       "Terror Troops T [REIVER] — wrogowie w 3\" mają -1 Attack (melee) do końca rundy",
+       "Shock Assault Q [LEADER,REIVER] — darmowy atak melee z +2 Attack",
+       "Full Spectrum Command Q [LEADER] — do 2 sojuszników w 9\" wykonuje Move lub Attack"]},
+  {key:"InfSgt",n:"Infiltrator Sergeant",band:"Phobos Strike Team",side:'p',tags:["PHOBOS","SERGEANT","INFILTRATOR"],M:4,T:4,W:18,P:180,
+   wpn:[{name:"Bolt Carbine",r:'8"',A:5,S:4,d:"1/4"},{name:"Combat Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Shadow Tactics",
+   ab:["Tactical Discipline D [PHOBOS] — +1 Attack wszystkich broni do końca aktywacji",
+       "Omni-Scrambler T [INFILTRATOR] — wrogowie w 6\" nie mogą używać abilities ani reactions do końca rundy",
+       "Coordinated Fire T [SERGEANT] — sojusznik w 6\" wykonuje darmowy atak dystansowy"]},
+  {key:"InfWarrior",n:"Infiltrator Warrior",band:"Phobos Strike Team",side:'p',tags:["PHOBOS","INFILTRATOR"],M:4,T:4,W:16,P:130,
+   wpn:[{name:"Bolt Carbine",r:'8"',A:4,S:4,d:"1/4"},{name:"Combat Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Shadow Tactics",
+   ab:["Tactical Discipline D [PHOBOS] — +1 Attack wszystkich broni do końca aktywacji",
+       "Omni-Scrambler T [INFILTRATOR] — wrogowie w 6\" nie mogą używać abilities ani reactions do końca rundy"]},
+  {key:"InfComms",n:"Infiltrator Commsman",band:"Phobos Strike Team",side:'p',tags:["PHOBOS","INFILTRATOR","COMMS"],M:4,T:4,W:16,P:140,
+   wpn:[{name:"Bolt Carbine",r:'8"',A:4,S:4,d:"1/4"},{name:"Combat Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Shadow Tactics",
+   ab:["Tactical Discipline D [PHOBOS] — +1 Attack wszystkich broni do końca aktywacji",
+       "Omni-Scrambler T [INFILTRATOR] — wrogowie w 6\" nie mogą używać abilities ani reactions do końca rundy",
+       "Relay Orders D [COMMS] — sojusznik w 9\" wykonuje darmowy Move lub Attack"]},
+  {key:"InfHelix",n:"Infiltrator Helix Adept",band:"Phobos Strike Team",side:'p',tags:["PHOBOS","INFILTRATOR","MEDIC"],M:4,T:4,W:16,P:155,
+   wpn:[{name:"Bolt Carbine",r:'8"',A:4,S:4,d:"1/4"},{name:"Combat Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Shadow Tactics",
+   ab:["Tactical Discipline D [PHOBOS] — +1 Attack wszystkich broni do końca aktywacji",
+       "Omni-Scrambler T [INFILTRATOR] — wrogowie w 6\" nie mogą używać abilities ani reactions do końca rundy",
+       "Helix Stabiliser D [MEDIC] — sojusznik w 3\" leczy ran = wartość kości (D2=2, D4=4, D6=6)",
+       "Combat Revival T [MEDIC] — sojusznik w 3\": jeśli zginie przed następną aktywacją medyka, zostaje na 1HP ; 1×/model/gra"]},
+  {key:"InfSab",n:"Infiltrator Saboteur",band:"Phobos Strike Team",side:'p',tags:["PHOBOS","INFILTRATOR","DEMOLITIONS"],M:4,T:4,W:16,P:150,
+   wpn:[{name:"Bolt Carbine",r:'8"',A:4,S:4,d:"1/4"},{name:"Combat Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Shadow Tactics",
+   ab:["Tactical Discipline D [PHOBOS] — +1 Attack wszystkich broni do końca aktywacji",
+       "Omni-Scrambler T [INFILTRATOR] — wrogowie w 6\" nie mogą używać abilities ani reactions do końca rundy",
+       "Explosive Charge D [DEMOLITIONS] — umieść minę w 3\"; wróg wchodzący w 1\" automatycznie ją odpala 3dmg dla wszystkich w 2\"; rzuć K6 — na 4+ cel traci 1 akcję; max 1 mina"]},
+  {key:"IncSgt",n:"Incursor Sergeant",band:"Phobos Strike Team",side:'p',tags:["PHOBOS","SERGEANT","INCURSOR"],M:4,T:4,W:18,P:185,
+   wpn:[{name:"Occulus Bolt Carbine",r:'8"',A:5,S:4,d:"1/4"},{name:"Combat Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Shadow Tactics",
+   ab:["Tactical Discipline D [PHOBOS] — +1 Attack wszystkich broni do końca aktywacji",
+       "Auto-Targeters D [INCURSOR] — ataki dystansowe ignorują cover do końca aktywacji",
+       "Coordinated Fire T [SERGEANT] — sojusznik w 6\" wykonuje darmowy atak dystansowy",
+       "Precision Strike T [INCURSOR] — crits zadają +2 dmg do końca aktywacji"]},
+  {key:"IncWarrior",n:"Incursor Warrior",band:"Phobos Strike Team",side:'p',tags:["PHOBOS","INCURSOR"],M:4,T:4,W:16,P:140,
+   wpn:[{name:"Occulus Bolt Carbine",r:'8"',A:4,S:4,d:"1/4"},{name:"Combat Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Shadow Tactics",
+   ab:["Tactical Discipline D [PHOBOS] — +1 Attack wszystkich broni do końca aktywacji",
+       "Auto-Targeters D [INCURSOR] — ataki dystansowe ignorują cover do końca aktywacji",
+       "Precision Strike T [INCURSOR] — crits zadają +2 dmg do końca aktywacji"]},
+  {key:"IncMark",n:"Incursor Marksman",band:"Phobos Strike Team",side:'p',tags:["PHOBOS","SNIPER","INCURSOR"],M:4,T:4,W:16,P:165,
+   wpn:[{name:"Marksman Carbine",r:'12"',A:3,S:5,d:"2/4"},{name:"Combat Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Shadow Tactics",
+   ab:["Tactical Discipline D [PHOBOS] — +1 Attack wszystkich broni do końca aktywacji",
+       "Auto-Targeters D [INCURSOR] — ataki dystansowe ignorują cover do końca aktywacji",
+       "Precision Strike T [INCURSOR] — crits zadają +2 dmg do końca aktywacji",
+       "Sniper Shot T [SNIPER] — jeśli nie ruszał się w tej turze, rzuty 5+ liczą się jako crits"]},
+  {key:"ReiverW",n:"Reiver Warrior",band:"Phobos Strike Team",side:'p',tags:["PHOBOS","REIVER"],M:5,T:4,W:17,P:150,
+   wpn:[{name:"Heavy Bolt Pistol",r:'6"',A:3,S:4,d:"2/4"},{name:"Reiver Blade",r:'1"',A:5,S:4,d:"2/4"}],
+   react:"Shadow Tactics",
+   ab:["Tactical Discipline D [PHOBOS] — +1 Attack wszystkich broni do końca aktywacji",
+       "Grapnel Advance D [REIVER] — darmowy Move 6\", ignoruje teren pionowy; w tej aktywacji brak dodatkowego Move",
+       "Terror Troops T [REIVER] — wrogowie w 3\" mają -1 Attack (melee) do końca rundy"]},
+  {key:"ReiverSgt",n:"Reiver Sergeant",band:"Phobos Strike Team",side:'p',tags:["PHOBOS","SERGEANT","REIVER"],M:5,T:4,W:19,P:185,
+   wpn:[{name:"Heavy Bolt Pistol",r:'6"',A:4,S:4,d:"2/5"},{name:"Reiver Blade",r:'1"',A:5,S:4,d:"2/4"}],
+   react:"Shadow Tactics",
+   ab:["Tactical Discipline D [PHOBOS] — +1 Attack wszystkich broni do końca aktywacji",
+       "Grapnel Advance D [REIVER] — darmowy Move 6\", ignoruje teren pionowy; w tej aktywacji brak dodatkowego Move",
+       "Terror Troops T [REIVER] — wrogowie w 3\" mają -1 Attack (melee) do końca rundy",
+       "Coordinated Fire T [SERGEANT] — sojusznik w 6\" wykonuje darmowy atak dystansowy"]},
+  // LEGIONARIES
+  {key:"AspChamp",n:"Aspiring Champion",band:"Legionaries",side:'l',tags:["CHAOS","LEADER","KHORNE"],M:4,T:5,W:22,P:220,
+   wpn:[{name:"Bolt Pistol",r:'6"',A:4,S:4,d:"1/3"},{name:"Power Weapon",r:'1"',A:5,S:5,d:"2/5"}],
+   react:"Dark Resilience [CHAOS] — po deklaracji ataku wroga na ten model, rzuć K6: 3+: dmg z każdej kości tego atak zmniejszone o połowę (zaokr. góra); 5+: atakujący otrzymuje 2 dmg ; wybierz jeden efekt ; 1×/runda",
+   ab:["Blood Frenzy D [KHORNE] — +1 Attack (melee) do końca aktywacji",
+       "Butcher Strike T [KHORNE] — crits zadają +2 dmg do końca aktywacji",
+       "Chosen of Chaos Q [LEADER] — do 2 sojuszników w 6\": +1 Attack i +1 Toughness do końca rundy"]},
+  {key:"Chosen",n:"Chosen Warrior",band:"Legionaries",side:'l',tags:["CHAOS","SERGEANT","KHORNE"],M:4,T:4,W:18,P:180,
+   wpn:[{name:"Bolt Pistol",r:'6"',A:3,S:4,d:"1/3"},{name:"Chainsword",r:'1"',A:5,S:4,d:"2/4"}],
+   react:"Dark Resilience [CHAOS] — po deklaracji ataku wroga, rzuć K6: 3+: ½dmg każdej kości; 5+: atakujący otrzymuje 2dmg ; 1×/runda",
+   ab:["Blood Frenzy D [KHORNE] — +1 Attack (melee) do końca aktywacji",
+       "Mark of Chaos Ascendant T [SERGEANT] — sojusznicy w zasięgu = wartości kości (T2=2\", T4=4\", T6=6\"): +1 Attack do końca rundy"]},
+  {key:"Butcher",n:"Butcher",band:"Legionaries",side:'l',tags:["CHAOS","KHORNE"],M:4,T:4,W:20,P:195,
+   wpn:[{name:"Bolt Pistol",r:'6"',A:3,S:4,d:"1/3"},{name:"Chainaxe",r:'1"',A:4,S:5,d:"3/5"}],
+   react:"Dark Resilience [CHAOS] — po deklaracji ataku wroga, rzuć K6: 3+: ½dmg każdej kości; 5+: atakujący otrzymuje 2dmg ; 1×/runda",
+   ab:["Blood Frenzy D [KHORNE] — +1 Attack (melee) do końca aktywacji",
+       "Butcher Strike T [KHORNE] — crits zadają +2 dmg do końca aktywacji"]},
+  {key:"Shrivetalon",n:"Shrivetalon",band:"Legionaries",side:'l',tags:["CHAOS","SLAANESH"],M:5,T:4,W:16,P:175,
+   wpn:[{name:"Bolt Pistol",r:'6"',A:3,S:4,d:"1/3"},{name:"Paired Blades",r:'1"',A:5,S:5,d:"2/5"}],
+   react:"Dark Resilience [CHAOS] — po deklaracji ataku wroga, rzuć K6: 3+: ½dmg każdej kości; 5+: atakujący otrzymuje 2dmg ; 1×/runda",
+   ab:["Lightning Reflexes D [SLAANESH] — +1 Move i +1 Attack (wszystkie bronie) do końca aktywacji",
+       "Flawless Killer T [SLAANESH] — darmowa dodatkowa akcja Attack"]},
+  {key:"Anointed",n:"Anointed",band:"Legionaries",side:'l',tags:["CHAOS","ANNOINTED"],M:5,T:4,W:20,P:200,
+   wpn:[{name:"Daemon Claws",r:'1"',A:5,S:5,d:"2/5"}],
+   react:"Dark Resilience [CHAOS] — po deklaracji ataku wroga, rzuć K6: 3+: ½dmg każdej kości; 5+: atakujący otrzymuje 2dmg ; 1×/runda",
+   ab:["Daemon Surge Q [ANNOINTED] — +2 Attack do końca rundy; wrogowie atakujący ten model mają -1 Attack do końca rundy"]},
+  {key:"Acolyte",n:"Acolyte",band:"Legionaries",side:'l',tags:["CHAOS","TZEENTCH"],M:4,T:4,W:17,P:155,
+   wpn:[{name:"Bolt Pistol",r:'6"',A:3,S:4,d:"1/3"},{name:"Ritual Dagger",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Dark Resilience [CHAOS] — po deklaracji ataku wroga, rzuć K6: 3+: ½dmg każdej kości; 5+: atakujący otrzymuje 2dmg ; 1×/runda",
+   ab:["Warp Insight D [TZEENTCH] — ataki dystansowe trafiają na próg o 1 niższy (min. 3+) do końca aktywacji",
+       "Warp Fire T [TZEENTCH] — ataki dystansowe zadają +1 dmg (hit i crit) do końca aktywacji"]},
+  {key:"IconBearer",n:"Icon Bearer",band:"Legionaries",side:'l',tags:["CHAOS","ICON"],M:4,T:4,W:17,P:150,
+   wpn:[{name:"Boltgun",r:'12"',A:3,S:4,d:"2/4"},{name:"Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Dark Resilience [CHAOS] — po deklaracji ataku wroga, rzuć K6: 3+: ½dmg każdej kości; 5+: atakujący otrzymuje 2dmg ; 1×/runda",
+   ab:["Icon of Chaos D [ICON] — sojusznicy w 6\" ignorują efekty obniżające Attack do końca rundy"]},
+  {key:"LegGunPl",n:"Gunner (Plasma)",band:"Legionaries",side:'l',tags:["CHAOS","GUNNER"],M:4,T:4,W:16,P:170,
+   wpn:[{name:"Plasma Gun",r:'10"',A:3,S:5,d:"2/5"},{name:"Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Dark Resilience [CHAOS] — po deklaracji ataku wroga, rzuć K6: 3+: ½dmg każdej kości; 5+: atakujący otrzymuje 2dmg ; 1×/runda",
+   ab:["Suppressive Volley D [GUNNER] — darmowy atak dystansowy; jeśli trafi: cel -X Move (X=½ wartości kości: D2=-1, D4=-2, D6=-3)",
+       "Chaos Barrage T [GUNNER] — +1 Attack (dystans) i ignoruje cover do końca aktywacji"]},
+  {key:"LegGunMe",n:"Gunner (Melta)",band:"Legionaries",side:'l',tags:["CHAOS","GUNNER"],M:4,T:4,W:16,P:180,
+   wpn:[{name:"Melta Gun",r:'6"',A:2,S:6,d:"4/6"},{name:"Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Dark Resilience [CHAOS] — po deklaracji ataku wroga, rzuć K6: 3+: ½dmg każdej kości; 5+: atakujący otrzymuje 2dmg ; 1×/runda",
+   ab:["Suppressive Volley D [GUNNER] — darmowy atak dystansowy; jeśli trafi: cel -X Move (X=½ wartości kości: D2=-1, D4=-2, D6=-3)",
+       "Chaos Barrage T [GUNNER] — +1 Attack (dystans) i ignoruje cover do końca aktywacji"]},
+  {key:"LegGunFl",n:"Gunner (Flamer)",band:"Legionaries",side:'l',tags:["CHAOS","GUNNER"],M:4,T:4,W:16,P:160,
+   wpn:[{name:"Flamer",r:'8"',A:4,S:4,d:"2/4",note:"ignore cover"},{name:"Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Dark Resilience [CHAOS] — po deklaracji ataku wroga, rzuć K6: 3+: ½dmg każdej kości; 5+: atakujący otrzymuje 2dmg ; 1×/runda",
+   ab:["Suppressive Volley D [GUNNER] — darmowy atak dystansowy; jeśli trafi: cel -X Move (X=½ wartości kości: D2=-1, D4=-2, D6=-3)",
+       "Chaos Barrage T [GUNNER] — +1 Attack (dystans) i ignoruje cover do końca aktywacji"]},
+  {key:"LegHvyHB",n:"Heavy Gunner (H.Bolter)",band:"Legionaries",side:'l',tags:["CHAOS","HEAVY"],M:3,T:4,W:18,P:175,
+   wpn:[{name:"Heavy Bolter",r:'12"',A:4,S:5,d:"2/5"},{name:"Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Dark Resilience [CHAOS] — po deklaracji ataku wroga, rzuć K6: 3+: ½dmg każdej kości; 5+: atakujący otrzymuje 2dmg ; 1×/runda",
+   ab:["Hold the Line D [HEAVY] — nie rusza się tej aktywacji, ale zyskuje darmową dodatkową akcję Attack",
+       "Suppressor Protocol T [HEAVY] — atak; jeśli trafi, cel i wrogowie w 2\" od celu mają -2 Move do końca rundy"]},
+  {key:"LegHvyCC",n:"Heavy Gunner (Chaincan.)",band:"Legionaries",side:'l',tags:["CHAOS","HEAVY"],M:3,T:4,W:18,P:180,
+   wpn:[{name:"Chaincannon",r:'10"',A:6,S:4,d:"2/3"},{name:"Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Dark Resilience [CHAOS] — po deklaracji ataku wroga, rzuć K6: 3+: ½dmg każdej kości; 5+: atakujący otrzymuje 2dmg ; 1×/runda",
+   ab:["Hold the Line D [HEAVY] — nie rusza się tej aktywacji, ale zyskuje darmową dodatkową akcję Attack",
+       "Suppressor Protocol T [HEAVY] — atak; jeśli trafi, cel i wrogowie w 2\" od celu mają -2 Move do końca rundy"]},
+  {key:"LegHvyML",n:"Heavy Gunner (Missile)",band:"Legionaries",side:'l',tags:["CHAOS","HEAVY"],M:3,T:4,W:18,P:185,
+   wpn:[{name:"Frag Missile",r:'12"',A:4,S:4,d:"2/4",note:"AOE 2\""},{name:"Krak Missile",r:'12"',A:2,S:6,d:"4/6"},{name:"Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Dark Resilience [CHAOS] — po deklaracji ataku wroga, rzuć K6: 3+: ½dmg każdej kości; 5+: atakujący otrzymuje 2dmg ; 1×/runda",
+   ab:["Hold the Line D [HEAVY] — nie rusza się tej aktywacji, ale zyskuje darmową dodatkową akcję Attack",
+       "Suppressor Protocol T [HEAVY] — atak; jeśli trafi, cel i wrogowie w 2\" od celu mają -2 Move do końca rundy"]},
+  // NEMESIS CLAW
+  {key:"Visionary",n:"Visionary",band:"Nemesis Claw",side:'l',tags:["CHAOS","LEADER","VISIONARY"],M:5,T:4,W:20,P:210,
+   wpn:[{name:"Bolt Pistol",r:'6"',A:4,S:4,d:"1/3"},{name:"Power Blade",r:'1"',A:5,S:5,d:"2/5"}],
+   react:"Shadow in the Dark [CHAOS] — gdy ten model (poza engagement) jest celem ataku dystans., rzuć K6: 3-5: atakujący -1 To Hit; 6: trafia tylko na 6+ ; 1×/runda",
+   ab:["Predator Instinct D [CHAOS] — jeśli >3\" od wszystkich wrogów na początku aktywacji: +1 Move do końca aktywacji",
+       "Marked for Death T [LEADER] — wyznacz wroga w 12\"; sojusznicy w 6\" od Liderzy mają +1 Attack vs ten cel do końca rundy",
+       "Visions of Slaughter Q [LEADER,VISIONARY] — do 2 sojuszników w 9\": +1 Move i +1 Attack (wszystkie bronie) do końca rundy"]},
+  {key:"Fearmonger",n:"Fearmonger",band:"Nemesis Claw",side:'l',tags:["CHAOS","FEARMONGER"],M:5,T:4,W:18,P:170,
+   wpn:[{name:"Bolt Pistol",r:'6"',A:4,S:4,d:"1/3"},{name:"Blade",r:'1"',A:4,S:4,d:"2/4"}],
+   react:"Shadow in the Dark [CHAOS] — gdy ten model (poza engagement) jest celem ataku dystans., rzuć K6: 3-5: atakujący -1 To Hit; 6: trafia tylko na 6+ ; 1×/runda",
+   ab:["Predator Instinct D [CHAOS] — jeśli >3\" od wszystkich wrogów na początku aktywacji: +1 Move do końca aktywacji",
+       "Fear Aura D [FEARMONGER] — wrogowie w 3\" mają -1 Attack (melee, min.1) do końca rundy",
+       "Terror Unleashed T [FEARMONGER] — wszyscy wrogowie w 3\" mają -1 Attack (min.1) do końca rundy"]},
+  {key:"Screecher",n:"Screecher",band:"Nemesis Claw",side:'l',tags:["CHAOS","STALKER","SCREECHER"],M:5,T:3,W:16,P:165,
+   wpn:[{name:"Pistol",r:'6"',A:4,S:4,d:"1/3"},{name:"Talons",r:'1"',A:5,S:5,d:"2/4"}],
+   react:"Shadow in the Dark [CHAOS] — gdy ten model (poza engagement) jest celem ataku dystans., rzuć K6: 3-5: atakujący -1 To Hit; 6: trafia tylko na 6+ ; 1×/runda",
+   ab:["Predator Instinct D [CHAOS] — jeśli >3\" od wszystkich wrogów na początku aktywacji: +1 Move do końca aktywacji",
+       "Stalker's Patience D [STALKER] — darmowy Move; jeśli na końcu w cover, nie może być celem ataku dystans. z >6\" do końca rundy",
+       "Execution Strike T [SCREECHER] — jeśli cel ma <50% max Wounds: ataki melee +2 dmg (hit i crit) do końca aktywacji"]},
+  {key:"Skinthief",n:"Skinthief",band:"Nemesis Claw",side:'l',tags:["CHAOS","SKINTHIEF"],M:4,T:4,W:20,P:195,
+   wpn:[{name:"Bolt Pistol",r:'6"',A:4,S:4,d:"1/3"},{name:"Chainblade",r:'1"',A:5,S:5,d:"2/5"}],
+   react:"Shadow in the Dark [CHAOS] — gdy ten model (poza engagement) jest celem ataku dystans., rzuć K6: 3-5: atakujący -1 To Hit; 6: trafia tylko na 6+ ; 1×/runda",
+   ab:["Predator Instinct D [CHAOS] — jeśli >3\" od wszystkich wrogów na początku aktywacji: +1 Move do końca aktywacji",
+       "Frenzied Assault D [SKINTHIEF] — +1 Attack (melee) do końca aktywacji",
+       "Perfect Kill Q [SKINTHIEF] — do końca aktywacji: każda naturalna 6 w walce wręcz generuje dodatkowy automatyczny crit"]},
+  {key:"Ventrilokar",n:"Ventrilokar",band:"Nemesis Claw",side:'l',tags:["CHAOS","VENTRILOKAR"],M:4,T:4,W:17,P:165,
+   wpn:[{name:"Boltgun",r:'12"',A:3,S:4,d:"2/4"},{name:"Blade",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Shadow in the Dark [CHAOS] — gdy ten model (poza engagement) jest celem ataku dystans., rzuć K6: 3-5: atakujący -1 To Hit; 6: trafia tylko na 6+ ; 1×/runda",
+   ab:["Predator Instinct D [CHAOS] — jeśli >3\" od wszystkich wrogów na początku aktywacji: +1 Move do końca aktywacji",
+       "Warp Trickery D [VENTRILOKAR] — wybrany wróg w 6\": -1 To Hit (wszystkie ataki) do końca rundy",
+       "Mind Games T [VENTRILOKAR] — wybrany wróg w 6\": -1 Attack i -1 Move (min.1) do końca rundy"]},
+  {key:"NCWarrior",n:"Warrior (NC)",band:"Nemesis Claw",side:'l',tags:["CHAOS","STALKER"],M:4,T:4,W:16,P:145,
+   wpn:[{name:"Boltgun",r:'12"',A:3,S:4,d:"2/4"},{name:"Chainsword",r:'1"',A:4,S:4,d:"2/4"}],
+   react:"Shadow in the Dark [CHAOS] — gdy ten model (poza engagement) jest celem ataku dystans., rzuć K6: 3-5: atakujący -1 To Hit; 6: trafia tylko na 6+ ; 1×/runda",
+   ab:["Predator Instinct D [CHAOS] — jeśli >3\" od wszystkich wrogów na początku aktywacji: +1 Move do końca aktywacji",
+       "Stalker's Patience D [STALKER] — darmowy Move; jeśli na końcu w cover, nie może być celem ataku dystans. z >6\" do końca rundy",
+       "Ambush Strike T [STALKER] — jeśli nie był w engagement na początku aktywacji: pierwszy atak melee +2 dmg (hit i crit)"]},
+  {key:"NCGunPl",n:"Gunner Plasma (NC)",band:"Nemesis Claw",side:'l',tags:["CHAOS","GUNNER"],M:4,T:4,W:16,P:170,
+   wpn:[{name:"Plasma Gun",r:'10"',A:3,S:5,d:"2/5"},{name:"Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Shadow in the Dark [CHAOS] — gdy ten model (poza engagement) jest celem ataku dystans., rzuć K6: 3-5: atakujący -1 To Hit; 6: trafia tylko na 6+ ; 1×/runda",
+   ab:["Predator Instinct D [CHAOS] — jeśli >3\" od wszystkich wrogów na początku aktywacji: +1 Move do końca aktywacji",
+       "Covering Fire D [GUNNER] — darmowy atak dystansowy; jeśli trafi, cel ma -1 To Hit do końca swojej najbliższej aktywacji",
+       "Ghost Round T [GUNNER] — atak dystansowy ignoruje cover i LoS (przez ściany, cel w zasięgu) ; 1×/aktywacja"]},
+  {key:"NCGunMe",n:"Gunner Melta (NC)",band:"Nemesis Claw",side:'l',tags:["CHAOS","GUNNER"],M:4,T:4,W:16,P:180,
+   wpn:[{name:"Melta Gun",r:'6"',A:2,S:6,d:"4/6"},{name:"Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Shadow in the Dark [CHAOS] — gdy ten model (poza engagement) jest celem ataku dystans., rzuć K6: 3-5: atakujący -1 To Hit; 6: trafia tylko na 6+ ; 1×/runda",
+   ab:["Predator Instinct D [CHAOS] — jeśli >3\" od wszystkich wrogów na początku aktywacji: +1 Move do końca aktywacji",
+       "Covering Fire D [GUNNER] — darmowy atak dystansowy; jeśli trafi, cel ma -1 To Hit do końca swojej najbliższej aktywacji",
+       "Ghost Round T [GUNNER] — atak dystansowy ignoruje cover i LoS (przez ściany, cel w zasięgu) ; 1×/aktywacja"]},
+  {key:"NCGunFl",n:"Gunner Flamer (NC)",band:"Nemesis Claw",side:'l',tags:["CHAOS","GUNNER"],M:4,T:4,W:16,P:160,
+   wpn:[{name:"Flamer",r:'8"',A:4,S:4,d:"2/4",note:"ignore cover"},{name:"Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Shadow in the Dark [CHAOS] — gdy ten model (poza engagement) jest celem ataku dystans., rzuć K6: 3-5: atakujący -1 To Hit; 6: trafia tylko na 6+ ; 1×/runda",
+   ab:["Predator Instinct D [CHAOS] — jeśli >3\" od wszystkich wrogów na początku aktywacji: +1 Move do końca aktywacji",
+       "Covering Fire D [GUNNER] — darmowy atak dystansowy; jeśli trafi, cel ma -1 To Hit do końca swojej najbliższej aktywacji",
+       "Ghost Round T [GUNNER] — atak dystansowy ignoruje cover i LoS (przez ściany, cel w zasięgu) ; 1×/aktywacja"]},
+  {key:"NCHvyHB",n:"Heavy Gunner HB (NC)",band:"Nemesis Claw",side:'l',tags:["CHAOS","HEAVY"],M:3,T:4,W:18,P:175,
+   wpn:[{name:"Heavy Bolter",r:'12"',A:4,S:5,d:"2/5"},{name:"Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Shadow in the Dark [CHAOS] — gdy ten model (poza engagement) jest celem ataku dystans., rzuć K6: 3-5: atakujący -1 To Hit; 6: trafia tylko na 6+ ; 1×/runda",
+   ab:["Predator Instinct D [CHAOS] — jeśli >3\" od wszystkich wrogów na początku aktywacji: +1 Move do końca aktywacji",
+       "Brace and Fire D [HEAVY] — nie rusza się tej aktywacji, ale zyskuje darmową dodatkową akcję Attack",
+       "Suppressor Protocol T [HEAVY] — atak; jeśli trafi, cel i wrogowie w 2\" od celu mają -2 Move do końca rundy"]},
+  {key:"NCHvyCC",n:"Heavy Gunner CC (NC)",band:"Nemesis Claw",side:'l',tags:["CHAOS","HEAVY"],M:3,T:4,W:18,P:180,
+   wpn:[{name:"Chaincannon",r:'10"',A:6,S:4,d:"2/3"},{name:"Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Shadow in the Dark [CHAOS] — gdy ten model (poza engagement) jest celem ataku dystans., rzuć K6: 3-5: atakujący -1 To Hit; 6: trafia tylko na 6+ ; 1×/runda",
+   ab:["Predator Instinct D [CHAOS] — jeśli >3\" od wszystkich wrogów na początku aktywacji: +1 Move do końca aktywacji",
+       "Brace and Fire D [HEAVY] — nie rusza się tej aktywacji, ale zyskuje darmową dodatkową akcję Attack",
+       "Suppressor Protocol T [HEAVY] — atak; jeśli trafi, cel i wrogowie w 2\" od celu mają -2 Move do końca rundy"]},
+  {key:"NCHvyML",n:"Heavy Gunner ML (NC)",band:"Nemesis Claw",side:'l',tags:["CHAOS","HEAVY"],M:3,T:4,W:18,P:185,
+   wpn:[{name:"Frag Missile",r:'12"',A:4,S:4,d:"2/4",note:"AOE 2\""},{name:"Krak Missile",r:'12"',A:2,S:6,d:"4/6"},{name:"Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Shadow in the Dark [CHAOS] — gdy ten model (poza engagement) jest celem ataku dystans., rzuć K6: 3-5: atakujący -1 To Hit; 6: trafia tylko na 6+ ; 1×/runda",
+   ab:["Predator Instinct D [CHAOS] — jeśli >3\" od wszystkich wrogów na początku aktywacji: +1 Move do końca aktywacji",
+       "Brace and Fire D [HEAVY] — nie rusza się tej aktywacji, ale zyskuje darmową dodatkową akcję Attack",
+       "Suppressor Protocol T [HEAVY] — atak; jeśli trafi, cel i wrogowie w 2\" od celu mają -2 Move do końca rundy"]},
+  // NECRONS
+  {key:"Hexmark",n:"Hexmark Destroyer",band:"Necrons",side:'l',tags:["NECRON","LEADER","DESTROYER"],M:4,T:4,W:24,P:215,
+   wpn:[{name:"Enmitic Disintegrators",r:'8"',A:6,S:4,d:"1/3"},{name:"Bladed Limbs",r:'1"',A:4,S:4,d:"1/3"}],
+   react:"Reanimation Protocols [NECRON] — po otrzymaniu dmg (model nie zostaje zdjęty), rzuć K6: 3+: leczy K3; jeśli ma runę REANIMATION: leczy K6 zamiast K3 ; 1×/runda",
+   ab:["Relentless March D [NECRON] — +1 Move do końca aktywacji",
+       "Phase Shift D [DESTROYER] — darmowy Move do 6\", ignoruje teren (pionowy i poziomy) i przenika przez modele (nie może na nich zakończyć)",
+       "Living Metal T [NECRON] — leczy dokładnie 6 ran",
+       "Quantum Shielding T [DESTROYER] — 1×/runda: zignoruj i anuluj całkowicie jeden wrogi atak (0 dmg)",
+       "Phase Reanimation Q [LEADER] — do 3 sojuszników w 6\": leczą K6 i +1 Toughness do końca rundy",
+       "Unyielding Phalanx Q [LEADER] — sojusznicy w 6\" od Liderzy: -1 dmg (min.1) od każdego ataku do końca rundy"]},
+  {key:"WarrFlayer",n:"Warrior (Gauss Flayer)",band:"Necrons",side:'l',tags:["NECRON","REANIMATION"],M:4,T:4,W:18,P:170,
+   wpn:[{name:"Gauss Flayer",r:'10"',A:3,S:4,d:"1/3"},{name:"Rifle Butt",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Reanimation Protocols [NECRON] — po otrzymaniu dmg (model nie zostaje zdjęty), rzuć K6: 3+: leczy K3; jeśli ma runę REANIMATION: leczy K6 zamiast K3 ; 1×/runda",
+   ab:["Relentless March D [NECRON] — +1 Move do końca aktywacji",
+       "Gauss Volley D [REANIMATION] — +1 Attack (dystans) do końca aktywacji",
+       "Living Metal T [NECRON] — leczy dokładnie 6 ran",
+       "Gauss Flare T [REANIMATION] — ataki dystansowe +1 dmg (hit i crit) do końca aktywacji"]},
+  {key:"WarrReaper",n:"Warrior (Gauss Reaper)",band:"Necrons",side:'l',tags:["NECRON","REANIMATION"],M:4,T:4,W:18,P:180,
+   wpn:[{name:"Gauss Reaper",r:'6"',A:4,S:4,d:"2/4"},{name:"Rifle Butt",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Reanimation Protocols [NECRON] — po otrzymaniu dmg (model nie zostaje zdjęty), rzuć K6: 3+: leczy K3; jeśli ma runę REANIMATION: leczy K6 zamiast K3 ; 1×/runda",
+   ab:["Relentless March D [NECRON] — +1 Move do końca aktywacji",
+       "Gauss Volley D [REANIMATION] — +1 Attack (dystans) do końca aktywacji",
+       "Living Metal T [NECRON] — leczy dokładnie 6 ran",
+       "Gauss Flare T [REANIMATION] — ataki dystansowe +1 dmg (hit i crit) do końca aktywacji"]},
+  {key:"Scarab",n:"Scarab Swarm",band:"Necrons",side:'l',tags:["NECRON","SWARM"],M:6,T:2,W:10,P:65,
+   wpn:[{name:"Feeder Mandibles",r:'1"',A:4,S:3,d:"1/2"}],
+   react:"Reanimation Protocols [NECRON] — po otrzymaniu dmg (model nie zostaje zdjęty), rzuć K6: 3+: leczy K3; jeśli ma runę REANIMATION: leczy K6 zamiast K3 ; 1×/runda",
+   ab:["Relentless March D [NECRON] — +1 Move do końca aktywacji",
+       "Swarm Surge D [SWARM] — +2 Move do końca aktywacji",
+       "Living Metal T [NECRON] — leczy dokładnie 6 ran",
+       "Scarab Infestation T [SWARM] — +1 Attack (melee) do końca aktywacji; pierwszy trafiony wróg ma -1 Attack do końca rundy"]},
+  // KOMMANDOS
+  {key:"BossNob",n:"Boss Nob",band:"Kommandos",side:'l',tags:["ORK","LEADER"],M:4,T:5,W:24,P:230,
+   wpn:[{name:"Slugga",r:'6"',A:3,S:4,d:"1/3"},{name:"Power Klaw",r:'1"',A:4,S:5,d:"3/6"}],
+   react:"Sneaky Gitz [ORK] — gdy wróg kończy Move w 3\" od tego modelu, wybierz: darmowy Move 3\" (4\" jeśli KOMMANDO, może wejść w engagement) LUB +1 Toughness do końca rundy ; 1×/runda",
+   ab:["Waaagh! Charge D [ORK] — jeśli pierwszy Move tej aktywacji kończy się w engagement: pierwszy atak melee +2 Attack do końca aktywacji",
+       "Kunnin' Plan T [ORK] — darmowy Disengage, a następnie darmowy Move",
+       "Waaagh! Kommando Strike Q [LEADER] — do 2 sojuszników w 9\": +1 Move i +1 Attack (wszystkie bronie) do końca rundy"]},
+  {key:"OrkBoy",n:"Boy",band:"Kommandos",side:'l',tags:["ORK","KOMMANDO"],M:4,T:4,W:16,P:140,
+   wpn:[{name:"Slugga",r:'6"',A:3,S:4,d:"1/3"},{name:"Choppa",r:'1"',A:4,S:4,d:"2/4"}],
+   react:"Sneaky Gitz [ORK] — gdy wróg kończy Move w 3\" od tego modelu, wybierz: darmowy Move 3\" (4\" jeśli KOMMANDO, może wejść w engagement) LUB +1 Toughness do końca rundy ; 1×/runda",
+   ab:["Waaagh! Charge D [ORK] — jeśli pierwszy Move tej aktywacji kończy się w engagement: pierwszy atak melee +2 Attack do końca aktywacji",
+       "Sneaky Stab D [KOMMANDO] — jeśli zaczyna aktywację w 3\" od wroga, poza engagement: +1 Attack (melee) do końca aktywacji",
+       "Kunnin' Plan T [ORK] — darmowy Disengage, a następnie darmowy Move"]},
+  {key:"SlashaBoy",n:"Slasha Boy",band:"Kommandos",side:'l',tags:["ORK","KOMMANDO"],M:5,T:4,W:17,P:165,
+   wpn:[{name:"Throwing Knives",r:'6"',A:3,S:4,d:"1/2"},{name:"Choppa",r:'1"',A:5,S:4,d:"2/5"}],
+   react:"Sneaky Gitz [ORK] — gdy wróg kończy Move w 3\" od tego modelu, wybierz: darmowy Move 3\" (4\" jeśli KOMMANDO, może wejść w engagement) LUB +1 Toughness do końca rundy ; 1×/runda",
+   ab:["Waaagh! Charge D [ORK] — jeśli pierwszy Move tej aktywacji kończy się w engagement: pierwszy atak melee +2 Attack do końca aktywacji",
+       "Sneaky Stab D [KOMMANDO] — jeśli zaczyna aktywację w 3\" od wroga, poza engagement: +1 Attack (melee) do końca aktywacji",
+       "Kunnin' Plan T [ORK] — darmowy Disengage, a następnie darmowy Move"]},
+  {key:"BreachaBoy",n:"Breacha Boy",band:"Kommandos",side:'l',tags:["ORK","BREACH"],M:4,T:4,W:17,P:160,
+   wpn:[{name:"Slugga",r:'6"',A:3,S:4,d:"1/3"},{name:"Breacha Ram",r:'1"',A:4,S:4,d:"3/5"}],
+   react:"Sneaky Gitz [ORK] — gdy wróg kończy Move w 3\" od tego modelu, wybierz: darmowy Move 3\" (4\" jeśli KOMMANDO, może wejść w engagement) LUB +1 Toughness do końca rundy ; 1×/runda",
+   ab:["Waaagh! Charge D [ORK] — jeśli pierwszy Move tej aktywacji kończy się w engagement: pierwszy atak melee +2 Attack do końca aktywacji",
+       "Kunnin' Plan T [ORK] — darmowy Disengage, a następnie darmowy Move",
+       "Breach and Clear T [BREACH] — jeśli wykonał Move w tej aktywacji: +1 Attack i +1 dmg (hit i crit, melee) do końca aktywacji"]},
+  {key:"BurnaBoy",n:"Burna Boy",band:"Kommandos",side:'l',tags:["ORK","BURNER"],M:4,T:4,W:16,P:165,
+   wpn:[{name:"Burna",r:'8"',A:4,S:4,d:"2/4",note:"ignore cover"},{name:"Burna (melee)",r:'1"',A:3,S:4,d:"2/3"}],
+   react:"Sneaky Gitz [ORK] — gdy wróg kończy Move w 3\" od tego modelu, wybierz: darmowy Move 3\" (4\" jeśli KOMMANDO, może wejść w engagement) LUB +1 Toughness do końca rundy ; 1×/runda",
+   ab:["Waaagh! Charge D [ORK] — jeśli pierwszy Move tej aktywacji kończy się w engagement: pierwszy atak melee +2 Attack do końca aktywacji",
+       "Burn 'Em D [BURNER] — ataki dystansowe ignorują cover celu do końca aktywacji",
+       "Kunnin' Plan T [ORK] — darmowy Disengage, a następnie darmowy Move"]},
+  {key:"DakkaBoy",n:"Dakka Boy",band:"Kommandos",side:'l',tags:["ORK","DAKKA"],M:4,T:4,W:16,P:155,
+   wpn:[{name:"Dakkagun",r:'8"',A:4,S:4,d:"1/3"},{name:"Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Sneaky Gitz [ORK] — gdy wróg kończy Move w 3\" od tego modelu, wybierz: darmowy Move 3\" (4\" jeśli KOMMANDO, może wejść w engagement) LUB +1 Toughness do końca rundy ; 1×/runda",
+   ab:["Waaagh! Charge D [ORK] — jeśli pierwszy Move tej aktywacji kończy się w engagement: pierwszy atak melee +2 Attack do końca aktywacji",
+       "Dakka Dakka D [DAKKA] — +1 Attack (dystans) do końca aktywacji",
+       "Kunnin' Plan T [ORK] — darmowy Disengage, a następnie darmowy Move"]},
+  {key:"RokitBoy",n:"Rokit Boy",band:"Kommandos",side:'l',tags:["ORK","BOMB"],M:4,T:4,W:16,P:170,
+   wpn:[{name:"Rokkit Launcha",r:'8"',A:2,S:5,d:"3/5"},{name:"Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Sneaky Gitz [ORK] — gdy wróg kończy Move w 3\" od tego modelu, wybierz: darmowy Move 3\" (4\" jeśli KOMMANDO, może wejść w engagement) LUB +1 Toughness do końca rundy ; 1×/runda",
+   ab:["Waaagh! Charge D [ORK] — jeśli pierwszy Move tej aktywacji kończy się w engagement: pierwszy atak melee +2 Attack do końca aktywacji",
+       "Kunnin' Plan T [ORK] — darmowy Disengage, a następnie darmowy Move",
+       "Rokit Blast T [BOMB] — najbliższy atak dystansowy +2 dmg (hit i crit) do końca aktywacji"]},
+  {key:"SnipaBoy",n:"Snipa Boy",band:"Kommandos",side:'l',tags:["ORK","SNIPER"],M:4,T:3,W:16,P:150,
+   wpn:[{name:"Sniper Rifle",r:'10"',A:3,S:4,d:"2/4"},{name:"Knife",r:'1"',A:2,S:4,d:"1/3"}],
+   react:"Sneaky Gitz [ORK] — gdy wróg kończy Move w 3\" od tego modelu, wybierz: darmowy Move 3\" (4\" jeśli KOMMANDO, może wejść w engagement) LUB +1 Toughness do końca rundy ; 1×/runda",
+   ab:["Waaagh! Charge D [ORK] — jeśli pierwszy Move tej aktywacji kończy się w engagement: pierwszy atak melee +2 Attack do końca aktywacji",
+       "Kunnin' Plan T [ORK] — darmowy Disengage, a następnie darmowy Move",
+       "Headshot T [SNIPER] — tylko jeśli nie wykonał Move w tej aktywacji: ataki dystansowe crits +2 dmg do końca aktywacji"]},
+  {key:"CommsBoy",n:"Comms Boy",band:"Kommandos",side:'l',tags:["ORK","COMMS"],M:4,T:4,W:16,P:150,
+   wpn:[{name:"Slugga",r:'6"',A:3,S:4,d:"1/3"},{name:"Choppa",r:'1"',A:4,S:4,d:"2/4"}],
+   react:"Sneaky Gitz [ORK] — gdy wróg kończy Move w 3\" od tego modelu, wybierz: darmowy Move 3\" (4\" jeśli KOMMANDO, może wejść w engagement) LUB +1 Toughness do końca rundy ; 1×/runda",
+   ab:["Waaagh! Charge D [ORK] — jeśli pierwszy Move tej aktywacji kończy się w engagement: pierwszy atak melee +2 Attack do końca aktywacji",
+       "Signal Boost D [COMMS] — sojusznik w 9\": jego najbliższa akcja Ataku w tej rundzie ma +1 Attack",
+       "Kunnin' Plan T [ORK] — darmowy Disengage, a następnie darmowy Move"]},
+  {key:"BombSquig",n:"Bomb Squig",band:"Kommandos",side:'l',tags:["ORK","BOMB"],M:5,T:4,W:10,P:125,
+   wpn:[{name:"Detonation",r:'1"',A:3,S:5,d:"3/6",note:"po ataku model usuwany; wszyscy w 2\" (przyjaciele i wrogowie) otrzymują K3 dmg"}],
+   react:"Sneaky Gitz [ORK] — gdy wróg kończy Move w 3\" od tego modelu, wybierz: darmowy Move 3\" (4\" jeśli KOMMANDO, może wejść w engagement) LUB +1 Toughness do końca rundy ; 1×/runda",
+   ab:["Waaagh! Charge D [ORK] — jeśli pierwszy Move tej aktywacji kończy się w engagement: pierwszy atak melee +2 Attack do końca aktywacji",
+       "Kunnin' Plan T [ORK] — darmowy Disengage, a następnie darmowy Move",
+       "Rokit Blast T [BOMB] — najbliższy atak dystansowy +2 dmg (hit i crit) do końca aktywacji",
+       "Specjalne: po ataku Detonation model jest usuwany; wszystkie modele w 2\" dostają K3 dmg"]},
+  {key:"Grot",n:"Grot",band:"Kommandos",side:'l',tags:["ORK","GROT"],M:5,T:3,W:8,P:70,
+   wpn:[{name:"Grot Blasta",r:'6"',A:2,S:2,d:"1/3"},{name:"Knife",r:'1"',A:2,S:2,d:"1/2"}],
+   react:"Sneaky Gitz [ORK] — gdy wróg kończy Move w 3\" od tego modelu, wybierz: darmowy Move 3\" (4\" jeśli KOMMANDO, może wejść w engagement) LUB +1 Toughness do końca rundy ; 1×/runda",
+   ab:["Waaagh! Charge D [ORK] — jeśli pierwszy Move tej aktywacji kończy się w engagement: pierwszy atak melee +2 Attack do końca aktywacji",
+       "Distraction D [GROT] — wybrany wróg w 3\": -1 To Hit (wszystkie ataki) do końca rundy",
+       "Kunnin' Plan T [ORK] — darmowy Disengage, a następnie darmowy Move"]},
+  // RATLINGS
+  {key:"Fixer",n:"Fixer (Leader)",band:"Ratlings",side:'p',tags:["IMPERIUM","LEADER","FIXER"],M:4,T:3,W:15,P:165,
+   wpn:[{name:"Carbine",r:'8"',A:3,S:3,d:"1/3"},{name:"Knife",r:'1"',A:3,S:3,d:"1/3"}],
+   react:"Too Small to Hit [RATLING] — cel ataku dystans. w 1\" od terenu lub sojusznika: atakujący -1 To Hit; jeśli ma runę SNEAK: -2 To Hit (zamiast -1) ; 1×/runda",
+   ab:["Jury-Rig D [FIXER] — sojusznik w 3\": -1 dmg (min.1) od każdego ataku do końca rundy",
+       "Coordinated Suppression T [RATLING] — atak dystansowy; jeśli trafi, cel i wrogowie w 2\" od celu: -1 Attack (wszystkie bronie, min.1) do końca rundy",
+       "Perfect Setup Q [LEADER] — do 2 sojuszników w 6\": +1 Attack (dystans) i +1 To Hit do końca rundy"]},
+  {key:"Sniper",n:"Sniper",band:"Ratlings",side:'p',tags:["IMPERIUM","SNIPER","RATLING"],M:4,T:3,W:12,P:140,
+   wpn:[{name:"Sniper Rifle",r:'12"',A:3,S:4,d:"2/4"},{name:"Knife",r:'1"',A:2,S:3,d:"1/3"}],
+   react:"Too Small to Hit [RATLING] — cel ataku dystans. w 1\" od terenu lub sojusznika: atakujący -1 To Hit; jeśli ma runę SNEAK: -2 To Hit (zamiast -1) ; 1×/runda",
+   ab:["Deadeye Shot D [SNIPER] — +1 To Hit (dystans) do końca aktywacji",
+       "Coordinated Suppression T [RATLING] — atak dystansowy; jeśli trafi, cel i wrogowie w 2\" od celu: -1 Attack (min.1) do końca rundy",
+       "Headshot T [SNIPER] — ataki dystansowe crits +2 dmg do końca aktywacji"]},
+  {key:"Sneak",n:"Sneak",band:"Ratlings",side:'p',tags:["IMPERIUM","SNEAK","RATLING"],M:5,T:3,W:12,P:135,
+   wpn:[{name:"Carbine",r:'8"',A:3,S:3,d:"1/3"},{name:"Knife",r:'1"',A:2,S:3,d:"1/3"}],
+   react:"Too Small to Hit [RATLING] — cel ataku dystans. w 1\" od terenu lub sojusznika: atakujący -1 To Hit; jeśli ma runę SNEAK: -2 To Hit (zamiast -1) ; 1×/runda",
+   ab:["Silent Movement D [SNEAK] — +2 Move do końca aktywacji; pierwsza akcja może być darmowy Disengage",
+       "Coordinated Suppression T [RATLING] — atak dystansowy; jeśli trafi, cel i wrogowie w 2\" od celu: -1 Attack (min.1) do końca rundy"]},
+  {key:"Raider",n:"Raider",band:"Ratlings",side:'p',tags:["IMPERIUM","RAIDER","RATLING"],M:5,T:3,W:13,P:145,
+   wpn:[{name:"Shotgun",r:'6"',A:3,S:4,d:"2/3"},{name:"Blade",r:'1"',A:3,S:3,d:"2/4"}],
+   react:"Too Small to Hit [RATLING] — cel ataku dystans. w 1\" od terenu lub sojusznika: atakujący -1 To Hit; jeśli ma runę SNEAK: -2 To Hit (zamiast -1) ; 1×/runda",
+   ab:["Break Through D [RAIDER] — jeśli pierwszy Move tej aktywacji kończy się w engagement: +1 Attack (melee) do końca aktywacji",
+       "Coordinated Suppression T [RATLING] — atak dystansowy; jeśli trafi, cel i wrogowie w 2\" od celu: -1 Attack (min.1) do końca rundy"]},
+  {key:"Hardbit",n:"Hardhit",band:"Ratlings",side:'p',tags:["IMPERIUM","RATLING"],M:4,T:3,W:14,P:150,
+   wpn:[{name:"Carbine",r:'8"',A:3,S:3,d:"1/3"},{name:"Club",r:'1"',A:4,S:4,d:"2/3"}],
+   react:"Too Small to Hit [RATLING] — cel ataku dystans. w 1\" od terenu lub sojusznika: atakujący -1 To Hit; jeśli ma runę SNEAK: -2 To Hit (zamiast -1) ; 1×/runda",
+   ab:["Coordinated Suppression T [RATLING] — atak dystansowy; jeśli trafi, cel i wrogowie w 2\" od celu: -1 Attack (min.1) do końca rundy"]},
+  {key:"Spotter",n:"Spotter",band:"Ratlings",side:'p',tags:["IMPERIUM","SPOTTER","RATLING"],M:4,T:3,W:13,P:145,
+   wpn:[{name:"Scoped Rifle",r:'10"',A:3,S:4,d:"1/2"},{name:"Knife",r:'1"',A:2,S:3,d:"1/3"}],
+   react:"Too Small to Hit [RATLING] — cel ataku dystans. w 1\" od terenu lub sojusznika: atakujący -1 To Hit; jeśli ma runę SNEAK: -2 To Hit (zamiast -1) ; 1×/runda",
+   ab:["Mark the Target D [SPOTTER] — wybrany wróg w 9\": sojusznicy ignorują jego cover przy atakach dystans. do końca rundy",
+       "Coordinated Suppression T [RATLING] — atak dystansowy; jeśli trafi, cel i wrogowie w 2\" od celu: -1 Attack (min.1) do końca rundy"]},
+  {key:"VoxThief",n:"Vox-Thief",band:"Ratlings",side:'p',tags:["IMPERIUM","VOX-THIEF","RATLING"],M:4,T:3,W:13,P:150,
+   wpn:[{name:"Carbine",r:'8"',A:3,S:3,d:"1/3"},{name:"Knife",r:'1"',A:2,S:3,d:"1/3"}],
+   react:"Too Small to Hit [RATLING] — cel ataku dystans. w 1\" od terenu lub sojusznika: atakujący -1 To Hit; jeśli ma runę SNEAK: -2 To Hit (zamiast -1) ; 1×/runda",
+   ab:["Coordinated Suppression T [RATLING] — atak dystansowy; jeśli trafi, cel i wrogowie w 2\" od celu: -1 Attack (min.1) do końca rundy",
+       "Tactical Relay T [VOX-THIEF] — sojusznik w 6\" (jeszcze nieaktywowany) wykonuje darmowy atak dystansowy"]},
+  {key:"Stashmaster",n:"Stashmaster",band:"Ratlings",side:'p',tags:["IMPERIUM","STASHMASTER","RATLING"],M:4,T:3,W:14,P:150,
+   wpn:[{name:"Shotgun",r:'6"',A:3,S:4,d:"2/3"},{name:"Knife",r:'1"',A:2,S:3,d:"1/3"}],
+   react:"Too Small to Hit [RATLING] — cel ataku dystans. w 1\" od terenu lub sojusznika: atakujący -1 To Hit; jeśli ma runę SNEAK: -2 To Hit (zamiast -1) ; 1×/runda",
+   ab:["Scavenge Supplies D [STASHMASTER] — ten model lub sojusznik w 3\": leczy K3 ran",
+       "Coordinated Suppression T [RATLING] — atak dystansowy; jeśli trafi, cel i wrogowie w 2\" od celu: -1 Attack (min.1) do końca rundy"]},
+  {key:"Ogryn",n:"Ogryn",band:"Ratlings",side:'p',tags:["IMPERIUM","OGRYN"],M:4,T:5,W:28,P:225,
+   wpn:[{name:"Ripper Gun",r:'6"',A:4,S:4,d:"2/4"},{name:"Fists",r:'1"',A:5,S:5,d:"3/5"}],
+   react:"—",
+   ab:["Hold the Line T [OGRYN] — sojusznicy w 3\": +1 Toughness do końca rundy"]},
+  {key:"Bullgryn",n:"Bullgryn",band:"Ratlings",side:'p',tags:["IMPERIUM","OGRYN","BODYGUARD"],M:4,T:5,W:30,P:260,
+   wpn:[{name:"Maul",r:'1"',A:4,S:5,d:"3/5"}],
+   react:"Slabshield Wall [BODYGUARD] — gdy sojusznik w 2\" zostaje celem ataku, ten model staje się nowym celem (wrogie kości lecą w jego staty) ; 1×/runda",
+   ab:["Hold the Line T [OGRYN] — sojusznicy w 3\": +1 Toughness do końca rundy"]},
+  {key:"Battlemutt",n:"Battlemutt",band:"Ratlings",side:'p',tags:["IMPERIUM"],M:6,T:3,W:10,P:90,
+   wpn:[{name:"Bite",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"—",
+   ab:[]},
+  // BLOOD ANGELS
+  {key:"BACpt",n:"Blood Angels Captain",band:"Blood Angels",side:'p',tags:["BLOOD ANGELS","LEADER","PLASMA"],M:5,T:4,W:24,P:240,
+   wpn:[{name:"Plasma Pistol",r:'8"',A:3,S:5,d:"2/4"},{name:"Power Sword (Mistrzowski)",r:'1"',A:5,S:5,d:"2/5"}],
+   react:"Red Thirst [BLOOD ANGELS] — gdy wróg kończy Move w 3\": +1 Attack (melee) do końca rundy/najbliższej aktywacji; jeśli ASSAULT: +2 Attack łącznie (do własnej aktywacji) ; 1×/runda",
+   ab:["Plasma Surge D [PLASMA] — +1 dmg (normal hits, dystans) do końca aktywacji",
+       "Angelic Fury T [BLOOD ANGELS] — darmowy Move +2\"; +1 Attack (melee) do końca aktywacji",
+       "Overcharge Plasma T [PLASMA] — ten model otrzymuje flat 3 dmg; w zamian +2 dmg (normal hits, dystans) do końca aktywacji",
+       "For Sanguinius Q [LEADER] — sojusznicy w 9\" (½ wartości maks 3: Q2=1, Q4=2, Q6=3): +1 Move i +1 Attack (wszystkie bronie) do końca rundy; wrogowie przy nich nie mogą Disengage"]},
+  {key:"AssaultSgt",n:"BA Assault Sergeant",band:"Blood Angels",side:'p',tags:["BLOOD ANGELS","SERGEANT","ASSAULT"],M:5,T:4,W:20,P:200,
+   wpn:[{name:"Bolt Pistol",r:'6"',A:4,S:4,d:"1/3"},{name:"Chainsword",r:'1"',A:6,S:4,d:"2/4"}],
+   react:"Red Thirst [BLOOD ANGELS] — gdy wróg kończy Move w 3\": +1 Attack (melee) do końca rundy/najbliższej aktywacji; jeśli ASSAULT: +2 Attack łącznie (do własnej aktywacji) ; 1×/runda",
+   ab:["Furious Charge D [ASSAULT] — jeśli wykonał Move w tej aktywacji: +1 Attack (melee) do końca aktywacji",
+       "Angelic Fury T [BLOOD ANGELS] — darmowy Move +2\"; +1 Attack (melee) do końca aktywacji",
+       "Coordinated Advance T [SERGEANT] — sojusznik w 6\" (jeszcze nieaktywowany) wykonuje darmowy Move lub Attack"]},
+  {key:"AssaultCS",n:"BA Assault Marine (Chainsword)",band:"Blood Angels",side:'p',tags:["BLOOD ANGELS","ASSAULT"],M:5,T:4,W:18,P:170,
+   wpn:[{name:"Bolt Pistol",r:'6"',A:3,S:4,d:"1/3"},{name:"Chainsword",r:'1"',A:5,S:4,d:"2/4"}],
+   react:"Red Thirst [BLOOD ANGELS] — gdy wróg kończy Move w 3\": +1 Attack (melee) do końca rundy/najbliższej aktywacji; jeśli ASSAULT: +2 Attack łącznie (do własnej aktywacji) ; 1×/runda",
+   ab:["Furious Charge D [ASSAULT] — jeśli wykonał Move w tej aktywacji: +1 Attack (melee) do końca aktywacji",
+       "Angelic Fury T [BLOOD ANGELS] — darmowy Move +2\"; +1 Attack (melee) do końca aktywacji"]},
+  {key:"Assault2H",n:"BA Assault Marine (2H Chainsword)",band:"Blood Angels",side:'p',tags:["BLOOD ANGELS","ASSAULT"],M:5,T:4,W:18,P:185,
+   wpn:[{name:"2H Chainsword",r:'1"',A:4,S:5,d:"3/5"}],
+   react:"Red Thirst [BLOOD ANGELS] — gdy wróg kończy Move w 3\": +1 Attack (melee) do końca rundy/najbliższej aktywacji; jeśli ASSAULT: +2 Attack łącznie (do własnej aktywacji) ; 1×/runda",
+   ab:["Furious Charge D [ASSAULT] — jeśli wykonał Move w tej aktywacji: +1 Attack (melee) do końca aktywacji",
+       "Angelic Fury T [BLOOD ANGELS] — darmowy Move +2\"; +1 Attack (melee) do końca aktywacji"]},
+  {key:"AssaultHF",n:"BA Assault Marine (Power Sword + Hand Flamer)",band:"Blood Angels",side:'p',tags:["BLOOD ANGELS","ASSAULT"],M:5,T:4,W:18,P:180,
+   wpn:[{name:"Hand Flamer",r:'8"',A:4,S:4,d:"2/4",note:"ignore cover"},{name:"Power Sword",r:'1"',A:5,S:5,d:"2/5"}],
+   react:"Red Thirst [BLOOD ANGELS] — gdy wróg kończy Move w 3\": +1 Attack (melee) do końca rundy/najbliższej aktywacji; jeśli ASSAULT: +2 Attack łącznie (do własnej aktywacji) ; 1×/runda",
+   ab:["Furious Charge D [ASSAULT] — jeśli wykonał Move w tej aktywacji: +1 Attack (melee) do końca aktywacji",
+       "Angelic Fury T [BLOOD ANGELS] — darmowy Move +2\"; +1 Attack (melee) do końca aktywacji"]},
+  {key:"AssaultRS",n:"BA Assault Marine (Relic Shield)",band:"Blood Angels",side:'p',tags:["BLOOD ANGELS","ASSAULT"],M:5,T:5,W:19,P:195,
+   wpn:[{name:"Power Sword",r:'1"',A:5,S:5,d:"2/5"}],
+   react:"Red Thirst [BLOOD ANGELS] — gdy wróg kończy Move w 3\": +1 Attack (melee) do końca rundy/najbliższej aktywacji; jeśli ASSAULT: +2 Attack łącznie (do własnej aktywacji) ; 1×/runda",
+   ab:["Furious Charge D [ASSAULT] — jeśli wykonał Move w tej aktywacji: +1 Attack (melee) do końca aktywacji",
+       "Angelic Fury T [BLOOD ANGELS] — darmowy Move +2\"; +1 Attack (melee) do końca aktywacji"]},
+  {key:"TactBolt",n:"BA Tactical Marine (Bolter)",band:"Blood Angels",side:'p',tags:["BLOOD ANGELS","TACTICAL"],M:4,T:4,W:18,P:165,
+   wpn:[{name:"Boltgun",r:'12"',A:3,S:4,d:"2/4"},{name:"Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Red Thirst [BLOOD ANGELS] — gdy wróg kończy Move w 3\": +1 Attack (melee) do końca rundy/najbliższej aktywacji; jeśli ASSAULT: +2 Attack łącznie (do własnej aktywacji) ; 1×/runda",
+   ab:["Bolter Discipline D [TACTICAL] — +1 Attack do ataków dystans. bronią typu Bolt do końca aktywacji"]},
+  {key:"TactPlasma",n:"BA Tactical Marine (Plasma)",band:"Blood Angels",side:'p',tags:["BLOOD ANGELS","PLASMA"],M:4,T:4,W:18,P:185,
+   wpn:[{name:"Plasma Gun",r:'10"',A:3,S:5,d:"2/5"},{name:"Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Red Thirst [BLOOD ANGELS] — gdy wróg kończy Move w 3\": +1 Attack (melee) do końca rundy/najbliższej aktywacji; jeśli ASSAULT: +2 Attack łącznie (do własnej aktywacji) ; 1×/runda",
+   ab:["Plasma Surge D [PLASMA] — +1 dmg (normal hits, dystans) do końca aktywacji",
+       "Overcharge Plasma T [PLASMA] — ten model otrzymuje flat 3 dmg; w zamian +2 dmg (normal hits, dystans) do końca aktywacji"]},
+  {key:"TactScanner",n:"BA Tactical Marine (Scanner)",band:"Blood Angels",side:'p',tags:["BLOOD ANGELS","TACTICAL","SCANNER"],M:4,T:4,W:18,P:170,
+   wpn:[{name:"Boltgun",r:'12"',A:3,S:4,d:"2/4"},{name:"Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Red Thirst [BLOOD ANGELS] — gdy wróg kończy Move w 3\": +1 Attack (melee) do końca rundy/najbliższej aktywacji; jeśli ASSAULT: +2 Attack łącznie (do własnej aktywacji) ; 1×/runda",
+   ab:["Bolter Discipline D [TACTICAL] — +1 Attack do ataków dystans. bronią typu Bolt do końca aktywacji",
+       "Scanner Sweep D [SCANNER] — wybrany wróg w 6\": sojusznicy ignorują jego cover przy atakach dystans. do końca rundy"]},
+  {key:"Hellblaster",n:"BA Hellblaster",band:"Blood Angels",side:'p',tags:["BLOOD ANGELS","PLASMA"],M:4,T:4,W:18,P:190,
+   wpn:[{name:"Plasma Incinerator",r:'10"',A:3,S:5,d:"2/5"}],
+   react:"Red Thirst [BLOOD ANGELS] — gdy wróg kończy Move w 3\": +1 Attack (melee) do końca rundy/najbliższej aktywacji; jeśli ASSAULT: +2 Attack łącznie (do własnej aktywacji) ; 1×/runda",
+   ab:["Plasma Surge D [PLASMA] — +1 dmg (normal hits, dystans) do końca aktywacji",
+       "Overcharge Plasma T [PLASMA] — ten model otrzymuje flat 3 dmg; w zamian +2 dmg (normal hits, dystans) do końca aktywacji"]},
+  {key:"HellblasterSgt",n:"BA Hellblaster Sergeant",band:"Blood Angels",side:'p',tags:["BLOOD ANGELS","SERGEANT","PLASMA"],M:4,T:4,W:20,P:215,
+   wpn:[{name:"Plasma Incinerator",r:'10"',A:3,S:5,d:"2/5"},{name:"Plasma Pistol",r:'8"',A:3,S:5,d:"2/4"},{name:"Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Red Thirst [BLOOD ANGELS] — gdy wróg kończy Move w 3\": +1 Attack (melee) do końca rundy/najbliższej aktywacji; jeśli ASSAULT: +2 Attack łącznie (do własnej aktywacji) ; 1×/runda",
+   ab:["Plasma Surge D [PLASMA] — +1 dmg (normal hits, dystans) do końca aktywacji",
+       "Overcharge Plasma T [PLASMA] — ten model otrzymuje flat 3 dmg; w zamian +2 dmg (normal hits, dystans) do końca aktywacji",
+       "Coordinated Advance T [SERGEANT] — sojusznik w 6\" (jeszcze nieaktywowany) wykonuje darmowy Move lub Attack"]},
+  // TYRANIDS
+  {key:"TyranidAlpha",n:"Tyranid Alpha (Wings)",band:"Tyranids",side:'l',tags:["TYRANID","LEADER","SYNAPSE","FLY"],M:7,T:4,W:22,P:245,
+   wpn:[{name:"Scything Talons",r:'1"',A:5,S:4,d:"2/5"}],
+   react:"Synaptic Override [SYNAPSE] — gdy sojusznik w 6\" z runą SYNAPSE jest celem ataku: -1 dmg (min.1) z każdego trafienia tego ataku; po ataku sojusznik wykonuje darmowy Move 2\" ; 1×/runda",
+   ab:["Synapse Pulse D [SYNAPSE] — sojusznik SWARM w zasięgu = wartości kości (D2=2\", D6=6\"): +1 Attack do jego najbliższej akcji Ataku w tej rundzie",
+       "Rending Slash T [TYRANID] — do końca aktywacji: rzuty 5 i 6 w melee tego modelu liczą się jako crits",
+       "Hive Frenzy Q [LEADER] — sojusznicy w 9\" (½ wartości maks 3: Q2=1, Q4=2, Q6=3): darmowy Move lub Attack"]},
+  {key:"Termagant",n:"Termagant (Fleshborer)",band:"Tyranids",side:'l',tags:["TYRANID","TERMAGAUNT","SWARM"],M:4,T:3,W:10,P:75,
+   wpn:[{name:"Fleshborer",r:'8"',A:3,S:3,d:"1/3"},{name:"Claws",r:'1"',A:2,S:2,d:"1/2"}],
+   react:"Synaptic Override [SYNAPSE] — gdy sojusznik w 6\" z runą SYNAPSE jest celem ataku: -1 dmg (min.1) z każdego trafienia; po ataku sojusznik wykonuje darmowy Move 2\" ; 1×/runda",
+   ab:["Skittering Swarm D [SWARM] — +2 Move do najbliższej akcji Ruchu do końca aktywacji",
+       "Living Ammunition D [TERMAGAUNT] — +1 Attack do najbliższej akcji Ataku dystans. do końca aktywacji",
+       "Fleshborer Volley T [TERMAGAUNT] — +1 dmg (normal hits, dystans) do końca aktywacji"]},
+  {key:"Hormagaunt",n:"Hormagaunt",band:"Tyranids",side:'l',tags:["TYRANID","HORMAGAUNT","SWARM"],M:6,T:3,W:10,P:85,
+   wpn:[{name:"Scything Talons",r:'1"',A:4,S:3,d:"1/3"}],
+   react:"Synaptic Override [SYNAPSE] — gdy sojusznik w 6\" z runą SYNAPSE jest celem ataku: -1 dmg (min.1) z każdego trafienia; po ataku sojusznik wykonuje darmowy Move 2\" ; 1×/runda",
+   ab:["Skittering Swarm D [SWARM] — +2 Move do najbliższej akcji Ruchu do końca aktywacji",
+       "Bounding Leap D [HORMAGAUNT] — +1 Attack do najbliższej akcji Ataku melee do końca aktywacji",
+       "Devour Prey T [HORMAGAUNT] — jeśli cel ma ≥50% max Wounds utracone: ten atak +2 dmg (hit i crit)"]},
+  {key:"Ripper",n:"Ripper Swarm",band:"Tyranids",side:'l',tags:["TYRANID","SWARM"],M:5,T:2,W:10,P:50,
+   wpn:[{name:"Ravenous Bites",r:'1"',A:3,S:3,d:"1/2"}],
+   react:"Synaptic Override [SYNAPSE] — gdy sojusznik w 6\" z runą SYNAPSE jest celem ataku: -1 dmg (min.1) z każdego trafienia; po ataku sojusznik wykonuje darmowy Move 2\" ; 1×/runda",
+   ab:["Skittering Swarm D [SWARM] — +2 Move do najbliższej akcji Ruchu do końca aktywacji",
+       "Specjalne — Swarm Instinct: jeśli w 3\" od sojusznika SYNAPSE: +1 Attack (melee, czyli atakuje 4 kośćmi)"]},
+  // GRETCHIN MOB — Da Kunnin' Gits (11 modeli)
+  {key:"Runtherd",n:"Runtherd (Szef Bandy)",band:"Gretchin Mob",side:'l',tags:["GRETCHIN MOB","LEADER","RUNTHERD"],M:4,T:4,W:22,P:190,
+   wpn:[{name:"Slugga",r:'6"',A:3,S:3,d:"1/3"},{name:"Grabba Stikk",r:'2"',A:4,S:4,d:"2/4"}],
+   react:"Run Fer It [GRETCHIN MOB] — gdy ten model zostanie zaatakowany i przeżyje: darmowy Move 3\" w kierunku oddalającym od wroga; jeśli w 6\" jest Runtherd: Move 4\" zamiast 3\"",
+   ab:["Whip 'Em! D [RUNTHERD] — wybrany Grot w 6\": darmowy Attack (melee lub dystans); nie może użyć Reaction w tej rundzie",
+       "Scrap Lootin' T [RUNTHERD] — jeśli w 1\" od objective: leczy K3 ran LUB +1 Attack (melee) do końca aktywacji",
+       "Overwhelming Numbers Q [RUNTHERD] — do 3 Grotów w 6\": +1 Move i +1 Attack; wrogowie przy nich nie mogą Disengage do końca rundy"]},
+  {key:"GretchGrenade",n:"Gretchin (Grenadier)",band:"Gretchin Mob",side:'l',tags:["GRETCHIN MOB","GRETCHIN","GRENADIER"],M:5,T:3,W:12,P:95,
+   wpn:[{name:"Grenade",r:'6"',A:2,S:4,d:"2/4"},{name:"Knife",r:'1"',A:2,S:2,d:"1/2"}],
+   react:"Run Fer It [GRETCHIN MOB] — gdy ten model zostanie zaatakowany i przeżyje: darmowy Move 3\" w kierunku oddalającym od wroga; jeśli w 6\" jest Runtherd: Move 4\" zamiast 3\"",
+   ab:["Panik! D [GRETCHIN] — +2 Move do końca aktywacji; -1 Attack (wszystkie bronie, min.1) do końca aktywacji",
+       "Grenade Toss T [GRENADIER] — wybierz wroga w 6\"; rzuć K6 za cel i za każdy model w 2\" od niego — na 4+: 3 dmg (flat)"]},
+  {key:"GretchShotgun",n:"Gretchin (Shotgun)",band:"Gretchin Mob",side:'l',tags:["GRETCHIN MOB","GRETCHIN","SHOOTER"],M:5,T:3,W:10,P:85,
+   wpn:[{name:"Shotgun",r:'6"',A:3,S:3,d:"2/3"},{name:"Knife",r:'1"',A:2,S:2,d:"1/2"}],
+   react:"Run Fer It [GRETCHIN MOB] — gdy ten model zostanie zaatakowany i przeżyje: darmowy Move 3\" w kierunku oddalającym od wroga; jeśli w 6\" jest Runtherd: Move 4\" zamiast 3\"",
+   ab:["Panik! D [GRETCHIN] — +2 Move do końca aktywacji; -1 Attack (wszystkie bronie, min.1) do końca aktywacji",
+       "More Dakka! D [SHOOTER] — +1 Attack do najbliższej akcji Ataku dystans. do końca aktywacji"]},
+  {key:"GretchDual",n:"Gretchin (Dual Pistols)",band:"Gretchin Mob",side:'l',tags:["GRETCHIN MOB","GRETCHIN","SHOOTER"],M:5,T:3,W:10,P:80,
+   wpn:[{name:"Dual Pistols",r:'6"',A:4,S:2,d:"1/2"},{name:"Knife",r:'1"',A:2,S:2,d:"1/2"}],
+   react:"Run Fer It [GRETCHIN MOB] — gdy ten model zostanie zaatakowany i przeżyje: darmowy Move 3\" w kierunku oddalającym od wroga; jeśli w 6\" jest Runtherd: Move 4\" zamiast 3\"",
+   ab:["Panik! D [GRETCHIN] — +2 Move do końca aktywacji; -1 Attack (wszystkie bronie, min.1) do końca aktywacji",
+       "More Dakka! D [SHOOTER] — +1 Attack do najbliższej akcji Ataku dystans. do końca aktywacji"]},
+  {key:"GretchKnife",n:"Gretchin (Pistol + Knife)",band:"Gretchin Mob",side:'l',tags:["GRETCHIN MOB","GRETCHIN"],M:5,T:3,W:8,P:75,
+   wpn:[{name:"Grot Blasta",r:'6"',A:2,S:2,d:"1/3"},{name:"Knife",r:'1"',A:3,S:3,d:"1/3"}],
+   react:"Run Fer It [GRETCHIN MOB] — gdy ten model zostanie zaatakowany i przeżyje: darmowy Move 3\" w kierunku oddalającym od wroga; jeśli w 6\" jest Runtherd: Move 4\" zamiast 3\"",
+   ab:["Panik! D [GRETCHIN] — +2 Move do końca aktywacji; -1 Attack (wszystkie bronie, min.1) do końca aktywacji"]},
+  {key:"GretchPistol",n:"Gretchin (Pistol)",band:"Gretchin Mob",side:'l',tags:["GRETCHIN MOB","GRETCHIN"],M:5,T:3,W:8,P:70,
+   wpn:[{name:"Grot Blasta",r:'6"',A:2,S:2,d:"1/3"},{name:"Knife",r:'1"',A:2,S:2,d:"1/2"}],
+   react:"Run Fer It [GRETCHIN MOB] — gdy ten model zostanie zaatakowany i przeżyje: darmowy Move 3\" w kierunku oddalającym od wroga; jeśli w 6\" jest Runtherd: Move 4\" zamiast 3\"",
+   ab:["Panik! D [GRETCHIN] — +2 Move do końca aktywacji; -1 Attack (wszystkie bronie, min.1) do końca aktywacji"]},
+
+  // SALAMANDERS — Strike Force Prometheus
+  {key:"SalCpt",n:"Salamander Captain (Plazma + Pięść)",band:"Salamanders",side:'p',tags:["SALAMANDERS","LEADER","CAPTAIN"],M:4,T:4,W:26,P:260,
+   wpn:[{name:"Plasma Pistol",r:'8"',A:3,S:5,d:"2/4"},{name:"Power Fist",r:'1"',A:4,S:6,d:"3/6"}],
+   react:"Promethean Resilience [SALAMANDERS] — gdy ten model jest celem ataku: -1 dmg z każdego normal hit i -1 dmg z każdego crit (min.1) z tego ataku",
+   ab:["Forgemaster Armor D [SALAMANDERS] — +1 Toughness do końca rundy",
+       "Overcharging Plasma T [CAPTAIN] — ataki Plasma Pistol +2 dmg (hit i crit) do końca aktywacji; jeśli jakikolwiek rzut na trafienie to naturalna 1: ten model otrzymuje flat 3 dmg",
+       "Unto the Anvil Q [LEADER] — darmowy Move + darmowy Attack; sojusznicy w 6\": +1 Attack (melee) do końca rundy"]},
+  {key:"SalSgt",n:"Salamander Sergeant (Karabin)",band:"Salamanders",side:'p',tags:["SALAMANDERS","LEADER","WARRIOR"],M:4,T:4,W:24,P:240,
+   wpn:[{name:"Bolt Rifle",r:'12"',A:3,S:4,d:"2/4"},{name:"Power Weapon",r:'1"',A:5,S:5,d:"2/5"}],
+   react:"Promethean Resilience [SALAMANDERS] — gdy ten model jest celem ataku: -1 dmg z każdego normal hit i -1 dmg z każdego crit (min.1) z tego ataku",
+   ab:["Forgemaster Armor D [SALAMANDERS] — +1 Toughness do końca rundy",
+       "Close-Quarters Fury D [WARRIOR] — +1 Attack (melee) do końca aktywacji",
+       "Unto the Anvil Q [LEADER] — darmowy Move + darmowy Attack; sojusznicy w 6\": +1 Attack (melee) do końca rundy"]},
+  {key:"SalHeavy",n:"Salamander Heavy Bolter",band:"Salamanders",side:'p',tags:["SALAMANDERS","HEAVY"],M:4,T:4,W:18,P:195,
+   wpn:[{name:"Heavy Bolter",r:'12"',A:4,S:5,d:"2/5"},{name:"Rifle Butt",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Promethean Resilience [SALAMANDERS] — gdy ten model jest celem ataku: -1 dmg z każdego normal hit i -1 dmg z każdego crit (min.1) z tego ataku",
+   ab:["Forgemaster Armor D [SALAMANDERS] — +1 Toughness do końca rundy",
+       "Heavy Stance D [HEAVY] — +1 Attack do Heavy Boltera do końca aktywacji; ten model nie może wykonać Move w tej aktywacji",
+       "Hellfire Shells T [HEAVY] — najbliższy atak Heavy Bolterem: +1 dmg (normal hits) i ignoruje cover"]},
+  {key:"SalSniper",n:"Salamander Sniper",band:"Salamanders",side:'p',tags:["SALAMANDERS","SNIPER"],M:4,T:4,W:18,P:190,
+   wpn:[{name:"Sniper Rifle",r:'16"',A:1,S:4,d:"3/5"},{name:"Combat Knife",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Promethean Resilience [SALAMANDERS] — gdy ten model jest celem ataku: -1 dmg z każdego normal hit i -1 dmg z każdego crit (min.1) z tego ataku",
+   ab:["Forgemaster Armor D [SALAMANDERS] — +1 Toughness do końca rundy",
+       "Patient Hunter D [SNIPER] — jeśli nie wykonał Move w tej aktywacji: +1 Attack do Sniper Rifle do końca aktywacji",
+       "Deadly Shot T [SNIPER] — najbliższy atak dystansowy: +2 dmg na crit"]},
+  {key:"SalInfernus",n:"Salamander Infernus Marine",band:"Salamanders",side:'p',tags:["SALAMANDERS","INFERNUS"],M:4,T:4,W:18,P:175,
+   wpn:[{name:"Pyreblaster",r:'8"',A:4,S:4,d:"2/4"},{name:"Combat Blade",r:'1"',A:3,S:4,d:"1/3"}],
+   react:"Promethean Resilience [SALAMANDERS] — gdy ten model jest celem ataku: -1 dmg z każdego normal hit i -1 dmg z każdego crit (min.1) z tego ataku",
+   ab:["Forgemaster Armor D [SALAMANDERS] — +1 Toughness do końca rundy",
+       "Purging Flames D [INFERNUS] — +1 Attack do Pyreblaster do końca aktywacji",
+       "Torrent of Fire T [INFERNUS] — wybierz wroga w 6\"; rzuć K6: na 2+ dmg = ½ wartości kości (T2=1, T4=2, T6=3); na 6: AOE 2\" wokół celu"]},
+  {key:"SalGrenadier",n:"Salamander Grenadier",band:"Salamanders",side:'p',tags:["SALAMANDERS","GRENADIER","WARRIOR"],M:5,T:4,W:18,P:180,
+   wpn:[{name:"Bolt Pistol",r:'6"',A:3,S:4,d:"1/3"},{name:"Chainsword",r:'1"',A:5,S:4,d:"2/4"}],
+   react:"Promethean Resilience [SALAMANDERS] — gdy ten model jest celem ataku: -1 dmg z każdego normal hit i -1 dmg z każdego crit (min.1) z tego ataku",
+   ab:["Forgemaster Armor D [SALAMANDERS] — +1 Toughness do końca rundy",
+       "Close-Quarters Fury D [WARRIOR] — +1 Attack (melee) do końca aktywacji",
+       "Krak Grenade T [GRENADIER] — wybierz wroga w 6\"; rzuć K6: 2-5: 4 dmg (flat); 6: 8 dmg (flat)"]},
+  {key:"SalAssault",n:"Salamander Assault Intercessor",band:"Salamanders",side:'p',tags:["SALAMANDERS","WARRIOR"],M:5,T:4,W:18,P:170,
+   wpn:[{name:"Heavy Bolt Pistol",r:'6"',A:3,S:4,d:"2/4"},{name:"Chainsword",r:'1"',A:5,S:4,d:"2/4"}],
+   react:"Promethean Resilience [SALAMANDERS] — gdy ten model jest celem ataku: -1 dmg z każdego normal hit i -1 dmg z każdego crit (min.1) z tego ataku",
+   ab:["Forgemaster Armor D [SALAMANDERS] — +1 Toughness do końca rundy",
+       "Close-Quarters Fury D [WARRIOR] — +1 Attack (melee) do końca aktywacji"]}
+];
+
+const DB_BY_KEY = {};
+DB.forEach(f => DB_BY_KEY[f.key] = f);
+const BANDS = [...new Set(DB.map(f => f.band))];
+
+// Kolory band — zgodne z lore WH40k
+const BAND_COLORS = {
+  "Phobos Strike Team": { main:'#3a6ea8', dark:'#0f1f30', label:'Phobos (granat)' },       // Space Marines steel blue
+  "Legionaries":        { main:'#8a1f1f', dark:'#2a0a0a', label:'Legionaries (krwista czerwień)' }, // Khorne red
+  "Nemesis Claw":       { main:'#5a2d82', dark:'#1c0e2a', label:'Nemesis Claw (fiolet)' },  // Slaanesh/Chaos purple
+  "Necrons":            { main:'#3ddc97', dark:'#0e2a20', label:'Necrons (zielony metal)' }, // Necron green
+  "Kommandos":          { main:'#5a7a1f', dark:'#1c2608', label:'Kommandos (orkowa zieleń)' }, // Ork green
+  "Ratlings":           { main:'#8a6a2f', dark:'#2a200c', label:'Ratlings (khaki)' },        // Astra Militarum khaki
+  "Blood Angels":       { main:'#c41e1e', dark:'#3a0808', label:'Blood Angels (szkarłat)' },  // Blood Angels red
+  "Tyranids":           { main:'#9a2d6e', dark:'#2e0e22', label:'Tyranids (fiolet/róż)' },    // Hive Fleet purple/pink
+  "Gretchin Mob":       { main:'#7a8a3a', dark:'#242a10', label:'Gretchin Mob (oliwka)' },    // Grot drab green
+  "Salamanders":        { main:'#1e7a4a', dark:'#0a2418', label:'Salamanders (zieleń+pomarańcz)' } // Salamanders green
+};
+function getBandColor(band){
+  return BAND_COLORS[band] || { main:'#888888', dark:'#222222', label:band };
+}
+function getModelColor(m){
+  const db = getDB(m);
+  if(db) return getBandColor(db.band);
+  // fallback by side if fighter unknown
+  return m.s==='p' ? BAND_COLORS["Phobos Strike Team"] : BAND_COLORS["Legionaries"];
+}
+const SHORT_TO_KEY = {Capt:'PhobosCpt',Helix:'InfHelix',Mark:'IncMark',Sab:'InfSab',Reiv:'ReiverSgt',Champ:'AspChamp',Butch:'Butcher',Anoin:'Anointed',HGun:'LegHvyCC',Shriv:'Shrivetalon'};
+
+function getDB(m) {
+  if (m.fk && DB_BY_KEY[m.fk]) return DB_BY_KEY[m.fk];
+  if (SHORT_TO_KEY[m.n]) return DB_BY_KEY[SHORT_TO_KEY[m.n]];
+  return null;
+}
+
+// ═══════════════════════════════════════════════
+// CANVAS SETUP
+// ═══════════════════════════════════════════════
+const CV = document.getElementById('cv');
+const G = CV.getContext('2d');
+const IN = 36;
+CV.width  = 30 * IN; // 1080px — JSON y axis horizontal
+CV.height = 22 * IN; // 792px  — JSON x axis vertical
+const W = CV.width, H = CV.height;
+const TH = 0.25, WTH = 0.5;
+
+// Transforms: JSON (x,y) ↔ canvas (cx,cy)
+// Canvas X = JSON y * IN, Canvas Y = JSON x * IN
+function jToC(jx, jy) { return { cx: jy * IN, cy: jx * IN }; }
+function cToJ(cx, cy) { return { jx: cy / IN, jy: cx / IN }; }
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let level = 0, tool = 'move', terrain = [], objectives = [];
+let models = [
+  {id:1,s:'p',n:'Capt', fk:'PhobosCpt', x:3.25, y:23.25,lv:0,hp:28},
+  {id:2,s:'p',n:'Helix',fk:'InfHelix',  x:19.75,y:23,   lv:0,hp:16},
+  {id:3,s:'p',n:'Mark', fk:'IncMark',   x:2,    y:23,   lv:0,hp:16},
+  {id:4,s:'p',n:'Sab',  fk:'InfSab',    x:21,   y:23,   lv:0,hp:16},
+  {id:5,s:'p',n:'Reiv', fk:'ReiverSgt', x:1,    y:23.5, lv:0,hp:19},
+  {id:6,s:'l',n:'Champ',fk:'AspChamp',  x:16.25,y:4,    lv:0,hp:22},
+  {id:7,s:'l',n:'Butch',fk:'Butcher',   x:6.25, y:4,    lv:0,hp:20},
+  {id:8,s:'l',n:'Anoin',fk:'Anointed',  x:18.75,y:4,    lv:0,hp:20},
+  {id:9,s:'l',n:'HGun', fk:'LegHvyCC',  x:5,    y:4,    lv:0,hp:18},
+  {id:10,s:'l',n:'Shriv',fk:'Shrivetalon',x:17.5,y:4,   lv:0,hp:16}
+];
+let nid=11, ntid=100, sel=null, losA=null, rangeA=null;
+let drag=false, off={x:0,y:0}, mouse={x:0,y:0}, prevRot=0, pendingF=null;
+
+function snap(v,s=0.25){return Math.round(v/s)*s;}
+function sts(t){document.getElementById('statusBar').innerHTML=t;}
+
+// ═══════════════════════════════════════════════
+// TERRAIN SHAPES
+// ═══════════════════════════════════════════════
+const SD={
+  hw:{los:true, base:[[0,0,3,WTH]], label:'Heavy Wall'},
+  lw:{los:false,base:[[0,0,3,WTH]], label:'Light Wall'},
+  v1:{los:true, base:[[0,0,6,TH],[0,0,TH,8],[6-TH,0,TH,8],[0,8-TH,6,TH]], label:'Stronghold V1'},
+  v2:{los:true, base:[[0,0,8,TH],[0,0,TH,8],[8-TH,0,TH,8],[0,8-TH,8,TH]], label:'Stronghold V2'},
+  b1:{los:true, base:[[0,0,6,TH],[0,0,TH,4]], label:'Bastion B1'},
+  b2:{los:true, base:[[0,0,4,TH],[0,0,TH,2]], label:'Bastion B2'},
+  b3:{los:true, base:[[0,0,6,TH],[6-TH,0,TH,4]], label:'Bastion B3'},
+  b4:{los:true, base:[[0,0,4,TH],[4-TH,0,TH,2]], label:'Bastion B4'},
+  rb:{los:false,base:[], label:'Rubble'},
+  fs:{los:false,base:[[0,0,1.5,2.5]], label:'Fire Step'}
+};
+
+function rotRects(rects,r){
+  let res=rects.map(([dx,dy,w,h])=>({dx,dy,w,h}));
+  for(let i=0;i<r;i++){
+    let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+    res.forEach(({dx,dy,w,h})=>{x0=Math.min(x0,dx);y0=Math.min(y0,dy);x1=Math.max(x1,dx+w);y1=Math.max(y1,dy+h);});
+    const bh=y1-y0;
+    res=res.map(({dx,dy,w,h})=>({dx:bh-(dy-y0)-h,dy:dx-x0,w:h,h:w}));
+  }
+  return res;
+}
+function buildRects(type,ox,oy,rot){
+  const d=SD[type];if(!d||!d.base.length)return[];
+  return rotRects(d.base,rot).map(({dx,dy,w,h})=>({x:ox+dx,y:oy+dy,w,h}));
+}
+function rotatePt(px,py,r,bw,bh){
+  for(let i=0;i<r;i++){const nx=bh-py,ny=px;[bw,bh]=[bh,bw];px=nx;py=ny;}
+  return{x:px,y:py};
+}
+// Convert JSON rects → canvas rects (swap axes)
+function cR(rects){return rects.map(r=>({cx:r.y*IN,cy:r.x*IN,cw:r.h*IN,ch:r.w*IN}));}
+
+// ═══════════════════════════════════════════════
+// LEVEL ZONES
+// ═══════════════════════════════════════════════
+function zonePts(type,ox,oy,rot,lvl){
+  let pts=null;
+  if(type==='v1'&&lvl===1) pts=[{x:0,y:2},{x:6,y:6},{x:6,y:0},{x:0,y:0}].map(p=>{const r=rotatePt(p.x,p.y,rot,6,8);return{jx:ox+r.x,jy:oy+r.y};});
+  else if(type==='v2'&&lvl===1) pts=[{x:0,y:3.6},{x:8,y:4.1},{x:8,y:0},{x:0,y:0}].map(p=>{const r=rotatePt(p.x,p.y,rot,8,8);return{jx:ox+r.x,jy:oy+r.y};});
+  else if(type==='v2'&&lvl===2) pts=[{x:0,y:0},{x:0,y:2},{x:4,y:0}].map(p=>{const r=rotatePt(p.x,p.y,rot,8,8);return{jx:ox+r.x,jy:oy+r.y};});
+  else if(type==='b1'&&lvl===1) pts=[{x:0,y:3},{x:4.5,y:0},{x:0,y:0}].map(p=>{const r=rotatePt(p.x,p.y,rot,6,4);return{jx:ox+r.x,jy:oy+r.y};});
+  else if(type==='b3'&&lvl===1) pts=[{x:6,y:3},{x:1.5,y:0},{x:6,y:0}].map(p=>{const r=rotatePt(p.x,p.y,rot,6,4);return{jx:ox+r.x,jy:oy+r.y};});
+  if(!pts)return null;
+  return pts.map(p=>jToC(p.jx,p.jy));
+}
+function ptInPoly(cx,cy,poly){
+  let inside=false;
+  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+    const xi=poly[i].cx,yi=poly[i].cy,xj=poly[j].cx,yj=poly[j].cy;
+    if(((yi>cy)!==(yj>cy))&&(cx<(xj-xi)*(cy-yi)/(yj-yi)+xi))inside=!inside;
+  }
+  return inside;
+}
+function canPlace(cx,cy,lv){
+  if(lv===0)return true;
+  for(const t of terrain){const p=zonePts(t.type,t.ox,t.oy,t.rot||0,lv);if(p&&ptInPoly(cx,cy,p))return true;}
+  return false;
+}
+
+// ═══════════════════════════════════════════════
+// DOORS & LOS
+// ═══════════════════════════════════════════════
+const DOORS={
+  v1:[{ax:3.5,ay:0,bx:5,by:0}],
+  v2:[{ax:3.25,ay:0,bx:4.75,by:0}],
+  b1:[{ax:1,ay:0,bx:2.5,by:0}],
+  b3:[{ax:6,ay:1,bx:6,by:2.5}]
+};
+// t.doorsOpen[i] = bool — domyślnie drzwi są otwarte (nie blokują LoS/ruchu)
+function getDoorStates(t){
+  const defs=DOORS[t.type];
+  if(!defs)return[];
+  if(!t.doorsOpen)t.doorsOpen=defs.map(()=>true);
+  while(t.doorsOpen.length<defs.length)t.doorsOpen.push(true);
+  return t.doorsOpen;
+}
+function getDoors(type,ox,oy,rot){
+  const defs=DOORS[type];if(!defs)return[];
+  const d=SD[type];if(!d)return[];
+  let bw=0,bh=0;d.base.forEach(([dx,dy,w,h])=>{bw=Math.max(bw,dx+w);bh=Math.max(bh,dy+h);});
+  return defs.map(({ax,ay,bx,by},i)=>{
+    const ra=rotatePt(ax,ay,rot,bw,bh),rb=rotatePt(bx,by,rot,bw,bh);
+    const ca=jToC(ox+ra.x,oy+ra.y),cb=jToC(ox+rb.x,oy+rb.y);
+    return{ax:ca.cx,ay:ca.cy,bx:cb.cx,by:cb.cy,idx:i};
+  });
+}
+// Drzwi danego elementu terenu z aktualnym stanem open/closed
+function getDoorsWithState(t){
+  const rot=t.rot||0;
+  const doors=getDoors(t.type,t.ox,t.oy,rot);
+  const states=getDoorStates(t);
+  return doors.map(d=>({...d,open:states[d.idx]!==false}));
+}
+function allSegs(){
+  const s=[];
+  for(const t of terrain){
+    if(!SD[t.type]?.los)continue;
+    const rot=t.rot||0,doors=getDoorsWithState(t).filter(d=>!d.open); // tylko zamknięte drzwi blokują LoS
+    for(const r of cR(t.rects||buildRects(t.type,t.ox,t.oy,rot))){
+      const{cx,cy,cw,ch}=r;
+      const edges=[[cx,cy,cx+cw,cy],[cx+cw,cy,cx+cw,cy+ch],[cx+cw,cy+ch,cx,cy+ch],[cx,cy+ch,cx,cy]];
+      for(const[x1,y1,x2,y2]of edges){
+        // Sprawdź czy ta krawędź ma OTWARTE drzwi (wycinamy przerwę tylko dla otwartych)
+        const openDoors=getDoorsWithState(t).filter(d=>d.open);
+        let doorFound=false;
+        for(const d of openDoors){
+          const el=Math.hypot(x2-x1,y2-y1);if(el<0.01)continue;
+          const ex=(x2-x1)/el,ey=(y2-y1)/el;
+          const pA=Math.abs((d.ax-x1)*ey-(d.ay-y1)*ex),pB=Math.abs((d.bx-x1)*ey-(d.by-y1)*ex);
+          if(pA>5||pB>5)continue;
+          const ta=((d.ax-x1)*ex+(d.ay-y1)*ey)/el,tb=((d.bx-x1)*ex+(d.by-y1)*ey)/el;
+          const t0=Math.max(0,Math.min(ta,tb)),t1=Math.min(1,Math.max(ta,tb));
+          if(t1<=t0)continue;
+          doorFound=true;
+          if(t0>0.01)s.push([x1,y1,x1+(x2-x1)*t0,y1+(y2-y1)*t0]);
+          if(t1<0.99)s.push([x1+(x2-x1)*t1,y1+(y2-y1)*t1,x2,y2]);
+          break;
+        }
+        if(!doorFound)s.push([x1,y1,x2,y2]);
+      }
+    }
+  }
+  return s;
+}
+function segX(ax,ay,bx,by,cx,cy,dx,dy){
+  const d1x=bx-ax,d1y=by-ay,d2x=dx-cx,d2y=dy-cy,cr=d1x*d2y-d1y*d2x;
+  if(Math.abs(cr)<0.001)return false;
+  const tv=((cx-ax)*d2y-(cy-ay)*d2x)/cr,uv=((cx-ax)*d1y-(cy-ay)*d1x)/cr;
+  return tv>0.001&&tv<0.999&&uv>0.001&&uv<0.999;
+}
+function hasLoS(ax,ay,bx,by){for(const[x1,y1,x2,y2]of allSegs())if(segX(ax,ay,bx,by,x1,y1,x2,y2))return false;return true;}
+
+// ═══════════════════════════════════════════════
+// HIT DETECTION
+// ═══════════════════════════════════════════════
+function modelAt(cx,cy){return models.find(m=>{const p=jToC(m.x,m.y);return Math.hypot(cx-p.cx,cy-p.cy)<17;});}
+function objAt(cx,cy){return objectives.find(o=>{const p=jToC(o.x,o.y);return Math.hypot(cx-p.cx,cy-p.cy)<17;});}
+function terrainAt(cx,cy){
+  for(let i=terrain.length-1;i>=0;i--){
+    const t=terrain[i],rot=t.rot||0;
+    if(t.type==='rb'){
+      const horiz=(rot%2===0),bh=horiz?3:2,bw=horiz?2:3;
+      const{cx:tx,cy:ty}=jToC(t.ox,t.oy);
+      if(cx>=tx&&cx<=tx+bh*IN&&cy>=ty&&cy<=ty+bw*IN)return t;continue;
+    }
+    for(const r of cR(t.rects||buildRects(t.type,t.ox,t.oy,rot)))
+      if(cx>=r.cx&&cx<=r.cx+r.cw&&cy>=r.cy&&cy<=r.cy+r.ch)return t;
+  }
+  return null;
+}
+
+// Znajdź drzwi pod kursorem: zwraca {terrain, doorIdx} lub null
+function doorAt(cx,cy){
+  const TOL=13; // px tolerancji dotyku
+  for(let i=terrain.length-1;i>=0;i--){
+    const t=terrain[i];
+    if((t.level||0)!==level)continue; // drzwi klikalne tylko na aktywnym poziomie
+    const doors=getDoorsWithState(t);
+    for(const d of doors){
+      // odległość punktu od odcinka
+      const dx=d.bx-d.ax,dy=d.by-d.ay;
+      const len2=dx*dx+dy*dy;
+      let tt=len2>0?((cx-d.ax)*dx+(cy-d.ay)*dy)/len2:0;
+      tt=Math.max(0,Math.min(1,tt));
+      const px=d.ax+tt*dx,py=d.ay+tt*dy;
+      if(Math.hypot(cx-px,cy-py)<=TOL)return{terrain:t,doorIdx:d.idx};
+    }
+  }
+  return null;
+}
+
+// ═══════════════════════════════════════════════
+// DRAWING
+// ═══════════════════════════════════════════════
+function la(lv){if(lv===level)return 1;return lv<level?0.2:0;}
+function ma(lv){return lv===level?1:0.35;}
+
+function dpoly(pts,fill,stroke,dash,a=1){
+  if(!pts||pts.length<2)return;
+  G.globalAlpha=a;G.beginPath();G.moveTo(pts[0].cx,pts[0].cy);
+  for(let i=1;i<pts.length;i++)G.lineTo(pts[i].cx,pts[i].cy);
+  G.closePath();G.fillStyle=fill;G.fill();
+  if(stroke){G.strokeStyle=stroke;G.lineWidth=1;if(dash)G.setLineDash(dash);G.stroke();G.setLineDash([]);}
+  G.globalAlpha=1;
+}
+
+function drawTItem(t){
+  const a=la(t.level||0);if(a<=0)return;
+  const isSel=sel&&sel._type==='terrain'&&sel.id===t.id;
+  const rot=t.rot||0,type=t.type;
+  if(type==='rb'){
+    G.globalAlpha=a;
+    const horiz=(rot%2===0),cols=horiz?4:2,rows=horiz?2:4;
+    const bh=horiz?3:2,bw=horiz?2:3;
+    const cw=(bh*IN)/cols,ch=(bw*IN)/rows;
+    const{cx:ox,cy:oy}=jToC(t.ox,t.oy);
+    const r=Math.min(cw,ch)*0.35;
+    if(isSel){G.strokeStyle='#f0b840';G.lineWidth=1.5;G.setLineDash([2,2]);G.strokeRect(ox,oy,bh*IN,bw*IN);G.setLineDash([]);}
+    for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){
+      G.beginPath();G.arc(ox+cw*col+cw/2,oy+ch*row+ch/2,r,0,Math.PI*2);
+      G.fillStyle='#505060';G.strokeStyle='#7070a0';G.lineWidth=0.75;G.fill();G.stroke();
+    }
+    G.globalAlpha=1;return;
+  }
+  const rects=cR(t.rects||buildRects(type,t.ox,t.oy,rot));
+  let fc='#4a4a5a',sc='#6a6a8a';
+  if(type==='hw'){fc='#1a1a1a';sc='#555';}
+  else if(type==='lw'){fc='#d0d0e0';sc='#aaa';}
+  else if(type==='fs'){fc='#5a5a6a';sc='#8a8aaa';}
+  else if(['b1','b2','b3','b4'].includes(type)){fc='#4a3a2a';sc='#6a5a4a';}
+  G.globalAlpha=a;
+  for(const r of rects){
+    G.fillStyle=fc;G.strokeStyle=isSel?'#f0b840':sc;G.lineWidth=isSel?2:0.75;
+    G.fillRect(r.cx,r.cy,r.cw,r.ch);G.strokeRect(r.cx,r.cy,r.cw,r.ch);
+  }
+  G.globalAlpha=1;
+  [1,2].forEach(lvl=>{
+    const p=zonePts(type,t.ox,t.oy,rot,lvl);
+    if(p)dpoly(p,lvl===1?'rgba(170,170,220,.2)':'rgba(90,90,120,.3)',lvl===1?'#7a7aaa':'#4a4a6a',lvl===1?[4,3]:[2,2],a);
+  });
+  if(type==='fs'&&rects.length){
+    const r=rects[0];G.globalAlpha=a;
+    G.fillStyle='#aaa';G.font='bold 9px -apple-system,Arial,sans-serif';G.textAlign='center';
+    G.fillText('F',r.cx+r.cw/2,r.cy+r.ch/2+3);G.globalAlpha=1;
+  }
+  const doors=getDoorsWithState(t);
+  if(doors.length){
+    G.globalAlpha=a;G.lineCap='round';
+    doors.forEach(d=>{
+      G.strokeStyle=d.open?'#50c878':'#e05050';
+      G.lineWidth=3;
+      G.beginPath();G.moveTo(d.ax,d.ay);G.lineTo(d.bx,d.by);G.stroke();
+      G.fillStyle=d.open?'#50c878':'#e05050';
+      G.font='bold 8px -apple-system,Arial,sans-serif';G.textAlign='center';
+      G.fillText(d.open?'O':'X',(d.ax+d.bx)/2,(d.ay+d.by)/2-4);
+    });
+    G.lineCap='butt';G.globalAlpha=1;
+  }
+}
+
+function drawPrev(){
+  if(!SD[tool]||level>0)return;
+  const{jx,jy}=cToJ(mouse.x,mouse.y);
+  const fakeT={type:tool,ox:snap(jx),oy:snap(jy),rot:prevRot,level:0,rects:buildRects(tool,snap(jx),snap(jy),prevRot)};
+  G.globalAlpha=0.4;drawTItem(fakeT);G.globalAlpha=1;
+}
+
+function drawGrid(){
+  G.strokeStyle='rgba(70,70,100,.3)';G.lineWidth=0.5;
+  for(let x=0;x<=W;x+=IN){G.beginPath();G.moveTo(x,0);G.lineTo(x,H);G.stroke();}
+  for(let y=0;y<=H;y+=IN){G.beginPath();G.moveTo(0,y);G.lineTo(W,y);G.stroke();}
+  G.strokeStyle='rgba(110,110,160,.45)';G.lineWidth=1;
+  for(let x=0;x<=W;x+=IN*5){G.beginPath();G.moveTo(x,0);G.lineTo(x,H);G.stroke();}
+  for(let y=0;y<=H;y+=IN*5){G.beginPath();G.moveTo(0,y);G.lineTo(W,y);G.stroke();}
+  G.font='9px "Consolas","Courier New",monospace';
+  for(let jy=0;jy<=30;jy++){
+    const cx2=jy*IN+IN/2;
+    G.fillStyle=jy%5===0?'rgba(170,170,220,.7)':'rgba(110,110,160,.35)';
+    G.textAlign='center';if(jy%5===0||jy%2===0){G.fillText('y='+jy,cx2,10);G.fillText('y='+jy,cx2,H-3);}
+  }
+  for(let jx=0;jx<=22;jx++){
+    const cy2=jx*IN+IN/2;
+    G.fillStyle=jx%5===0?'rgba(170,170,220,.7)':'rgba(110,110,160,.35)';
+    if(jx%5===0||jx%2===0){G.textAlign='right';G.fillText('x='+jx,W-3,cy2+3);G.textAlign='left';G.fillText('x='+jx,3,cy2+3);}
+  }
+}
+
+function drawZones(){
+  G.fillStyle='rgba(224,80,80,.06)';G.fillRect(0,0,4*IN,H);
+  G.fillStyle='rgba(74,158,255,.06)';G.fillRect(25*IN,0,5*IN,H);
+  G.strokeStyle='rgba(200,200,100,.18)';G.lineWidth=1.5;G.setLineDash([8,4]);
+  G.beginPath();G.moveTo(15*IN,0);G.lineTo(15*IN,H);G.stroke();G.setLineDash([]);
+  G.font='bold 10px -apple-system,Arial,sans-serif';
+  G.fillStyle='rgba(224,80,80,.5)';G.textAlign='center';G.fillText('LEGIONARIES',2*IN,H-8);
+  G.fillStyle='rgba(74,158,255,.5)';G.fillText('PHOBOS',27.5*IN,H-8);
+  const lc=['#4a9eff','#50c878','#f0b840'][level];
+  G.fillStyle=lc+'12';G.fillRect(0,0,W,H);
+  G.fillStyle=lc+'cc';G.font='bold 10px -apple-system,Arial,sans-serif';G.textAlign='right';
+  G.fillText(['Poziom 0','Poziom 1','Poziom 2'][level],W-10,H-6);
+}
+
+function drawObjs(){
+  for(const o of objectives){
+    const{cx,cy}=jToC(o.x,o.y);
+    G.globalAlpha=ma(o.lv||0);
+    G.beginPath();G.arc(cx,cy,10,0,Math.PI*2);
+    G.fillStyle='#1a3a1a';G.strokeStyle='#50c878';G.lineWidth=2;G.fill();G.stroke();
+    G.fillStyle='#50c878';G.font='bold 7px -apple-system,Arial,sans-serif';G.textAlign='center';
+    G.fillText('OBJ',cx,cy+2.5);
+    if(o.lv)badge(cx,cy,o.lv);G.globalAlpha=1;
+  }
+}
+
+function badge(cx,cy,lv){
+  const c=['#4a9eff','#50c878','#f0b840'][lv]||'#fff';
+  G.fillStyle=c;G.beginPath();G.arc(cx+10,cy-10,5,0,Math.PI*2);G.fill();
+  G.fillStyle='#000';G.font='bold 7px -apple-system,Arial,sans-serif';G.textAlign='center';G.fillText(lv,cx+10,cy-8);
+}
+
+function drawModels(){
+  for(const m of models){
+    const{cx,cy}=jToC(m.x,m.y);
+    const col=getModelColor(m);
+    const isSel=sel&&sel._type==='model'&&sel.id===m.id;
+    const isLos=losA&&losA.id===m.id;
+    const isAct=!!m.activated;
+    G.globalAlpha=ma(m.lv||0)*(isAct?0.55:1);
+    if(isSel||isLos){G.beginPath();G.arc(cx,cy,15,0,Math.PI*2);G.fillStyle='rgba(240,184,64,.2)';G.fill();}
+    G.beginPath();G.arc(cx,cy,11,0,Math.PI*2);
+    G.fillStyle=col.dark;G.fill();
+    G.strokeStyle=isSel||isLos?'#f0b840':col.main;
+    G.lineWidth=isSel||isLos?2.5:1.5;G.stroke();
+    G.fillStyle=col.main;
+    G.font='bold 8px -apple-system,Arial,sans-serif';G.textAlign='center';
+    G.fillText((m.n||'?').substring(0,5),cx,cy+3);
+    if(m.lv)badge(cx,cy,m.lv);
+    const db=getDB(m);
+    if(db&&m.hp!==undefined&&m.hp<db.W){
+      const pct=m.hp/db.W,hc=pct>.6?'#50c878':pct>.3?'#f0b840':'#e05050';
+      G.fillStyle='#111';G.fillRect(cx-11,cy+12,22,4);
+      G.fillStyle=hc;G.fillRect(cx-11,cy+12,Math.round(22*pct),4);
+      G.strokeStyle='#333';G.lineWidth=.5;G.strokeRect(cx-11,cy+12,22,4);
+    }
+    G.globalAlpha=ma(m.lv||0);
+    if(isAct){
+      // Diagonal "used" strike + checkmark badge top-left
+      G.beginPath();G.moveTo(cx-8,cy-8);G.lineTo(cx+8,cy+8);G.moveTo(cx+8,cy-8);G.lineTo(cx-8,cy+8);
+      G.strokeStyle='rgba(255,255,255,.55)';G.lineWidth=1.5;G.stroke();
+      G.beginPath();G.arc(cx-10,cy-10,5,0,Math.PI*2);
+      G.fillStyle='#555';G.fill();G.strokeStyle='#aaa';G.lineWidth=1;G.stroke();
+      G.fillStyle='#dfe';G.font='bold 8px -apple-system,Arial,sans-serif';G.textAlign='center';
+      G.fillText('✓',cx-10,cy-7.5);
+    }
+    G.globalAlpha=1;
+  }
+}
+
+function drawLoS(){
+  if(!losA)return;
+  const{cx:ax,cy:ay}=jToC(losA.x,losA.y);
+  const los=hasLoS(ax,ay,mouse.x,mouse.y);
+  G.beginPath();G.moveTo(ax,ay);G.lineTo(mouse.x,mouse.y);
+  G.strokeStyle=los?'#50c878':'#e05050';G.lineWidth=1.5;G.setLineDash([5,3]);G.stroke();G.setLineDash([]);
+}
+
+function drawRange(){
+  if(!rangeA)return;
+  const d=Math.hypot(mouse.x-rangeA.x,mouse.y-rangeA.y)/IN;
+  G.beginPath();G.moveTo(rangeA.x,rangeA.y);G.lineTo(mouse.x,mouse.y);
+  G.strokeStyle='#f0b840';G.lineWidth=1.5;G.setLineDash([5,3]);G.stroke();G.setLineDash([]);
+  const mx=(rangeA.x+mouse.x)/2,my=(rangeA.y+mouse.y)/2;
+  G.fillStyle='rgba(24,24,30,.85)';G.fillRect(mx-22,my-13,44,15);
+  G.fillStyle='#f0b840';G.font='bold 11px "Consolas","Courier New",monospace';G.textAlign='center';
+  G.fillText(d.toFixed(2)+'"',mx,my-1);
+}
+
+function drawPendingCursor(){
+  if(tool!=='placeF'||!pendingF)return;
+  const col=getBandColor(pendingF.band);
+  G.globalAlpha=0.6;
+  G.beginPath();G.arc(mouse.x,mouse.y,11,0,Math.PI*2);
+  G.fillStyle=col.dark;G.fill();
+  G.strokeStyle=col.main;G.lineWidth=2;G.stroke();
+  G.fillStyle=col.main;
+  G.font='bold 8px -apple-system,Arial,sans-serif';G.textAlign='center';
+  G.fillText(pendingF.n.substring(0,5),mouse.x,mouse.y+3);
+  G.globalAlpha=1;
+}
+
+function draw(){
+  G.clearRect(0,0,W,H);G.fillStyle='#16161c';G.fillRect(0,0,W,H);
+  drawGrid();drawZones();
+  for(const t of terrain)drawTItem(t);
+  drawObjs();drawPrev();drawPendingCursor();
+  if(tool==='los')drawLoS();
+  if(tool==='range')drawRange();
+  drawModels();
+  if(typeof scheduleSave==='function')scheduleSave();
+}
+
+// ═══════════════════════════════════════════════
+// STATS PANEL
+// ═══════════════════════════════════════════════
+function clearStatsPanel(){
+  document.getElementById('statsPanel').classList.remove('open');
+  document.getElementById('spEmpty').style.display='flex';
+  document.getElementById('spContent').style.display='none';
+}
+function closeStats(){clearStatsPanel();sel=null;draw();}
+function showStats(m){
+  const empty=document.getElementById('spEmpty'),content=document.getElementById('spContent');
+  const db=getDB(m);
+  document.getElementById('statsPanel').classList.add('open');
+  if(!db){empty.style.display='flex';content.style.display='none';return;}
+  empty.style.display='none';content.style.display='block';
+  const hp=m.hp!==undefined?m.hp:db.W;
+  const pct=hp/db.W,hc=pct>.6?'#50c878':pct>.3?'#f0b840':'#e05050';
+  const isAct=!!m.activated;
+  content.innerHTML=`
+    <div class="sp-head">
+      <div class="sp-name">${db.n}</div>
+      <div class="sp-band">${db.band}</div>
+      <div class="sp-tags">${db.tags.map(t=>`<span class="sp-tag">${t}</span>`).join('')}</div>
+    </div>
+    <div class="act-row ${isAct?'act-on':''}" onclick="toggleActivated(${m.id})">
+      <span class="act-icon">${isAct?'✓':'○'}</span>
+      <span class="act-label">${isAct?'AKTYWOWANY w tej rundzie':'Nie aktywowany'}</span>
+      <span class="act-hint">(kliknij aby przełączyć)</span>
+    </div>
+    <div class="pts-row"><span style="font-size:11px;color:var(--text2)">Koszt</span><span class="pts-val">${db.P}p</span></div>
+    <div class="sp-sec">
+      <div class="sp-sec-t">Statystyki</div>
+      <div class="stat-grid">
+        <div class="stat-box" title="MOVE — maksymalna odległość w calach jaką model może pokonać podczas akcji Ruchu">
+          <div class="stat-val">${db.M}"</div><div class="stat-lbl">MOVE</div>
+          <div class="stat-tip">Cale ruchu na akcję</div>
+        </div>
+        <div class="stat-box" title="TOUGHNESS — wytrzymałość modelu. Atakujący trafia na 3+ gdy S>T, 4+ gdy S=T, 5+ gdy S<T">
+          <div class="stat-val">${db.T}</div><div class="stat-lbl">TOUGH</div>
+          <div class="stat-tip">S&gt;T:3+ S=T:4+ S&lt;T:5+</div>
+        </div>
+        <div class="stat-box" title="WOUNDS — punkty życia modelu. Gdy spadną do 0, model jest usuwany z gry">
+          <div class="stat-val">${db.W}</div><div class="stat-lbl">WOUNDS</div>
+          <div class="stat-tip">HP — 0 = usunięty</div>
+        </div>
+        <div class="stat-box" title="PUNKTY — koszt modelu przy budowaniu bandy">
+          <div class="stat-val">${db.P}</div><div class="stat-lbl">PTS</div>
+          <div class="stat-tip">Koszt bandy</div>
+        </div>
+      </div>
+    </div>
+    <div class="sp-sec">
+      <div class="sp-sec-t">Jak atakować</div>
+      <div class="stat-tip-box">
+        <div class="stat-tip-row"><span class="tip-label">Trafienie</span><span class="tip-val">S &gt; T → 3+ &nbsp;|&nbsp; S = T → 4+ &nbsp;|&nbsp; S &lt; T → 5+</span></div>
+        <div class="stat-tip-row"><span class="tip-label">Krytyk</span><span class="tip-val">Zawsze na 6 (drugi profil dmg)</span></div>
+        <div class="stat-tip-row"><span class="tip-label">Broń</span><span class="tip-val">A=Ataki &nbsp;|&nbsp; S=Siła &nbsp;|&nbsp; dmg hit/crit</span></div>
+        <div class="stat-tip-row"><span class="tip-label">Cover</span><span class="tip-val">Trafienia zamień na 4+ (nie crits)</span></div>
+      </div>
+    </div>
+    <div class="hp-row">
+      <span class="hp-label">HP</span>
+      <div class="hp-bar-wrap"><div class="hp-bar" style="width:${pct*100}%;background:${hc}"></div></div>
+      <div class="hp-ctrl">
+        <button onclick="adjHP(${m.id},-1)">−</button>
+        <input class="hp-inp" type="number" value="${hp}" min="0" max="${db.W}" id="hpI${m.id}" onchange="setHP(${m.id},parseInt(this.value)||0)">
+        <button onclick="adjHP(${m.id},1)">+</button>
+        <span class="hp-max">/${db.W}</span>
+        <button title="Reset" onclick="setHP(${m.id},${db.W})">↺</button>
+      </div>
+    </div>
+    <div class="sp-sec">
+      <div class="sp-sec-t">Broń</div>
+      ${db.wpn.map(w=>`<div class="wpn-row"><div class="wpn-name">${w.name}</div><div class="wpn-stats">${w.r} | A${w.A} S${w.S} ${w.d}</div>${w.note?`<div class="wpn-note">${w.note}</div>`:''}</div>`).join('')}
+    </div>
+    <div class="sp-sec">
+      <div class="sp-sec-t">Reakcja</div>
+      <div class="react-text">${db.react}</div>
+    </div>
+    ${db.ab.length?`<div class="sp-sec"><div class="sp-sec-t">Abilities</div>${db.ab.map(a=>`<div class="ab-item">${a}</div>`).join('')}</div>`:''}`;
+}
+
+function adjHP(id,d){
+  const m=models.find(m=>m.id===id);if(!m)return;
+  const db=getDB(m);if(!db)return;
+  m.hp=Math.max(0,Math.min(db.W,(m.hp!==undefined?m.hp:db.W)+d));
+  showStats(m);draw();
+}
+function setHP(id,v){
+  const m=models.find(m=>m.id===id);if(!m)return;
+  const db=getDB(m);if(!db)return;
+  m.hp=Math.max(0,Math.min(db.W,v));showStats(m);draw();
+}
+function toggleActivated(id){
+  const m=models.find(m=>m.id===id);if(!m)return;
+  m.activated=!m.activated;
+  showStats(m);draw();
+}
+function resetActivations(){
+  models.forEach(m=>m.activated=false);
+  if(sel&&sel._type==='model'){const m=models.find(mm=>mm.id===sel.id);if(m)showStats(m);}
+  sts('✓ Status aktywacji wyzerowany dla wszystkich modeli (nowa runda).');
+  draw();
+}
+
+// ═══════════════════════════════════════════════
+// FIGHTER PICKER
+// ═══════════════════════════════════════════════
+let pkBand=null,pkSel=null;
+
+function openPicker(){
+  pkBand=null;pkSel=null;
+  document.getElementById('pkSearch').value='';
+  document.getElementById('pkConfBtn').disabled=true;
+  document.getElementById('pkSelName').textContent='Wybierz fightera...';
+  renderBandBtns();renderPkList();
+  document.getElementById('pickerModal').classList.add('open');
+}
+function closePicker(){document.getElementById('pickerModal').classList.remove('open');}
+
+function renderBandBtns(){
+  const c=document.getElementById('pkBands');
+  const btns=['<button class="bk-btn'+(pkBand===null?' active':'')+'" onclick="setBand(null,this)">Wszystkie</button>'];
+  BANDS.forEach(b=>{
+    const esc=b.replace(/"/g,'&quot;');
+    btns.push('<button class="bk-btn'+(pkBand===b?' active':'')+'" data-band="'+esc+'" onclick="setBandBtn(this)">'+b+'</button>');
+  });
+  c.innerHTML=btns.join('');
+}
+function setBandBtn(btn){
+  const b=btn.dataset.band||null;
+  setBand(b,btn);
+}
+function setBand(b,btn){
+  pkBand=b;
+  document.querySelectorAll('.bk-btn').forEach(el=>el.classList.remove('active'));
+  btn.classList.add('active');renderPkList();
+}
+
+function renderPkList(){
+  const s=(document.getElementById('pkSearch').value||'').toLowerCase();
+  const list=document.getElementById('pkList');
+  const fighters=DB.filter(f=>{
+    if(pkBand&&f.band!==pkBand)return false;
+    if(s&&!f.n.toLowerCase().includes(s)&&!f.band.toLowerCase().includes(s)&&!f.tags.join(' ').toLowerCase().includes(s))return false;
+    return true;
+  });
+  if(!fighters.length){list.innerHTML='<div style="padding:20px;text-align:center;color:var(--text2);font-size:11px;">Brak wyników</div>';return;}
+  const grp={};fighters.forEach(f=>{if(!grp[f.band])grp[f.band]=[];grp[f.band].push(f);});
+  let html='';
+  for(const [b,fs] of Object.entries(grp)){
+    html+=`<div class="bnd-hdr">${b}</div>`;
+    for(const f of fs){
+      const sel2=pkSel&&pkSel.key===f.key?' sel':'';
+      const dot=getBandColor(f.band).main;
+      html+=`<div class="fi-item${sel2}" data-key="${f.key}" onclick="pickFByEl(this)">
+        <div class="fi-dot" style="background:${dot}"></div>
+        <div style="flex:1;min-width:0"><div class="fi-name">${f.n}</div><div class="fi-meta">M${f.M} T${f.T} W${f.W} | ${f.tags.slice(0,3).join(', ')}</div></div>
+        <div class="fi-pts">${f.P}p</div>
+      </div>`;
+    }
+  }
+  list.innerHTML=html;
+}
+
+function pickFByEl(el){
+  const key=el.dataset.key;
+  pickF(key);
+}
+
+function pickF(key){
+  pkSel=DB_BY_KEY[key];
+  document.getElementById('pkSelName').textContent=pkSel?pkSel.n+' — '+pkSel.band+' ('+pkSel.P+'p)':'';
+  document.getElementById('pkConfBtn').disabled=!pkSel;
+  renderPkList();
+}
+
+function confirmPicker(){
+  if(!pkSel)return;
+  pendingF=pkSel;closePicker();
+  setTool('placeF');
+  sts('Kliknij na mapie aby umieścić: <b>'+pendingF.n+'</b> ('+pendingF.P+'p)');
+}
+
+// ═══════════════════════════════════════════════
+// TOOLS & LEVEL
+// ═══════════════════════════════════════════════
+const TTOOLS=['hw','lw','v1','v2','b1','b2','b3','b4','rb','fs'];
+const TIDS={hw:'bHW',lw:'bLW',v1:'bV1',v2:'bV2',b1:'bB1',b2:'bB2',b3:'bB3',b4:'bB4',rb:'bRB',fs:'bFS',move:'bMV',los:'bLOS',range:'bRNG',obj:'bOBJ'};
+
+function setTool(t){
+  tool=t;sel=null;losA=null;rangeA=null;drag=false;
+  if(t!=='placeF')pendingF=null;
+  Object.entries(TIDS).forEach(([k,id])=>{
+    const el=document.getElementById(id);if(!el)return;
+    el.className=el.className.replace(/\bon\b/,'').trim();
+    if(k===t)el.className=(el.className+' on').trim();
+  });
+  const h={move:'Dotknij i przeciągnij.',los:'Dotknij model A → B.',range:'Dotknij dwa punkty.',
+    hw:'Heavy Wall.',lw:'Light Wall.',v1:'V1 6"×8".',v2:'V2 8"×8".',
+    b1:'B1 L 6"×4".',b2:'B2 L 4"×2".',b3:'B3 ⌐ 6"×4".',b4:'B4 ⌐ 4"×2".',rb:'Rubble.',fs:'Fire Step.',
+    obj:'Dotknij mapę = dodaj Objective. Dotknij istniejący = usuń.'};
+  if(t!=='placeF')sts(h[t]||'');
+  draw();
+}
+
+function setLevel(l){
+  level=l;
+  ['bL0','bL1','bL2'].forEach((id,i)=>{
+    const el=document.getElementById(id);if(!el)return;
+    el.className=i===l?['lv0','lv1','lv2'][l]:'';
+  });
+  TTOOLS.forEach(t=>{
+    const el=document.getElementById(TIDS[t]);if(!el)return;
+    el.disabled=l>0;el.style.opacity=l>0?'0.35':'1';
+  });
+  if(l>0&&TTOOLS.includes(tool))setTool('move');
+  else draw();
+}
+
+function rotSel(){
+  if(TTOOLS.includes(tool)&&level===0){prevRot=(prevRot+1)%4;sts('Orientacja: '+prevRot*90+'°');draw();return;}
+  if(sel&&sel._type==='terrain'){
+    const t=terrain.find(t=>t.id===sel.id);
+    if(t){t.rot=(t.rot+1)%4;t.rects=buildRects(t.type,t.ox,t.oy,t.rot);draw();}
+  }
+}
+function delSel(){
+  if(!sel)return;
+  if(sel._type==='terrain')terrain=terrain.filter(t=>t.id!==sel.id);
+  else models=models.filter(m=>m.id!==sel.id);
+  sel=null;
+  clearStatsPanel();
+  draw();
+}
+function resetAll(){
+  terrain=[];objectives=[];sel=null;losA=null;rangeA=null;prevRot=0;pendingF=null;
+  models=[
+    {id:1,s:'p',n:'Capt',fk:'PhobosCpt',x:3.25,y:23.25,lv:0,hp:28},
+    {id:2,s:'p',n:'Helix',fk:'InfHelix',x:19.75,y:23,lv:0,hp:16},
+    {id:3,s:'p',n:'Mark',fk:'IncMark',x:2,y:23,lv:0,hp:16},
+    {id:4,s:'p',n:'Sab',fk:'InfSab',x:21,y:23,lv:0,hp:16},
+    {id:5,s:'p',n:'Reiv',fk:'ReiverSgt',x:1,y:23.5,lv:0,hp:19},
+    {id:6,s:'l',n:'Champ',fk:'AspChamp',x:16.25,y:4,lv:0,hp:22},
+    {id:7,s:'l',n:'Butch',fk:'Butcher',x:6.25,y:4,lv:0,hp:20},
+    {id:8,s:'l',n:'Anoin',fk:'Anointed',x:18.75,y:4,lv:0,hp:20},
+    {id:9,s:'l',n:'HGun',fk:'LegHvyCC',x:5,y:4,lv:0,hp:18},
+    {id:10,s:'l',n:'Shriv',fk:'Shrivetalon',x:17.5,y:4,lv:0,hp:16}
+  ];
+  setLevel(0);setTool('move');
+}
+
+// ═══════════════════════════════════════════════
+// EXPORT / IMPORT
+// ═══════════════════════════════════════════════
+// ── Geometry helpers ────────────────────────────────────────
+function geoRotatePt(px,py,r,bw,bh){
+  for(let i=0;i<r;i++){const nx=bh-py,ny=px;[bw,bh]=[bh,bw];px=nx;py=ny;}
+  return{x:+px.toFixed(4),y:+py.toFixed(4)};
+}
+function geoRects(type,rot){
+  const base={
+    hw:[[0,0,3,0.5]],lw:[[0,0,3,0.5]],
+    v1:[[0,0,6,0.25],[0,0,0.25,8],[5.75,0,0.25,8],[0,7.75,6,0.25]],
+    v2:[[0,0,8,0.25],[0,0,0.25,8],[7.75,0,0.25,8],[0,7.75,8,0.25]],
+    b1:[[0,0,6,0.25],[0,0,0.25,4]],
+    b2:[[0,0,4,0.25],[0,0,0.25,2]],
+    b3:[[0,0,6,0.25],[5.75,0,0.25,4]],
+    b4:[[0,0,4,0.25],[3.75,0,0.25,2]],
+    fs:[[0,0,1.5,2.5]],rb:[]
+  }[type]||[];
+  if(!base.length)return[];
+  // compute bbox
+  let bw=0,bh=0;
+  base.forEach(([x,y,w,h])=>{bw=Math.max(bw,x+w);bh=Math.max(bh,y+h);});
+  // rotate each rect
+  return base.map(([dx,dy,w,h])=>{
+    let rx=dx,ry=dy,rw=w,rh=h,cbw=bw,cbh=bh;
+    for(let i=0;i<rot;i++){
+      const ndx=cbh-ry-rh,ndy=rx,nw=rh,nh=rw;
+      [cbw,cbh]=[cbh,cbw];rx=ndx;ry=ndy;rw=nw;rh=nh;
+    }
+    return{x:+rx.toFixed(4),y:+ry.toFixed(4),w:+rw.toFixed(4),h:+rh.toFixed(4)};
+  });
+}
+function geoZones(type,rot){
+  const zones={};
+  const bb={v1:[6,8],v2:[8,8],b1:[6,4],b3:[6,4]};
+  if(!bb[type])return zones;
+  const[bw,bh]=bb[type];
+  const rp=(x,y)=>geoRotatePt(x,y,rot,bw,bh);
+  if(type==='v1'){
+    zones.lvl1=[[0,2],[6,6],[6,0],[0,0]].map(([x,y])=>rp(x,y));
+  }else if(type==='v2'){
+    zones.lvl1=[[0,3.6],[8,4.1],[8,0],[0,0]].map(([x,y])=>rp(x,y));
+    zones.lvl2=[[0,0],[0,2],[4,0]].map(([x,y])=>rp(x,y));
+  }else if(type==='b1'){
+    zones.lvl1=[[0,3],[4.5,0],[0,0]].map(([x,y])=>rp(x,y));
+  }else if(type==='b3'){
+    zones.lvl1=[[6,3],[1.5,0],[6,0]].map(([x,y])=>rp(x,y));
+  }
+  return zones;
+}
+function geoDoors(type,rot){
+  const defs={
+    v1:[{ax:3.5,ay:0,bx:5,by:0}],
+    v2:[{ax:3.25,ay:0,bx:4.75,by:0}],
+    b1:[{ax:1,ay:0,bx:2.5,by:0}],
+    b3:[{ax:6,ay:1,bx:6,by:2.5}]
+  }[type];
+  if(!defs)return[];
+  const bb={v1:[6,8],v2:[8,8],b1:[6,4],b3:[6,4]}[type];
+  const rp=(x,y)=>geoRotatePt(x,y,rot,bb[0],bb[1]);
+  return defs.map(d=>({from:rp(d.ax,d.ay),to:rp(d.bx,d.by)}));
+}
+function geoWallEndpoints(rects){
+  return rects.map(r=>{
+    const{x,y,w,h}=r;
+    if(w>=h){const my=+(y+h/2).toFixed(4);return{from:{x:+x.toFixed(4),y:my},to:{x:+(x+w).toFixed(4),y:my},orientation:'horizontal'};}
+    else{const mx=+(x+w/2).toFixed(4);return{from:{x:mx,y:+y.toFixed(4)},to:{x:mx,y:+(y+h).toFixed(4)},orientation:'vertical'};}
+  });
+}
+function geoRubble(rot){
+  const horiz=(rot%2===0);
+  return{w:horiz?3:2,h:horiz?2:3,cols:horiz?4:2,rows:horiz?2:4};
+}
+
+// Zwraca segmenty ścian (punkty końcowe) tego elementu terenu w absolutnych współrzędnych
+function buildWallSegments(t){
+  const type=t.type,rot=t.rot||0,ox=t.ox,oy=t.oy;
+  if(type==='rb'||type==='fs')return[]; // rubble i fire step nie są "ścianami"
+  const relRects=geoRects(type,rot);
+  return geoWallEndpoints(relRects).map(w=>({
+    from:{x:+(w.from.x+ox).toFixed(4),y:+(w.from.y+oy).toFixed(4)},
+    to:{x:+(w.to.x+ox).toFixed(4),y:+(w.to.y+oy).toFixed(4)},
+    orientation:w.orientation
+  }));
+}
+
+// Zwraca kształt platformy (polygon) dla danego poziomu, w absolutnych współrzędnych
+function buildPlatformShape(t,lv){
+  const type=t.type,rot=t.rot||0,ox=t.ox,oy=t.oy;
+  const relZones=geoZones(type,rot);
+  const key='lvl'+lv;
+  if(!relZones[key])return null;
+  return relZones[key].map(p=>({x:+(p.x+ox).toFixed(4),y:+(p.y+oy).toFixed(4)}));
+}
+
+function buildExportState(){
+  // Sekcje per poziom: dla każdego poziomu zbieramy ściany (z flagami LoS/ruch)
+  // i platformy (dla lvl 1/2, jeśli element terenu definiuje strefę na tym poziomie)
+  const levels=[0,1,2];
+  const terrainByLevel={};
+
+  for(const lv of levels){
+    const wallEntries=[];
+    const platformEntries=[];
+
+    for(const t of terrain){
+      const elemLevel=t.level||0;
+      // Ściany istnieją fizycznie na poziomie 0 (gdzie stoi budynek) — ale
+      // jeśli element terenu jest umieszczony na poziomie 'lv', jego ściany
+      // należą do sekcji tego poziomu.
+      if(elemLevel===lv){
+        const segs=buildWallSegments(t);
+        if(segs.length){
+          const doorsAbs=getDoorsWithState(t).map(d=>({
+            from:{x:+(d.ax/IN).toFixed(4),y:+(d.ay/IN).toFixed(4)},
+            to:{x:+(d.bx/IN).toFixed(4),y:+(d.by/IN).toFixed(4)},
+            open:d.open,
+            blocks_los: lv===0 ? !d.open : false,   // poziom 0: zamknięte drzwi blokują LoS jak ściana; poziom 1/2: nigdy nie blokują LoS
+            blocks_movement: !d.open                 // otwarte drzwi nie blokują ruchu, zamknięte blokują
+          }));
+          wallEntries.push({
+            terrain_id:t.id,
+            name:SD[t.type]?.label||t.type.toUpperCase(),
+            type:t.type,
+            position:{x:t.ox,y:t.oy},
+            rotation:(t.rot||0)*90,
+            walls: segs.map(s=>({
+              from:s.from, to:s.to, orientation:s.orientation,
+              blocks_los: lv===0,        // poziom 0: blokuje LoS; poziom 1/2: nie blokuje
+              blocks_movement: true       // ściany zawsze blokują ruch
+            })),
+            doors: doorsAbs
+          });
+        }
+      }
+
+      // Platformy (strefy lvl1/lvl2) — przypisane do sekcji poziomu który opisują,
+      // niezależnie od poziomu na którym "stoi" sam budynek (zazwyczaj 0)
+      if(lv>=1){
+        const shape=buildPlatformShape(t,lv);
+        if(shape){
+          platformEntries.push({
+            terrain_id:t.id,
+            name:SD[t.type]?.label||t.type.toUpperCase(),
+            type:t.type,
+            position:{x:t.ox,y:t.oy},
+            rotation:(t.rot||0)*90,
+            shape // polygon punktów (narożniki platformy)
+          });
+        }
+      }
+    }
+
+    terrainByLevel['level'+lv]={
+      description: lv===0
+        ? 'Poziom 0: ściany blokują LoS i ruch.'
+        : `Poziom ${lv}: ściany NIE blokują LoS, ale blokują ruch. Platformy opisują obszar na którym można umieszczać modele/objectives.`,
+      walls: wallEntries,
+      platforms: platformEntries
+    };
+  }
+
+  return {
+    version:7,
+    rules:{
+      level0:'Ściany na poziomie 0 blokują LoS i ruch',
+      level1_2:'Ściany na poziomach 1 i 2 NIE blokują LoS, ale blokują ruch',
+      doors:'Drzwi OTWARTE (open:true) nie blokują LoS ani ruchu. Drzwi ZAMKNIĘTE (open:false) blokują i LoS i ruch (na poziomie 0; na poziomach 1/2 zamknięte drzwi blokują tylko ruch)',
+      activated:'Pole "activated" przy modelu oznacza, że model już wykonał aktywację w tej rundzie. actionsLeft/reactionUsed opisują ekonomię akcji. Resetowane przyciskiem "Nowa runda".'
+    },
+    game:{round:gameState.round,wildDiceP:gameState.wildP,wildDiceL:gameState.wildL},
+    terrain:terrain.map(t=>({id:t.id,type:t.type,name:SD[t.type]?.label||t.type.toUpperCase(),ox:t.ox,oy:t.oy,rot:t.rot||0,rotation_deg:(t.rot||0)*90,level:t.level||0,doorsOpen:getDoorStates(t)})),
+    terrainByLevel,
+    models: models.map(m=>({...m, activated: !!m.activated})),
+    objectives
+  };
+}
+function exportMap(){
+  const st=buildExportState();
+  const blob=new Blob([JSON.stringify(st,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download='warcry_map.json';a.click();URL.revokeObjectURL(url);
+  sts('✓ Zapisano warcry_map.json (v7 — status aktywacji modeli)');
+}
+async function copyJsonForClaude(){
+  const text=JSON.stringify(buildExportState(),null,2);
+  try{
+    await navigator.clipboard.writeText(text);
+    sts('✓ JSON skopiowany do schowka — wklej go na czacie z Claude.');
+    return;
+  }catch(e){/* spróbuj metody zapasowej */}
+  try{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.position='fixed';ta.style.opacity='0';ta.style.top='0';
+    document.body.appendChild(ta);ta.focus();ta.select();
+    const ok=document.execCommand('copy');
+    document.body.removeChild(ta);
+    if(ok){sts('✓ JSON skopiowany do schowka — wklej go na czacie z Claude.');return;}
+  }catch(e){/* spróbuj metody zapasowej */}
+  showCopyFallback(text);
+}
+function showCopyFallback(text){
+  document.getElementById('copyJsonText').value=text;
+  document.getElementById('copyModal').style.display='block';
+  sts('⚠ Automatyczne kopiowanie zablokowane — zaznacz tekst ręcznie poniżej.');
+}
+function closeCopyFallback(){document.getElementById('copyModal').style.display='none';}
+function selectAllCopyText(){
+  const ta=document.getElementById('copyJsonText');ta.focus();ta.select();
+  try{document.execCommand('copy');sts('✓ Skopiowano.');}catch(e){}
+}
+function openImport(){document.getElementById('importPanel').style.display='block';}
+function applyImportedState(st){
+  // Compatible with version 1-7 — extra fields (geo/rules/terrainByLevel/name/rotation_deg) ignored, recomputed on export
+  terrain=(st.terrain||[]).map(t=>({
+    id:t.id, type:t.type, ox:t.ox, oy:t.oy,
+    rot:t.rot||0, level:t.level||0,
+    doorsOpen: Array.isArray(t.doorsOpen) ? t.doorsOpen.slice() : undefined,
+    rects:buildRects(t.type,t.ox,t.oy,t.rot||0)
+  }));
+  models=(st.models||[]).map(m=>({...m,lv:m.lv||0,hp:m.hp!==undefined?m.hp:(getDB(m)?.W||16),activated:!!m.activated}));
+  objectives=(st.objectives||[]).map(o=>({...o,lv:o.lv||0}));
+  ntid=Math.max(100,...terrain.map(t=>t.id+1),...objectives.map(o=>o.id+1));
+  nid=Math.max(11,...models.map(m=>m.id+1));
+  models.forEach(ensureModelFields);
+  if(st.game)gameState=Object.assign({round:1,wildP:0,wildL:0},{round:st.game.round,wildP:st.game.wildDiceP,wildL:st.game.wildDiceL});
+  return st.version||1;
+}
+function doImport(){
+  try{
+    const raw=document.getElementById('importJson').value.trim();if(!raw)return;
+    const st=JSON.parse(raw);
+    const ver=applyImportedState(st);
+    document.getElementById('importPanel').style.display='none';
+    sts(`✓ Mapa wczytana (format v${ver}).`);
+    updateGameUI();renderChecklist();gsRenderModelList();
+    draw();
+  }catch(e){sts('❌ Błąd JSON: '+e.message);}
+}
+
+// ═══════════════════════════════════════════════
+// CANVAS EVENTS
+// ═══════════════════════════════════════════════
+function pos(e){
+  const r=CV.getBoundingClientRect();
+  return{cx:(e.clientX-r.left)*(W/r.width),cy:(e.clientY-r.top)*(H/r.height)};
+}
+
+CV.addEventListener('contextmenu',e=>{
+  e.preventDefault();
+  const{cx,cy}=pos(e);const ex=objAt(cx,cy);
+  if(ex){objectives=objectives.filter(o=>o.id!==ex.id);sts('Objective usunięty.');draw();return;}
+  if(!canPlace(cx,cy,level)){sts('❌ Poza strefą poziomu '+level+'.');return;}
+  const{jx,jy}=cToJ(cx,cy);
+  objectives.push({id:ntid++,x:snap(jx),y:snap(jy),lv:level});
+  sts('Objective dodany.');draw();
+});
+
+CV.addEventListener('pointermove',e=>{
+  const{cx,cy}=pos(e);mouse={x:cx,y:cy};
+  if(drag&&sel){
+    if(sel._type==='model'){
+      const m=models.find(m=>m.id===sel.id);if(m){
+        const{jx,jy}=cToJ(cx-off.x,cy-off.y);
+        m.x=Math.max(0,Math.min(22,snap(jx)));m.y=Math.max(0,Math.min(30,snap(jy)));
+      }
+    }else if(sel._type==='terrain'){
+      const t=terrain.find(t=>t.id===sel.id);if(t){
+        const{jx,jy}=cToJ(cx-off.x,cy-off.y);
+        t.ox=Math.max(0,snap(jx));t.oy=Math.max(0,snap(jy));
+        t.rects=buildRects(t.type,t.ox,t.oy,t.rot);
+      }
+    }
+  }
+  draw();
+});
+
+CV.addEventListener('pointerdown',e=>{
+  if(e.button!==0)return;
+  const{cx,cy}=pos(e);const{jx,jy}=cToJ(cx,cy);
+  const ox=snap(jx),oy=snap(jy);
+
+  if(TTOOLS.includes(tool)&&level===0){
+    terrain.push({id:ntid++,type:tool,ox,oy,rot:prevRot,level:0,rects:buildRects(tool,ox,oy,prevRot)});
+    sts(tool.toUpperCase()+' dodany.');draw();return;
+  }
+
+  if(tool==='placeF'&&pendingF){
+    if(!canPlace(cx,cy,level)){sts('❌ Poza strefą poziomu '+level+'.');return;}
+    const f=pendingF;
+    models.push({id:nid++,s:f.side,n:f.n.replace(/[^a-zA-Z]/g,'').substring(0,5),fk:f.key,x:snap(jx),y:snap(jy),lv:level,hp:f.W});
+    sts('<b>'+f.n+'</b> dodany na poziomie '+level+'.');
+    pendingF=null;setTool('move');draw();return;
+  }
+
+  if(tool==='obj'){
+    const ex=objAt(cx,cy);
+    if(ex){objectives=objectives.filter(o=>o.id!==ex.id);sts('Objective usunięty.');draw();return;}
+    if(!canPlace(cx,cy,level)){sts('❌ Poza strefą poziomu '+level+'.');return;}
+    objectives.push({id:ntid++,x:snap(jx),y:snap(jy),lv:level});
+    sts('✓ Objective dodany. Dotknij istniejący, aby usunąć.');draw();return;
+  }
+
+  if(tool==='move'){
+    const dr=doorAt(cx,cy);
+    if(dr){
+      const states=getDoorStates(dr.terrain);
+      states[dr.doorIdx]=!states[dr.doorIdx];
+      const isOpen=states[dr.doorIdx];
+      sts((isOpen?'🟢 Drzwi OTWARTE':'🔴 Drzwi ZAMKNIĘTE')+' — '+(isOpen?'nie blokują LoS ani ruchu':'blokują LoS i ruch')+' ('+(SD[dr.terrain.type]?.label||dr.terrain.type)+')');
+      draw();return;
+    }
+    const m=modelAt(cx,cy);
+    if(m){sel={...m,_type:'model'};drag=true;const p=jToC(m.x,m.y);off={x:cx-p.cx,y:cy-p.cy};draw();return;}
+    if(level===0){const t=terrainAt(cx,cy);if(t){sel={...t,_type:'terrain'};drag=true;const p=jToC(t.ox,t.oy);off={x:cx-p.cx,y:cy-p.cy};draw();return;}}
+    sel=null;clearStatsPanel();draw();return;
+  }
+
+  if(tool==='los'){
+    const m=modelAt(cx,cy);
+    if(!losA){if(m){losA=m;sts('Kliknij cel lub rusz myszą.');}}
+    else{
+      if(m&&m.id!==losA.id){
+        const{cx:ax,cy:ay}=jToC(losA.x,losA.y),{cx:bx,cy:by}=jToC(m.x,m.y);
+        const los=hasLoS(ax,ay,bx,by),d=Math.hypot(m.x-losA.x,m.y-losA.y).toFixed(2);
+        sts((los?'<span style="color:#50c878">✓ Widzą się</span>':'<span style="color:#e05050">✗ Zablokowane</span>')+' — dystans: '+d+'"');
+        losA=null;
+      }else{losA=m||null;}
+      draw();
+    }return;
+  }
+
+  if(tool==='range'){
+    if(!rangeA){rangeA={x:cx,y:cy};sts('Kliknij drugi punkt.');}
+    else{sts('Dystans: <b>'+(Math.hypot(cx-rangeA.x,cy-rangeA.y)/IN).toFixed(2)+'"</b>');rangeA=null;draw();}
+  }
+});
+
+CV.addEventListener('pointerup',()=>{
+  if(drag&&sel&&sel._type==='model'){
+    const m=models.find(m=>m.id===sel.id);
+    if(m){
+      const{cx,cy}=jToC(m.x,m.y);const oldLv=m.lv||0;
+      if(!canPlace(cx,cy,level)){sts('⚠ '+m.n+': poza strefą poz.'+level+'. Poziom bez zmian.');m.lv=oldLv;}
+      else{m.lv=level;}
+      sts(m.n+' → x='+m.x+', y='+m.y+(m.lv!==oldLv?' [Lv '+oldLv+'→'+m.lv+']':' [Lv '+m.lv+']'));
+      draw();
+    }
+  }else if(drag&&sel&&sel._type==='terrain'){
+    const t=terrain.find(t=>t.id===sel.id);
+    if(t)sts(t.type.toUpperCase()+' → ox='+t.ox.toFixed(2)+', oy='+t.oy.toFixed(2));
+  }
+  drag=false;
+});
+
+CV.addEventListener('click',e=>{
+  if(drag)return;
+  const{cx,cy}=pos(e);const m=modelAt(cx,cy);
+  if(m){
+    if(e.shiftKey){
+      toggleActivated(m.id);
+      sel={...m,_type:'model'};
+      const fresh=models.find(mm=>mm.id===m.id);
+      sts('<b>'+m.n+'</b> — '+(fresh.activated?'oznaczony jako AKTYWOWANY':'odznaczony (nieaktywowany)')+' (Shift+klik)');
+      return;
+    }
+    sel={...m,_type:'model'};
+    const db=getDB(m);
+    sts('<b>'+(db?db.n:m.n)+'</b> x='+m.x+', y='+m.y+' [Lv '+(m.lv||0)+'] — Shift+klik: przełącz aktywację');
+    showStats(m);draw();
+  }
+});
+
+CV.addEventListener('pointerleave',()=>{drag=false;});
+CV.addEventListener('pointercancel',()=>{drag=false;});
+
+function renderLegend(){
+  const el=document.getElementById('legendBar');
+  el.innerHTML=BANDS.map(b=>{
+    const col=getBandColor(b);
+    return `<span class="legend-item"><span class="legend-dot" style="background:${col.main}"></span>${b}</span>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════
+function showTab(name){
+  ['Mapa','Checklist','Game'].forEach(n=>{
+    document.getElementById('tab'+n).classList.toggle('active',n===name);
+    document.getElementById('tabbtn'+n).classList.toggle('on',n===name);
+  });
+  if(name==='Checklist')renderChecklist();
+  if(name==='Game'){gsRenderModelList();updateGameUI();}
+}
+
+// ═══════════════════════════════════════════════
+// CHECKLIST (na podstawie warcry_checklist.txt)
+// ═══════════════════════════════════════════════
+const CHECKLIST=[
+ {t:"INIT PHASE (faza inicjatywy)",scope:"round",items:[
+   "Rzuć 6 kośćmi dla każdego gracza.",
+   "Policz układy: pojedyncze (singles) / dublety / triplety / kwarty.",
+   "Zapytaj OBU graczy o deklarację Dzikich Kości (Wild Dice).",
+   "Zastosuj modyfikacje i zaktualizuj pulę kości.",
+   "Ponownie przelicz singles.",
+   "Inicjatywa: porównaj wyłącznie singles. Remis → roll-off."]},
+ {t:"START ACTIVATION (ekonomia akcji i reakcje)",scope:"activation",items:[
+   "Weryfikacja stanu: model żyje.",
+   "Pobranie puli akcji: bazowo 2 akcje.",
+   {x:"Weryfikacja reakcji: czy model użył reakcji przed swoją aktywacją?",sub:["Jeśli TAK → pula akcji −1 (tylko 1 akcja do dyspozycji)."]},
+   "Sprawdź, czy w poprzednim podetapie użyto WAIT.",
+   "Zapisz pozycję startową: (X,Y) i poziom.",
+   "Aktualizacja licznika: Remaining = 2 − użyte − reakcje.",
+   {x:"Rygor akcji WAIT:",sub:["Action 1 = WAIT → status Waiting, aktywacja zawieszona (można wrócić z 1 akcją).","Action 2 = WAIT → status Finished, Remaining=0, koniec aktywacji na tę rundę."]},
+   "Reaction Lock: jeśli model musi zachować zdolność defensywną — zakaz 2. akcji innej niż WAIT jako pierwszej."]},
+ {t:"BEFORE ACTION (weryfikacja celu i ostrzału)",scope:"activation",items:[
+   "Zweryfikuj HP oraz Toughness celu.",
+   "Sprawdź stan zwarcia (Engagement).",
+   "Potwierdź dostępność zdolności.",
+   {x:"Weryfikacja LoS:",sub:["Ściany na poziomach 1+ NIE blokują LoS.","Platformy (podłogi) są nieprzezroczyste — blokują widok pionowy."]},
+   {x:"Zakaz strzelania w zwarcie:",sub:["Jeśli cel <1\" od sojusznika strzelca → atak dystansowy (>3\") NIEMOŻLIWY."]}]},
+ {t:"TARGET VERIFICATION v2 (krytyczna weryfikacja celu)",scope:"activation",items:[
+   "MUSISZ sprawdzić aktualne HP oraz Toughness celu.",
+   "Zweryfikuj buffy/debuffy, zdolności specjalne (np. Omni Scrambler), blokady reakcji.",
+   "Potwierdź: czy engaged i czy reakcja już wykorzystana w tej rundzie.",
+   "Uwzględnij modyfikatory obronne (redukcje dmg, hit modifiers).",
+   "ZAKAZ zakładania wartości domyślnych dla celu! ❌"]},
+ {t:"ABILITIES (zdolności)",scope:"activation",items:[
+   "Maksymalnie 1 zdolność na aktywację modelu.",
+   "Użycie zdolności NIE zużywa akcji.",
+   "Zweryfikuj koszt w kościach (Double / Triple / Quad).",
+   "Decyzja: użyć teraz vs oszczędzać na później."]},
+ {t:"ACTION EXECUTION (geometria ruchu i przeszkody)",scope:"activation",items:[
+   "Dla KAŻDEJ akcji ruchu potwierdź: dystans | pełna ścieżka | obrys terenu na właściwym poziomie | ściany | climb/drop | legalność pozycji końcowej.",
+   "Wykorzystaj geometrię makiet (np. V1) z mapy.",
+   "State Path Segments: rozbij ruch na wektory (x1,y1)→(x2,y2).",
+   "Wall Intersection Check: segment ruchu nie może przecinać ściany z pliku mapy — zakaz skrótów przez ściany!",
+   "Poziom 0: ściany lite — przejście tylko przez oznaczone drzwi, inaczej wspinaczka górą.",
+   {x:"Climb vs Drop:",sub:["Wspinaczka w górę: +3\" do dystansu poziomego.","Zeskok w dół: kosztuje 0\" ruchu poziomego."]},
+   "ZAKAZ pomijania kroków składowych! ❌",
+   "Ruch niezatwierdzony bez przejścia wszystkich testów geometrii ❌."]},
+ {t:"COMBAT RESOLUTION (rozstrzygnięcie walki)",scope:"activation",items:[
+   "Wykonaj rzut kośćmi ataku.",
+   "Zlicz trafienia zwykłe (hits) i krytyczne (crits).",
+   "Oblicz surowe obrażenia (raw damage).",
+   "Zastosuj modyfikacje (reakcje / aktywne buffy).",
+   "Potwierdź poprawność przypisania obrażeń do celu."]},
+ {t:"DAMAGE VALIDATION (weryfikacja obrażeń)",scope:"activation",items:[
+   "Uwzględnij i zsumuj wszystkie wykonane ataki.",
+   "Zweryfikuj, czy reakcja została w pełni rozliczona.",
+   "Udokumentuj HP: przed atakiem → po ataku."]},
+ {t:"END ACTIVATION CHECK (kontrola końca aktywacji)",scope:"activation",items:[
+   "Akcje skonsumowane prawidłowo i sprawiedliwie.",
+   "Odnotuj użytą zdolność.",
+   "Odnotuj wykorzystaną reakcję.",
+   "Potwierdź finalne HP modeli.",
+   "Zaktualizuj pozycje modeli na mapie.",
+   "Zaktualizuj stan związania walką (Engagement)."]},
+ {t:"GLOBAL CONTROL (kontrola globalna bitwy)",scope:"round",items:[
+   "Kontroluj listę i liczbę żywych modeli na polu bitwy.",
+   "Śledź wykorzystane w rundzie reakcje.",
+   "Monitoruj stan i zużycie Dzikich Kości.",
+   "Zadbaj o spójność i chronologię raportu bitewnego."]},
+ {t:"TERRAIN GEOMETRY (geometria terenu)",scope:"ref",items:[
+   "Każdy element terenu ma zdefiniowany punkt (ox, oy).",
+   "LEVEL 0: zamknięty prostokątny obrys, 4 ściany.",
+   "LEVEL 1: polygon A–B–C–D; ściany DA, AB, BC; krawędź otwarta CD.",
+   "Sprawdź, czy model po ruchu fizycznie jest wewnątrz obrysu terenu.",
+   "Ściany bezwzględnie blokują ruch, chyba że legalna wspinaczka."]},
+ {t:"STRATEGIC CHECK (ocena strategiczna)",scope:"round",items:[
+   "Przeanalizuj opłacalność i moment użycia Dzikich Kości.",
+   "Oceń stan inicjatywy na podstawie singles.",
+   "Zidentyfikuj i uszereguj priorytety zagrożeń na polu bitwy."]},
+ {t:"ABILITY EFFECT VERIFICATION (weryfikacja efektów zdolności)",scope:"activation",items:[
+   "Przeczytaj dokładny, oryginalny opis zdolności.",
+   "Określ dokładny moment aktywacji (trigger timing).",
+   "Określ fazę gry, na którą wpływa.",
+   "Potwierdź legalność celu i wymagany zasięg.",
+   "Sprawdź, czy modyfikuje: ataki / reakcje / akcje.",
+   "ZAKAZ domyślania się efektów działania zdolności! ❌"]},
+ {t:"WEAPON VERIFICATION (weryfikacja oręża)",scope:"activation",items:[
+   "Jednoznacznie zidentyfikuj broń używaną do ataku.",
+   "Odczytaj profil broni: Ataki (A), Siła (S), dmg hit/crit.",
+   "Potwierdź typ ataku: melee vs dystansowy.",
+   "Potwierdź, że cel jest w zasięgu broni.",
+   "Zweryfikuj obostrzenia broni dystansowej (brak sojuszników <1\" od celu).",
+   "ZAKAZ zakładania domyślnych statystyk broni! ❌"]},
+ {t:"REACTION ELIGIBILITY (uprawnienie do reakcji)",scope:"activation",items:[
+   "Wojownik NIE MOŻE reagować, jeśli: już aktywowany ORAZ 0 akcji pozostałych.",
+   "Sprawdź: pozostałe akcje, czy reakcja już użyta w tej rundzie (limit 1×), brak blokady (np. Omni Scrambler).",
+   "Reakcja dozwolona TYLKO gdy wszystkie testy ✅."]},
+ {t:"VERTICAL MOVEMENT & FALL DAMAGE v2 (upadki i obrażenia)",scope:"ref",items:[
+   "Określ poziom startowy i końcowy ruchu.",
+   "Jeśli model przekracza krawędź terenu → CLIMB lub DROP.",
+   "Ściany jednego poziomu = dokładnie 3\" wysokości.",
+   "Safe Drop: zeskok do 3\" włącznie — bez testu obrażeń (ruch dobrowolny).",
+   "Punitive Fall: test K6 tylko gdy spadek >3\" I jest skutkiem ataku/zepchnięcia."]},
+ {t:"HORIZONTAL MOVEMENT (ruch poziomy)",scope:"ref",items:[
+   "Ruch na jednym poziomie = dowolna liczba segmentów.",
+   "Suma dystansu wszystkich segmentów w limicie Move.",
+   "Każdy segment sprawdzony pod kątem przeszkód i kolizji."]},
+ {t:"NIEZALEŻNE JEDNOSTKI — STALKING (np. Hormagaunty)",scope:"ref",items:[
+   "Trigger LoS: sprawdź, czy fighter wszedł w LoS bestii.",
+   "Rzut na opóźnienie K6 — liczba aktywacji do agresywnego uderzenia.",
+   "Licznik agresji: aktywacja, w której model wszedł w LoS, się NIE liczy.",
+   {x:"Activation Resolution — licznik dobiegł końca:",sub:["Jeśli bestia straciła LoS do celu → WAIT, aktywacja przesuwa się na koniec rundy."]}]},
+ {t:"KONTROLA CELÓW (Objective Control)",scope:"ref",items:[
+   {x:"Zasada Ścisłej Nierówności:",sub:["Kontrolę przyznaje się tylko gdy Sojusznicy > Wrogowie + Niezależni."]},
+   {x:"Blokada Hormagauntów:",sub:["Niezależni liczą się jako wrogowie dla OBU stron; w 3\" od objective blokują przejęcie przy remisie."]}]}
+];
+let clState={}, clOpen=new Set([0]);
+
+function clKey(p,i){return p+'-'+i;}
+function renderChecklist(){
+  const wrap=document.getElementById('clList');
+  let totalItems=0, checkedItems=0;
+  let html='';
+  CHECKLIST.forEach((phase,pi)=>{
+    const n=phase.items.length;totalItems+=n;
+    let cCount=0;
+    const itemsHtml=phase.items.map((it,ii)=>{
+      const isObj=typeof it==='object';
+      const text=isObj?it.x:it;
+      const sub=isObj?it.sub:null;
+      const key=clKey(pi,ii);
+      const chk=!!clState[key];if(chk)cCount++;
+      return `<div class="cl-item${chk?' chk':''}" onclick="toggleClItem(${pi},${ii})">
+        <span class="cl-check">✓</span>
+        <span><span class="cl-txt">${text}</span>${sub?`<div class="cl-sub">${sub.map(s=>`<div>• ${s}</div>`).join('')}</div>`:''}</span>
+      </div>`;
+    }).join('');
+    checkedItems+=cCount;
+    const isOpen=clOpen.has(pi), isDone=cCount===n;
+    html+=`<div class="cl-phase${isOpen?' open':''}${isDone?' done':''}">
+      <div class="cl-phase-hdr" onclick="togglePhaseOpen(${pi})">
+        <span class="cl-phase-num">${pi+1}</span>
+        <span class="cl-phase-title">${phase.t}</span>
+        <span class="cl-phase-count">${cCount}/${n}</span>
+        <span class="cl-phase-chev">▶</span>
+      </div>
+      <div class="cl-phase-body">${itemsHtml}</div>
+    </div>`;
+  });
+  wrap.innerHTML=html;
+  document.getElementById('clFill').style.width=(totalItems?checkedItems/totalItems*100:0)+'%';
+  document.getElementById('clProgressTxt').textContent=checkedItems+' / '+totalItems+' zaznaczone';
+}
+function toggleClItem(pi,ii){
+  const key=clKey(pi,ii);clState[key]=!clState[key];renderChecklist();scheduleSave();
+}
+function togglePhaseOpen(pi){
+  if(clOpen.has(pi))clOpen.delete(pi);else clOpen.add(pi);renderChecklist();
+}
+function resetChecklistActivation(){
+  CHECKLIST.forEach((phase,pi)=>{if(phase.scope==='activation')phase.items.forEach((it,ii)=>{delete clState[clKey(pi,ii)];});});
+  renderChecklist();sts('✓ Checklista aktywacji wyczyszczona.');scheduleSave();
+}
+function resetChecklistAll(){
+  clState={};renderChecklist();sts('✓ Cała checklista wyczyszczona.');scheduleSave();
+}
+
+// ═══════════════════════════════════════════════
+// STAN GRY (runda / wild dice / inicjatywa / ekonomia akcji)
+// ═══════════════════════════════════════════════
+let gameState={round:1,wildP:0,wildL:0};
+
+function ensureModelFields(m){
+  if(m.actionsLeft===undefined)m.actionsLeft=2;
+  if(m.reactionUsed===undefined)m.reactionUsed=false;
+  if(m.waiting===undefined)m.waiting=false;
+}
+function updateGameUI(){
+  document.getElementById('roundPill').textContent='R'+gameState.round;
+  document.getElementById('gsRoundVal').textContent=gameState.round;
+  document.getElementById('wildP').textContent=gameState.wildP;
+  document.getElementById('wildL').textContent=gameState.wildL;
+}
+function adjRound(d){gameState.round=Math.max(1,gameState.round+d);updateGameUI();scheduleSave();}
+function adjWild(side,d){
+  if(side==='p')gameState.wildP=Math.max(0,gameState.wildP+d);
+  else gameState.wildL=Math.max(0,gameState.wildL+d);
+  updateGameUI();scheduleSave();
+}
+function calcInit(){
+  const p=parseInt(document.getElementById('initP').value)||0;
+  const l=parseInt(document.getElementById('initL').value)||0;
+  const el=document.getElementById('initResult');
+  if(p===l){el.innerHTML='🎲 Remis ('+p+' = '+l+') — wykonajcie <b>roll-off</b>.';el.style.color='var(--ay)';}
+  else{const w=p>l?'Gracz P':'Gracz L';el.innerHTML='🏆 Inicjatywę ma <b>'+w+'</b> ('+Math.max(p,l)+' vs '+Math.min(p,l)+' singles).';el.style.color='var(--ag)';}
+}
+function cycleActions(id){
+  const m=models.find(m=>m.id===id);if(!m)return;
+  ensureModelFields(m);
+  m.actionsLeft=m.actionsLeft>0?m.actionsLeft-1:2;
+  m.activated=(m.actionsLeft===0);
+  gsRenderModelList();draw();scheduleSave();
+}
+function toggleReaction(id){
+  const m=models.find(m=>m.id===id);if(!m)return;
+  ensureModelFields(m);
+  m.reactionUsed=!m.reactionUsed;
+  if(m.reactionUsed&&m.actionsLeft===2)m.actionsLeft=1; // reakcja przed aktywacją: pula -1
+  gsRenderModelList();draw();scheduleSave();
+}
+function resetModelEconomy(id){
+  const m=models.find(m=>m.id===id);if(!m)return;
+  m.actionsLeft=2;m.reactionUsed=false;m.waiting=false;m.activated=false;
+  gsRenderModelList();draw();scheduleSave();
+}
+function jumpToModelOnMap(id){
+  const m=models.find(m=>m.id===id);if(!m)return;
+  showTab('Mapa');sel={...m,_type:'model'};showStats(m);draw();
+}
+function gsRenderModelList(){
+  const wrap=document.getElementById('gsModelList');
+  if(!models.length){wrap.innerHTML='<div class="gs-empty">Brak modeli na mapie.</div>';return;}
+  wrap.innerHTML=models.map(m=>{
+    ensureModelFields(m);
+    const db=getDB(m),col=getModelColor(m);
+    const name=db?db.n:(m.n||'?');
+    const finished=m.actionsLeft===0;
+    const status=finished?'Finished':(m.waiting?'Waiting':(m.actionsLeft<2?'W trakcie':'Gotowy'));
+    const pips=[0,1].map(i=>`<span class="gs-pip${i<m.actionsLeft?' on':''}"></span>`).join('');
+    return `<div class="gs-mrow${finished?' finished':''}">
+      <span class="gs-mdot" style="background:${col.main}" onclick="jumpToModelOnMap(${m.id})"></span>
+      <span class="gs-mname" onclick="jumpToModelOnMap(${m.id})">${name}</span>
+      <span class="gs-mstatus">${status}</span>
+      <span class="gs-pips" onclick="cycleActions(${m.id})" title="Dotknij, aby zużyć akcję">${pips}</span>
+      <button class="gs-reactbtn${m.reactionUsed?' on':''}" onclick="toggleReaction(${m.id})" title="Reakcja użyta">⚡</button>
+      <button class="gs-reactbtn" onclick="resetModelEconomy(${m.id})" title="Resetuj">↺</button>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+// NOWA RUNDA / PEŁNY RESET
+// ═══════════════════════════════════════════════
+function newRound(){
+  gameState.round++;
+  models.forEach(m=>{m.activated=false;m.actionsLeft=2;m.reactionUsed=false;m.waiting=false;});
+  clState={};
+  updateGameUI();renderChecklist();gsRenderModelList();
+  if(sel&&sel._type==='model'){const m=models.find(mm=>mm.id===sel.id);if(m)showStats(m);}
+  sts('✓ Nowa runda R'+gameState.round+': aktywacje, akcje, reakcje i checklista zresetowane.');
+  draw();
+}
+function confirmResetAll(){
+  if(!confirm('To usunie cały teren, modele i objectives z mapy oraz zresetuje rundę. Kontynuować?'))return;
+  resetAll();
+  gameState={round:1,wildP:0,wildL:0};
+  clState={};
+  updateGameUI();renderChecklist();gsRenderModelList();
+  sts('✓ Pełny reset wykonany.');
+}
+
+// ═══════════════════════════════════════════════
+// PERSYSTENCJA: lokalnie (błyskawicznie) + GitHub (współdzielone z Claude)
+// ═══════════════════════════════════════════════
+const SESSION_KEY='warcry-session-v1';
+const GH_CONFIG_KEY='warcry-gh-config-v1';
+const isClaudeArtifact=!!(window.storage&&window.storage.set);
+
+let saveTimer=null;
+function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveLocal,600);scheduleGhSave();}
+
+function localSessionObj(){
+  return {terrain,models,objectives,level,checklist:{state:clState,open:[...clOpen]},game:gameState};
+}
+async function saveLocal(){
+  try{
+    const st=localSessionObj();
+    if(isClaudeArtifact){await window.storage.set(SESSION_KEY,JSON.stringify(st),false);}
+    else{localStorage.setItem(SESSION_KEY,JSON.stringify(st));}
+  }catch(e){console.error('Zapis lokalny nieudany:',e);}
+}
+async function loadLocal(){
+  try{
+    let raw=null;
+    if(isClaudeArtifact){const res=await window.storage.get(SESSION_KEY,false);raw=res&&res.value;}
+    else{raw=localStorage.getItem(SESSION_KEY);}
+    if(!raw)return false;
+    const st=JSON.parse(raw);
+    terrain=(st.terrain||[]).map(t=>({...t,rects:buildRects(t.type,t.ox,t.oy,t.rot||0)}));
+    models=(st.models||[]).map(m=>({...m}));
+    objectives=st.objectives||[];
+    level=st.level||0;
+    if(st.checklist){clState=st.checklist.state||{};clOpen=new Set(st.checklist.open||[0]);}
+    if(st.game)gameState=Object.assign({round:1,wildP:0,wildL:0},st.game);
+    nid=Math.max(11,...models.map(m=>m.id+1));
+    ntid=Math.max(100,...terrain.map(t=>t.id+1),...objectives.map(o=>o.id+1));
+    return true;
+  }catch(e){console.error('Odczyt lokalny nieudany:',e);return false;}
+}
+
+// ─── GitHub sync (Secret Gist) — działa tylko poza artefaktem Claude (prawdziwa strona) ───
+let ghConfig=null, ghSaveTimer=null, ghBusy=false;
+function loadGhConfig(){try{const raw=localStorage.getItem(GH_CONFIG_KEY);if(raw)ghConfig=JSON.parse(raw);}catch(e){}}
+function saveGhConfig(cfg){ghConfig=cfg;try{localStorage.setItem(GH_CONFIG_KEY,JSON.stringify(cfg));}catch(e){}}
+function clearGhConfig(){ghConfig=null;try{localStorage.removeItem(GH_CONFIG_KEY);}catch(e){}}
+function ghApiUrl(){return `https://api.github.com/gists/${encodeURIComponent(ghConfig.gistId)}`;}
+function setGhStatus(msg){['ghStatus','gsSaveStatus'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=msg;});}
+
+async function ghTestAndLoad(){
+  if(!ghConfig){setGhStatus('Skonfiguruj połączenie z GitHub.');return false;}
+  setGhStatus('⏳ Łączenie z Gistem…');
+  try{
+    const res=await fetch(ghApiUrl(),{headers:{'Authorization':'Bearer '+ghConfig.token,'Accept':'application/vnd.github+json'}});
+    if(res.status===404){setGhStatus('⚠️ Nie znaleziono Gista — sprawdź ID.');return false;}
+    if(res.status===401||res.status===403){setGhStatus('⚠️ GitHub odmówił dostępu — sprawdź token (musi mieć zakres "gist").');return false;}
+    if(!res.ok){setGhStatus('⚠️ Błąd GitHub ('+res.status+').');return false;}
+    const data=await res.json();
+    const file=data.files&&data.files[ghConfig.filename];
+    if(!file){setGhStatus('ℹ️ Połączono, ale brak pliku "'+ghConfig.filename+'" w tym Giście — powstanie przy pierwszym zapisie.');return true;}
+    const st=JSON.parse(file.content);
+    applyImportedState(st);
+    updateGameUI();renderChecklist();gsRenderModelList();draw();
+    setGhStatus('✓ Wczytano z GitHub Gist · '+new Date().toLocaleTimeString('pl-PL').slice(0,5));
+    return true;
+  }catch(e){setGhStatus('⚠️ Nie udało się połączyć z GitHub (sieć/CORS).');return false;}
+}
+async function ghSaveNow(){
+  if(!ghConfig||ghBusy)return;
+  ghBusy=true;setGhStatus('⏳ Zapisywanie do Gista…');
+  try{
+    const body={files:{[ghConfig.filename]:{content:JSON.stringify(buildExportState(),null,2)}}};
+    const res=await fetch(ghApiUrl(),{method:'PATCH',headers:{'Authorization':'Bearer '+ghConfig.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!res.ok){setGhStatus('⚠️ Błąd zapisu do GitHub ('+res.status+').');ghBusy=false;return;}
+    setGhStatus('✓ Zsynchronizowano z GitHub Gist · '+new Date().toLocaleTimeString('pl-PL').slice(0,5));
+  }catch(e){setGhStatus('⚠️ Nie udało się połączyć z GitHub (sieć/CORS).');}
+  ghBusy=false;
+}
+function scheduleGhSave(){if(!ghConfig)return;clearTimeout(ghSaveTimer);ghSaveTimer=setTimeout(ghSaveNow,3500);}
+
+function openGhSettings(){
+  document.getElementById('ghGistId').value=ghConfig?ghConfig.gistId:'';
+  document.getElementById('ghFilename').value=ghConfig?ghConfig.filename:'warcry_map.json';
+  document.getElementById('ghToken').value=ghConfig?ghConfig.token:'';
+  document.getElementById('ghModal').style.display='block';
+}
+function closeGhSettings(){document.getElementById('ghModal').style.display='none';}
+async function ghConnect(){
+  const gistId=document.getElementById('ghGistId').value.trim();
+  const filename=document.getElementById('ghFilename').value.trim()||'warcry_map.json';
+  const token=document.getElementById('ghToken').value.trim();
+  if(!gistId||!token){setGhStatus('⚠️ Uzupełnij ID Gista i token.');return;}
+  saveGhConfig({gistId,filename,token});
+  const ok=await ghTestAndLoad();
+  updateGhBadge();
+  if(ok)closeGhSettings();
+}
+function ghDisconnect(){clearGhConfig();updateGhBadge();setGhStatus('Rozłączono z GitHub — dane zostają tylko lokalnie.');}
+function updateGhBadge(){
+  const b=document.getElementById('ghBadge');if(!b)return;
+  b.textContent=ghConfig?('🔗 Gist '+ghConfig.gistId.slice(0,7)+'…'):'🔗 GitHub';
+  b.classList.toggle('connected',!!ghConfig);
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+(async function init(){
+  renderLegend();
+  loadGhConfig();
+  let loaded=false;
+  if(ghConfig)loaded=await ghTestAndLoad();
+  if(!loaded)loaded=await loadLocal();
+  if(!loaded)resetAll();
+  models.forEach(ensureModelFields);
+  setLevel(level||0);setTool('move');
+  updateGameUI();renderChecklist();gsRenderModelList();updateGhBadge();
+  if(!ghConfig)setGhStatus('Sesja zapisywana lokalnie. Podłącz GitHub, by dzielić się stanem z Claude.');
+  sts(loaded?'✓ Wczytano zapisany stan.':'Gotowy. Nowa sesja.');
+  draw();
+})();
+</script>
+</body>
+</html>
