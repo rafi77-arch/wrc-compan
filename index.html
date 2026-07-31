@@ -1768,13 +1768,16 @@ function buildExportState(){
       if(elemLevel===lv){
         const segs=buildWallSegments(t);
         if(segs.length){
-          const doorsAbs=getDoorsWithState(t).map(d=>({
-            from:{x:+(d.ax/IN).toFixed(4),y:+(d.ay/IN).toFixed(4)},
-            to:{x:+(d.bx/IN).toFixed(4),y:+(d.by/IN).toFixed(4)},
-            open:d.open,
-            blocks_los: lv===0 ? !d.open : false,   // poziom 0: zamknięte drzwi blokują LoS jak ściana; poziom 1/2: nigdy nie blokują LoS
-            blocks_movement: !d.open                 // otwarte drzwi nie blokują ruchu, zamknięte blokują
-          }));
+          const doorsAbs=getDoorsWithState(t).map(d=>{
+            const pa=cToJ(d.ax,d.ay), pb=cToJ(d.bx,d.by);
+            return {
+              from:{x:+pa.jx.toFixed(4), y:+pa.jy.toFixed(4)},
+              to:{x:+pb.jx.toFixed(4), y:+pb.jy.toFixed(4)},
+              open:d.open,
+              blocks_los: lv===0 ? !d.open : false,   // poziom 0: zamknięte drzwi blokują LoS jak ściana; poziom 1/2: nigdy nie blokują LoS
+              blocks_movement: !d.open                 // otwarte drzwi nie blokują ruchu, zamknięte blokują
+            };
+          });
           wallEntries.push({
             terrain_id:t.id,
             name:SD[t.type]?.label||t.type.toUpperCase(),
