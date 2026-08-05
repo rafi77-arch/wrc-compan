@@ -1353,13 +1353,11 @@ function drawGrid(){
 }
 
 function drawZones(){
-  G.fillStyle='rgba(224,80,80,.06)';G.fillRect(0,0,4*IN,H);
-  G.fillStyle='rgba(74,158,255,.06)';G.fillRect(25*IN,0,5*IN,H);
-  G.strokeStyle='rgba(200,200,100,.18)';G.lineWidth=1.5;G.setLineDash([8,4]);
-  G.beginPath();G.moveTo(15*IN,0);G.lineTo(15*IN,H);G.stroke();G.setLineDash([]);
-  G.font='bold 10px -apple-system,Arial,sans-serif';
-  G.fillStyle='rgba(224,80,80,.5)';G.textAlign='center';G.fillText('LEGIONARIES',2*IN,H-8);
-  G.fillStyle='rgba(74,158,255,.5)';G.fillText('PHOBOS',27.5*IN,H-8);
+  G.fillStyle='rgba(74,158,255,.06)';
+  G.fillRect(0,0,W,4*IN);           // góra
+  G.fillRect(0,H-4*IN,W,4*IN);      // dół
+  G.fillRect(0,0,4*IN,H);           // lewa
+  G.fillRect(W-4*IN,0,4*IN,H);      // prawa
   const lc=['#4a9eff','#50c878','#f0b840'][level];
   G.fillStyle=lc+'12';G.fillRect(0,0,W,H);
   G.fillStyle=lc+'cc';G.font='bold 10px -apple-system,Arial,sans-serif';G.textAlign='right';
