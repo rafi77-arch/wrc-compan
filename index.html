@@ -1013,17 +1013,17 @@ const BANDS = [...new Set(DB.map(f => f.band))];
 
 // Kolory band — zgodne z lore WH40k
 const BAND_COLORS = {
-  "Phobos Strike Team": { main:'#3a6ea8', dark:'#0f1f30', label:'Phobos (granat)' },       // Space Marines steel blue
-  "Legionaries":        { main:'#8a1f1f', dark:'#2a0a0a', label:'Legionaries (krwista czerwień)' }, // Khorne red
-  "Nemesis Claw":       { main:'#5a2d82', dark:'#1c0e2a', label:'Nemesis Claw (fiolet)' },  // Slaanesh/Chaos purple
-  "Necrons":            { main:'#3ddc97', dark:'#0e2a20', label:'Necrons (zielony metal)' }, // Necron green
-  "Kommandos":          { main:'#5a7a1f', dark:'#1c2608', label:'Kommandos (orkowa zieleń)' }, // Ork green
-  "Ratlings":           { main:'#8a6a2f', dark:'#2a200c', label:'Ratlings (khaki)' },        // Astra Militarum khaki
-  "Blood Angels":       { main:'#c41e1e', dark:'#3a0808', label:'Blood Angels (szkarłat)' },  // Blood Angels red
-  "Tyranids":           { main:'#9a2d6e', dark:'#2e0e22', label:'Tyranids (fiolet/róż)' },    // Hive Fleet purple/pink
-  "Gretchin Mob":       { main:'#7a8a3a', dark:'#242a10', label:'Gretchin Mob (oliwka)' },    // Grot drab green
-  "Salamanders":        { main:'#1e7a4a', dark:'#0a2418', label:'Salamanders (zieleń+pomarańcz)' }, // Salamanders green
-  "Freebooterz":        { main:'#b8860b', dark:'#332404', label:'Freebooterz (piracki brąz/złoto)' } // Ork pirate gold
+  "Phobos Strike Team":                    { main:'#4a9eff', dark:'#0f2540', label:'Phobos (błękit)' },
+  "Legionaries of Chaos":                  { main:'#8a1f3a', dark:'#2a0a14', label:'Legionaries (bordowa czerwień)' },
+  "Nemesis Claw":                          { main:'#9b59d0', dark:'#241030', label:'Nemesis Claw (fiolet)' },
+  "Necrons — Awakened Phalanx":            { main:'#2ecfa0', dark:'#0a2a20', label:'Necrons (turkusowa zieleń)' },
+  "Kommandos":                             { main:'#a4c62d', dark:'#242c08', label:'Kommandos (limonkowa zieleń)' },
+  "Ratlings (Salvagers)":                  { main:'#d4a92f', dark:'#332608', label:'Ratlings (musztardowy złoty)' },
+  "Blood Angels":                          { main:'#e0384a', dark:'#3a0810', label:'Blood Angels (szkarłat)' },
+  "Tyranids — Swarm Brood":                { main:'#d43ac0', dark:'#300a2a', label:'Tyranids (magenta)' },
+  "Gretchin Mob — Da Kunnin' Gits":        { main:'#5a8a3a', dark:'#182408', label:'Gretchin Mob (ciemna oliwka)' },
+  "Salamanders — Strike Force Prometheus": { main:'#17a2b8', dark:'#062830', label:'Salamanders (cyjan)' },
+  "Freebooterz":                           { main:'#c07830', dark:'#301c08', label:'Freebooterz (brązowy bursztyn)' }
 };
 function getBandColor(band){
   return BAND_COLORS[band] || { main:'#888888', dark:'#222222', label:band };
@@ -1032,7 +1032,7 @@ function getModelColor(m){
   const db = getDB(m);
   if(db) return getBandColor(db.band);
   // fallback by side if fighter unknown
-  return m.s==='p' ? BAND_COLORS["Phobos Strike Team"] : BAND_COLORS["Legionaries"];
+  return m.s==='p' ? BAND_COLORS["Phobos Strike Team"] : BAND_COLORS["Legionaries of Chaos"];
 }
 const SHORT_TO_KEY = {Capt:'PhobosCpt',Helix:'InfHelix',Mark:'IncMark',Sab:'InfSab',Reiv:'ReiverSgt',Champ:'AspChamp',Butch:'Butcher',Anoin:'Anointed',HGun:'LegHvyCC',Shriv:'Shrivetalon'};
 
