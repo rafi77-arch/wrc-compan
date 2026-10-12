@@ -190,6 +190,63 @@ textarea:focus{outline:none;border-color:var(--ap);}
 @media (min-width:1300px){
   #tabMapa{flex:3.4;}
 }
+
+/* ═══════ BITWA Z KOMPUTEREM ═══════ */
+body.in-battle #tabMapa .toolbar,body.in-battle #legendBar,body.in-battle .gs-manual{display:none;}
+.battlebar{display:none;flex-direction:column;gap:5px;background:#1a1a24;border-bottom:1px solid var(--border);padding:6px 10px;flex-shrink:0;}
+.bb-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.bb-pill{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:3px 9px;font-size:11px;font-family:var(--f-mono);white-space:nowrap;}
+.bb-dice{display:flex;gap:3px;align-items:center;}
+.bb-lv{display:flex;gap:3px;align-items:center;font-size:10px;color:var(--text2);margin-left:auto;}
+.bb-lv button{padding:3px 8px;font-size:11px;}
+.bb-actions{display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
+.bb-actions::-webkit-scrollbar{display:none;}
+.bb-actions button{flex-shrink:0;padding:8px 11px;font-size:12.5px;}
+.bb-actions button.bb-bonus{background:#14242a;color:#5ad8e6;border-color:#2a8a99;}
+.bb-act{display:flex;align-items:center;gap:6px;font-size:12px;white-space:nowrap;margin-right:4px;}
+.bb-msg{font-size:12px;color:var(--text);flex:1;min-width:180px;}
+.bb-sub{font-size:10px;color:var(--text2);}
+.bb-last{font-size:10.5px;color:var(--text2);font-family:var(--f-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.adie{display:inline-block;min-width:24px;text-align:center;padding:2px 5px;border-radius:5px;font-size:11px;font-weight:700;font-family:var(--f-mono);border:1px solid;}
+.adie.D{background:#142030;color:var(--ap);border-color:var(--ap);}
+.adie.T{background:#142014;color:var(--ag);border-color:var(--ag);}
+.adie.Q{background:#2a1e0a;color:var(--ay);border-color:var(--ay);}
+.adie.W{background:#1e1430;color:var(--av);border-color:var(--av);}
+.adie.used{opacity:.3;text-decoration:line-through;}
+.die{display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;border-radius:4px;margin:0 1px;font-size:11px;font-weight:700;font-family:var(--f-mono);background:#2a2a36;color:var(--text);border:1px solid #44445a;}
+.die.hit{background:#143020;color:#7ee0a0;border-color:#2a7a4a;}
+.die.crit{background:#3a2a08;color:#ffd060;border-color:#c09020;}
+.die.miss{opacity:.55;}
+.vs-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.vs-row label{flex:1;font-size:12px;}
+.vs-row select{max-width:66%;min-width:0;text-overflow:ellipsis;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:5px;padding:6px 8px;font-size:12px;}
+.vs-line{font-size:11px;margin-top:3px;}
+.vs-start{width:100%;margin-top:10px;padding:11px;font-size:14px;}
+.vs-rules{margin-top:10px;font-size:11px;color:var(--text2);line-height:1.5;}
+.vs-rules summary{cursor:pointer;color:var(--ay);font-weight:600;}
+.vs-rules ul{padding-left:16px;margin-top:6px;}
+.vs-scen{margin-bottom:8px;font-size:12px;}
+.gen-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:12px;}
+.gen-t{font-size:11px;font-weight:700;color:var(--ay);margin-bottom:8px;letter-spacing:.06em;}
+#genResult .gs-2col{margin-top:8px;}
+#genResult .gs-side{background:var(--bg2);}
+.vs-scen-desc{margin:-2px 0 6px;line-height:1.4;}
+.vs-fx{font-size:11px;padding:2px 0;border-bottom:1px dashed var(--border);}
+.blog{max-height:46vh;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px;margin-top:6px;}
+.bl{font-size:11px;line-height:1.45;padding:3px 2px;border-bottom:1px solid #22222c;}
+.bm-box{max-width:520px;}
+.bm-body{padding:10px 16px;font-size:13px;line-height:1.5;border-bottom:1px solid var(--border);overflow-y:auto;max-height:40vh;}
+.bm-opts{display:flex;flex-direction:column;gap:6px;padding:10px 14px 14px;overflow-y:auto;}
+.bm-opt{text-align:left;white-space:normal;display:flex;flex-direction:column;gap:2px;padding:9px 12px;font-size:13px;color:var(--text);}
+.bm-opt .bm-sub{font-size:11px;font-weight:400;color:var(--text2);line-height:1.35;}
+.bm-note{font-size:11px;color:var(--text2);margin-top:6px;}
+.bm-big{font-size:15px;margin-top:8px;}
+.bm-side{margin-bottom:8px;}
+#bModal{z-index:300;}
+@media (min-width:860px){
+  #bModal{align-items:center;}
+  #bModal .modal-box{border-radius:14px;}
+}
 </style>
 </head>
 <body>
@@ -253,6 +310,10 @@ textarea:focus{outline:none;border-color:var(--ap);}
       <button id="bRNG" onclick="setTool('range')">Dystans</button>
     </div>
     <div class="ts"></div>
+    <div class="tg"><span class="tl">Gra</span>
+      <button class="exp" onclick="openBattleSetup()">⚔ Graj z komputerem</button>
+    </div>
+    <div class="ts"></div>
     <div class="tg"><span class="tl">Mapa</span>
       <button class="bp" onclick="copyJsonForClaude()">📋 Kopiuj dla Claude</button>
       <button class="exp" onclick="exportMap()">⬇ JSON</button>
@@ -263,6 +324,10 @@ textarea:focus{outline:none;border-color:var(--ap);}
   </div>
   <div class="statusbar" id="statusBar">Gotowy. Narzędzie Objective = dotknij mapę. Dotknij model = statystyki.</div>
   <div class="legend-bar" id="legendBar"></div>
+  <div class="battlebar" id="battleBar">
+    <div class="bb-row" id="bbInfo"></div>
+    <div class="bb-actions" id="bbActions"></div>
+  </div>
   <div class="app-body">
     <div class="canvas-wrap"><canvas id="cv"></canvas></div>
     <div class="sp" id="statsPanel">
@@ -279,7 +344,55 @@ textarea:focus{outline:none;border-color:var(--ap);}
 <!-- ═══════ TAB: STAN GRY ═══════ -->
 <div class="tabpanel" id="tabGame">
   <div class="gs-wrap">
-    <div class="gs-card">
+    <div class="gs-card" id="vsCard">
+      <div class="gs-card-t">⚔ Bitwa z komputerem</div>
+      <div id="vsSetup">
+        <div class="gen-box">
+          <div class="gen-t">🎲 Generator band</div>
+          <div class="vs-row"><label>Strona P</label><select id="genP"></select></div>
+          <div class="vs-row"><label>Strona L</label><select id="genL"></select></div>
+          <div class="vs-row"><label>Limit punktów</label>
+            <select id="genPts"><option value="500">500</option><option value="750">750</option><option value="1000" selected>1000</option><option value="1250">1250</option><option value="1500">1500</option></select></div>
+          <button class="bp" style="width:100%;" onclick="runGenerator()">🎲 Wygeneruj bandy i rozstaw na mapie</button>
+          <div id="genResult"></div>
+        </div>
+        <div class="vs-row"><label>Grasz stroną</label>
+          <select id="vsSide" onchange="renderVsSetup()"><option value="p">P (niebieska obwódka)</option><option value="l">L</option><option value="ai">Pokaz: komputer vs komputer</option></select></div>
+        <div class="vs-row"><label>Scenariusz</label>
+          <select id="vsScen" onchange="renderVsSetup()"></select></div>
+        <div class="vs-scen-desc bb-sub" id="vsScenDesc"></div>
+        <button style="width:100%;margin:2px 0 10px;" onclick="applyScenarioMarkers()">📍 Rozstaw znaczniki scenariusza na mapie</button>
+        <div class="vs-row"><label>Liczba rund</label>
+          <select id="vsRounds"><option value="3">3</option><option value="4" selected>4</option><option value="5">5</option></select></div>
+        <div class="vs-row"><label>Poziom komputera</label>
+          <select id="vsDiff"><option value="easy">Łatwy</option><option value="normal" selected>Normalny</option><option value="hard">Trudny</option></select></div>
+        <div id="vsSetupSides"></div>
+        <div class="bb-sub" style="margin-top:6px;">Bandy, teren i cele (Objective) bierzemy z mapy. Rozstaw modele w edytorze przed startem — po bitwie możesz przywrócić mapę.</div>
+        <button class="exp vs-start" onclick="startBattle()">⚔ Rozpocznij bitwę</button>
+        <details class="vs-rules"><summary>Zasady w tej wersji</summary><ul>
+          <li><b>Runda:</b> obie strony rzucają 6 kośćmi. Więcej singli = inicjatywa (remis → roll-off). Dublety, triplety i quady to kości zdolności (wartość = oczko). Każda strona dostaje 1 dziką kość na rundę — podnosi Double→Triple lub Triple→Quad; niewykorzystana przepada.</li>
+          <li><b>Aktywacje</b> naprzemiennie, zaczyna strona z inicjatywą. Fighter ma 2 akcje (Ruch, Atak, Odskok, Czekaj) i może użyć 1 zdolności.</li>
+          <li><b>Ruch:</b> do Move cali. Wejście poziom wyżej kosztuje 3", zeskok nic, ale grozi obrażeniami (K6: 1 → 3 obr., 2–3 → 1 obr.). Ruch kończy się po wejściu w 1" od wroga. FLY przelatuje nad ścianami i nie płaci za wysokość.</li>
+          <li><b>Odskok</b> (gdy wróg jest w 1"): do 3", bez wspinania, koniec dalej niż 1" od wrogów.</li>
+          <li><b>Atak:</b> cel widoczny i w zasięgu (od krawędzi podstawki). S&gt;T → 3+, S=T → 4+, S&lt;T → 5+, 6 = krytyk. Osłona przy strzale (+1 T), gdy teren w promieniu 1" od celu leży między nim a strzelcem.</li>
+          <li><b>Zwarcie:</b> fighter w 1" od wroga nie może wykonywać ataków dystansowych ani być ich celem (walka wręcz bez ograniczeń).</li>
+          <li><b>Widoczność:</b> zasłaniają ją inne modele (sojusznicy i wrogowie) oraz ściany i zamknięte drzwi. Cel jest widoczny, jeśli widać środek lub bok jego podstawki. Ściany mają wysokość: budynki z platformami — parapet 1. piętra (3,5"), mury i bastiony 2,5". Fighter na platformie widzi ponad parapetem, ale nie przez ściany innych budynków; linia widzenia biegnie na wysokości głowy (1,2" nad podłogą). Light Wall nie zasłania (daje osłonę). Fighter zaatakowany przy krawędzi platformy rzuca test upadku (1 = spada).</li>
+          <li><b>Reakcje:</b> raz na rundę na fightera. Przed jego aktywacją kosztują 1 akcję; po aktywacji tylko jeśli wykonał Czekaj.</li>
+          <li><b>Wynik:</b> punkty zwycięstwa (PZ) przyznaje wybrany scenariusz. Cel kontroluje strona z większą liczbą fighterów w 3". Po ostatniej rundzie wygrywa więcej PZ, przy remisie więcej punktów powalonych wrogów. Wybicie bandy = natychmiastowe zwycięstwo.</li>
+          <li><b>Komputer gra pod scenariusz:</b> ocenia, ile PZ daje mu każda pozycja (przejęcie lub obrona celu, skarb, strefa wroga) i ile PZ odbiera wrogowi każde zabójstwo; fighterów trzymających cele aktywuje na końcu.</li>
+          <li><b>Zdolności uniwersalne:</b> Rush (D, +1 Move), Onslaught (D, +1 Attacks w zwarciu), Respite (D, leczenie o wartość).</li>
+        </ul></details>
+      </div>
+      <div id="vsLive" style="display:none;">
+        <div id="vsSides"></div>
+        <div class="gs-card-t" style="margin-top:10px;">Aktywne efekty</div>
+        <div id="vsFx"></div>
+        <div class="gs-card-t" style="margin-top:10px;">Przebieg bitwy</div>
+        <div class="blog" id="bLog"></div>
+        <button style="width:100%;margin-top:8px;color:var(--al);" onclick="endBattleManual()">✕ Zakończ bitwę</button>
+      </div>
+    </div>
+    <div class="gs-card gs-manual">
       <div class="gs-card-t">Runda</div>
       <div class="gs-round">
         <button onclick="adjRound(-1)">−</button>
@@ -287,7 +400,7 @@ textarea:focus{outline:none;border-color:var(--ap);}
         <button onclick="adjRound(1)">+</button>
       </div>
     </div>
-    <div class="gs-card">
+    <div class="gs-card gs-manual">
       <div class="gs-card-t">Dzikie kości (Wild Dice)</div>
       <div class="gs-2col">
         <div class="gs-side p">
@@ -300,13 +413,13 @@ textarea:focus{outline:none;border-color:var(--ap);}
         </div>
       </div>
     </div>
-    <div class="gs-card">
+    <div class="gs-card gs-manual">
       <div class="gs-card-t">Faza inicjatywy — kto ma singles?</div>
       <div class="gs-init-row"><label>Gracz P — singles</label><input type="number" id="initP" min="0" max="6" value="0" oninput="calcInit()"></div>
       <div class="gs-init-row"><label>Gracz L — singles</label><input type="number" id="initL" min="0" max="6" value="0" oninput="calcInit()"></div>
       <div class="gs-init-result" id="initResult">Wpisz liczbę singli obu graczy.</div>
     </div>
-    <div class="gs-card">
+    <div class="gs-card gs-manual">
       <div class="gs-card-t">Ekonomia akcji modeli</div>
       <div class="gs-mlist" id="gsModelList"></div>
     </div>
@@ -374,6 +487,15 @@ textarea:focus{outline:none;border-color:var(--ap);}
     <button style="flex:1;" onclick="closeGhSettings()">Zamknij</button>
   </div>
   <button style="width:100%;margin-top:6px;color:var(--al);" onclick="ghDisconnect()">Rozłącz</button>
+</div>
+
+<!-- Battle choice modal -->
+<div class="modal-ov" id="bModal">
+  <div class="modal-box bm-box">
+    <div class="modal-hdr"><h3 id="bmTitle"></h3></div>
+    <div class="bm-body" id="bmBody"></div>
+    <div class="bm-opts" id="bmOpts"></div>
+  </div>
 </div>
 
 <script>
@@ -1366,12 +1488,14 @@ function drawZones(){
 
 function drawObjs(){
   for(const o of objectives){
+    if(o.kind==='treasure'&&o.carrier!=null&&B&&B.active)continue; // niesiony skarb rysowany przy fighterze
     const{cx,cy}=jToC(o.x,o.y);
     G.globalAlpha=ma(o.lv||0);
     G.beginPath();G.arc(cx,cy,10,0,Math.PI*2);
-    G.fillStyle='#1a3a1a';G.strokeStyle='#50c878';G.lineWidth=2;G.fill();G.stroke();
-    G.fillStyle='#50c878';G.font='bold 7px -apple-system,Arial,sans-serif';G.textAlign='center';
-    G.fillText('OBJ',cx,cy+2.5);
+    const tr=o.kind==='treasure',col=tr?'#f0b840':'#50c878';
+    G.fillStyle=tr?'#3a2a08':'#1a3a1a';G.strokeStyle=col;G.lineWidth=2;G.fill();G.stroke();
+    G.fillStyle=col;G.font='bold 7px -apple-system,Arial,sans-serif';G.textAlign='center';
+    G.fillText(tr?'SKARB':((o.vp||1)>1?'OBJ '+o.vp:'OBJ'),cx,cy+2.5);
     if(o.lv)badge(cx,cy,o.lv);G.globalAlpha=1;
   }
 }
@@ -1459,7 +1583,9 @@ function draw(){
   drawObjs();drawPrev();drawPendingCursor();
   if(tool==='los')drawLoS();
   if(tool==='range')drawRange();
+  if(B&&B.active)drawBattleUnder();
   drawModels();
+  if(B&&B.active)drawBattleOver();
   if(typeof scheduleSave==='function')scheduleSave();
 }
 
@@ -1481,17 +1607,20 @@ function showStats(m){
   const hp=m.hp!==undefined?m.hp:db.W;
   const pct=hp/db.W,hc=pct>.6?'#50c878':pct>.3?'#f0b840':'#e05050';
   const isAct=!!m.activated;
+  const inB=!!(B&&B.active);
+  const fxl=inB?fxListFor(m):[];
   content.innerHTML=`
     <div class="sp-head">
       <div class="sp-name">${db.n}</div>
       <div class="sp-band">${db.band}</div>
       <div class="sp-tags">${db.tags.map(t=>`<span class="sp-tag">${t}</span>`).join('')}</div>
     </div>
-    <div class="act-row ${isAct?'act-on':''}" onclick="toggleActivated(${m.id})">
+    <div class="act-row ${isAct?'act-on':''}" ${inB?'':`onclick="toggleActivated(${m.id})"`}>
       <span class="act-icon">${isAct?'✓':'○'}</span>
       <span class="act-label">${isAct?'AKTYWOWANY w tej rundzie':'Nie aktywowany'}</span>
-      <span class="act-hint">(kliknij aby przełączyć)</span>
+      <span class="act-hint">${inB?(isAI(m.s)?'(komputer)':'(Twój fighter)'):'(kliknij aby przełączyć)'}</span>
     </div>
+    ${inB&&fxl.length?`<div class="sp-sec"><div class="sp-sec-t">Aktywne efekty</div>${fxl.map(t=>`<div class="ab-item">${t}</div>`).join('')}</div>`:''}
     <div class="pts-row"><span style="font-size:11px;color:var(--text2)">Koszt</span><span class="pts-val">${db.P}p</span></div>
     <div class="sp-sec">
       <div class="sp-sec-t">Statystyki</div>
@@ -1526,13 +1655,13 @@ function showStats(m){
     <div class="hp-row">
       <span class="hp-label">HP</span>
       <div class="hp-bar-wrap"><div class="hp-bar" style="width:${pct*100}%;background:${hc}"></div></div>
-      <div class="hp-ctrl">
+      ${inB?`<span class="hp-max">${hp}/${db.W}</span>`:`<div class="hp-ctrl">
         <button onclick="adjHP(${m.id},-1)">−</button>
         <input class="hp-inp" type="number" value="${hp}" min="0" max="${db.W}" id="hpI${m.id}" onchange="setHP(${m.id},parseInt(this.value)||0)">
         <button onclick="adjHP(${m.id},1)">+</button>
         <span class="hp-max">/${db.W}</span>
         <button title="Reset" onclick="setHP(${m.id},${db.W})">↺</button>
-      </div>
+      </div>`}
     </div>
     <div class="sp-sec">
       <div class="sp-sec-t">Broń</div>
@@ -1969,6 +2098,7 @@ function pos(e){
 
 CV.addEventListener('contextmenu',e=>{
   e.preventDefault();
+  if(B&&B.active)return;
   const{cx,cy}=pos(e);const ex=objAt(cx,cy);
   if(ex){objectives=objectives.filter(o=>o.id!==ex.id);sts('Objective usunięty.');draw();return;}
   if(!canPlace(cx,cy,level)){sts('❌ Poza strefą poziomu '+level+'.');return;}
@@ -1998,6 +2128,7 @@ CV.addEventListener('pointermove',e=>{
 
 CV.addEventListener('pointerdown',e=>{
   if(e.button!==0)return;
+  if(B&&B.active){const p=pos(e);battleClick(p.cx,p.cy);return;}
   const{cx,cy}=pos(e);const{jx,jy}=cToJ(cx,cy);
   const ox=snap(jx),oy=snap(jy);
 
@@ -2044,7 +2175,8 @@ CV.addEventListener('pointerdown',e=>{
       if(m&&m.id!==losA.id){
         const{cx:ax,cy:ay}=jToC(losA.x,losA.y),{cx:bx,cy:by}=jToC(m.x,m.y);
         const los=hasLoS(ax,ay,bx,by),d=Math.hypot(m.x-losA.x,m.y-losA.y).toFixed(2);
-        sts((los?'<span style="color:#50c878">✓ Widzą się</span>':'<span style="color:#e05050">✗ Zablokowane</span>')+' — dystans: '+d+'"');
+        const blk=models.find(o=>o.id!==losA.id&&o.id!==m.id&&segDist(o.x,o.y,losA.x,losA.y,m.x,m.y)<(11/IN)*0.95);
+        sts((los&&!blk?'<span style="color:#50c878">✓ Widzą się</span>':'<span style="color:#e05050">✗ Zablokowane'+(los&&blk?' przez model '+(getDB(blk)?.n||blk.n):'')+'</span>')+' — dystans: '+d+'"');
         losA=null;
       }else{losA=m||null;}
       draw();
@@ -2075,7 +2207,7 @@ CV.addEventListener('pointerup',()=>{
 });
 
 CV.addEventListener('click',e=>{
-  if(drag)return;
+  if(drag||(B&&B.active))return;
   const{cx,cy}=pos(e);const m=modelAt(cx,cy);
   if(m){
     if(e.shiftKey){
@@ -2111,7 +2243,7 @@ function showTab(name){
     document.getElementById('tab'+n).classList.toggle('active',n===name);
     document.getElementById('tabbtn'+n).classList.toggle('on',n===name);
   });
-  if(name==='Game'){gsRenderModelList();updateGameUI();}
+  if(name==='Game'){gsRenderModelList();if(!B)updateGameUI();renderBattleUI();}
 }
 
 
@@ -2218,6 +2350,7 @@ let saveTimer=null;
 function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveLocal,600);scheduleGhSave();}
 
 function localSessionObj(){
+  if(B&&B.snapshot)return B.snapshot; // w trakcie bitwy zapisujemy stan sprzed bitwy
   return {terrain,models,objectives,level,game:gameState};
 }
 async function saveLocal(){
@@ -2282,7 +2415,7 @@ async function ghSaveNow(){
   }catch(e){setGhStatus('⚠️ Nie udało się połączyć z GitHub (sieć/CORS).');}
   ghBusy=false;
 }
-function scheduleGhSave(){if(!ghConfig)return;clearTimeout(ghSaveTimer);ghSaveTimer=setTimeout(ghSaveNow,3500);}
+function scheduleGhSave(){if(!ghConfig||B)return;clearTimeout(ghSaveTimer);ghSaveTimer=setTimeout(ghSaveNow,3500);}
 
 function openGhSettings(){
   document.getElementById('ghGistId').value=ghConfig?ghConfig.gistId:'';
@@ -2309,6 +2442,2321 @@ function updateGhBadge(){
 }
 
 // ═══════════════════════════════════════════════
+// BITWA Z KOMPUTEREM — silnik zasad
+// ═══════════════════════════════════════════════
+// Odległości między fighterami mierzone od krawędzi podstawek (promień = rysowany krążek).
+const BASE_R=11/IN, LV_H=3, GS=0.25, MIN_GAP=0.15;
+const NX=Math.round(22/GS)+1, NY=Math.round(30/GS)+1, NL=3, NN=NL*NX*NY;
+let B=null;   // stan bitwy (null = tryb edytora)
+let BX=null;  // statyczna geometria planszy liczona na starcie bitwy
+class BattleAbort extends Error{}
+class BattleEnd extends Error{constructor(result){super('koniec bitwy');this.result=result;}}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const d6=()=>1+Math.floor(Math.random()*6);
+const rollN=n=>Array.from({length:Math.max(0,n)},d6);
+const half=v=>Math.ceil(v/2);
+const TYPE_PL={D:'Double',T:'Triple',Q:'Quad'};
+function chk(){if(!B||B.aborted)throw new BattleAbort('przerwano');}
+async function pause(ms){if(B&&B.fast)ms=0;await sleep(ms);chk();}
+function other(s){return s==='p'?'l':'p';}
+function isAI(s){return !!B&&B.aiSides.includes(s);}
+function liveModel(id){return models.find(m=>m.id===id)||null;}
+function hasTag(m,t){const db=getDB(m);return !!db&&db.tags.includes(t);}
+function bandOf(m){return getDB(m)?.band||'';}
+function mName(m){const db=getDB(m);return db?db.n:(m.n||'?');}
+function maxW(m){return getDB(m)?.W||16;}
+function dmgTaken(m){return maxW(m)-m.hp;}
+function sideName(s){if(!B)return s.toUpperCase();if(B.human===s)return 'Ty';if(B.human)return 'Komputer';return 'AI '+s.toUpperCase();}
+function nm(m){return `<b style="color:${getModelColor(m).main}">${mName(m)}</b>`;}
+function dieH(v,cls){return `<span class="die ${cls||''}">${v}</span>`;}
+function diceH(rolls,fn){return rolls.map(r=>dieH(r,fn?fn(r):'')).join('');}
+function logB(html){
+  if(!B)return;
+  B.log.push(html);if(B.log.length>500)B.log.shift();
+  sts(html);
+  if(typeof renderBattleLog==='function')renderBattleLog();
+}
+
+// ── Siatka węzłów ──────────────────────────────
+function nIdx(l,ix,iy){return (l*NX+ix)*NY+iy;}
+function nL(i){return Math.floor(i/(NX*NY));}
+function nIX(i){return Math.floor(i/NY)%NX;}
+function nIY(i){return i%NY;}
+function nPos(i){return {x:nIX(i)*GS,y:nIY(i)*GS,lv:nL(i)};}
+function posIdx(x,y,l){
+  const ix=Math.max(0,Math.min(NX-1,Math.round(x/GS))),iy=Math.max(0,Math.min(NY-1,Math.round(y/GS)));
+  return nIdx(Math.max(0,Math.min(NL-1,l||0)),ix,iy);
+}
+function segDist(px,py,ax,ay,bx,by){
+  const dx=bx-ax,dy=by-ay,l2=dx*dx+dy*dy;
+  let t=l2>0?((px-ax)*dx+(py-ay)*dy)/l2:0;t=Math.max(0,Math.min(1,t));
+  return Math.hypot(px-ax-t*dx,py-ay-t*dy);
+}
+function ptInPolyJ(x,y,poly){
+  let ins=false;
+  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+    const xi=poly[i].x,yi=poly[i].y,xj=poly[j].x,yj=poly[j].y;
+    if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi))ins=!ins;
+  }
+  return ins;
+}
+// Punkt przecięcia odcinków AB i CD — zwraca parametr t na AB lub -1
+function segInter(ax,ay,bx,by,cx,cy,dx,dy){
+  const d1x=bx-ax,d1y=by-ay,d2x=dx-cx,d2y=dy-cy,cr=d1x*d2y-d1y*d2x;
+  if(Math.abs(cr)<1e-9)return -1;
+  const t=((cx-ax)*d2y-(cy-ay)*d2x)/cr,u=((cx-ax)*d1y-(cy-ay)*d1x)/cr;
+  return (t>=0&&t<=1&&u>=0&&u<=1)?t:-1;
+}
+
+// Ściany blokujące ruch (osie ścian z wyciętymi otwartymi drzwiami), przeszkody dające osłonę, platformy
+function buildBattleGeometry(){
+  const walls=[],obst=[],plats={1:[],2:[]};
+  for(const t of terrain){
+    const rot=t.rot||0;
+    if(t.type==='rb'){
+      const horiz=rot%2===0,bw=horiz?2:3,bh=horiz?3:2,x0=t.ox,y0=t.oy,x1=t.ox+bw,y1=t.oy+bh;
+      obst.push([x0,y0,x1,y0],[x1,y0,x1,y1],[x1,y1,x0,y1],[x0,y1,x0,y0]);
+      continue;
+    }
+    const rects=buildRects(t.type,t.ox,t.oy,rot);
+    const doors=getDoorsWithState(t).map(d=>{const a=cToJ(d.ax,d.ay),b=cToJ(d.bx,d.by);return {ax:a.jx,ay:a.jy,bx:b.jx,by:b.jy,open:d.open};});
+    for(const r of rects){
+      obst.push([r.x,r.y,r.x+r.w,r.y],[r.x+r.w,r.y,r.x+r.w,r.y+r.h],[r.x+r.w,r.y+r.h,r.x,r.y+r.h],[r.x,r.y+r.h,r.x,r.y]);
+      if(t.type==='fs')continue; // fire step nie blokuje ruchu
+      const horiz=r.w>=r.h,ht=(horiz?r.h:r.w)/2;
+      let ax,ay,bx,by;
+      if(horiz){ax=r.x;bx=r.x+r.w;ay=by=r.y+r.h/2;}else{ay=r.y;by=r.y+r.h;ax=bx=r.x+r.w/2;}
+      const len=Math.hypot(bx-ax,by-ay);if(len<0.01)continue;
+      const ux=(bx-ax)/len,uy=(by-ay)/len,cuts=[];
+      for(const d of doors){
+        if(!d.open)continue;
+        const pa=Math.abs((d.ax-ax)*uy-(d.ay-ay)*ux),pb=Math.abs((d.bx-ax)*uy-(d.by-ay)*ux);
+        if(pa>ht+0.05||pb>ht+0.05)continue;
+        const ta=(d.ax-ax)*ux+(d.ay-ay)*uy,tb=(d.bx-ax)*ux+(d.by-ay)*uy;
+        const t0=Math.max(0,Math.min(ta,tb)),t1=Math.min(len,Math.max(ta,tb));
+        if(t1>t0)cuts.push([t0,t1]);
+      }
+      cuts.sort((a,b)=>a[0]-b[0]);
+      let cur=0;
+      const push=(s,e)=>{if(e-s>0.01)walls.push({ax:ax+ux*s,ay:ay+uy*s,bx:ax+ux*e,by:ay+uy*e,ht});};
+      for(const[c0,c1]of cuts){push(cur,c0);cur=Math.max(cur,c1);}
+      push(cur,len);
+    }
+    for(const lv of[1,2]){const s=buildPlatformShape(t,lv);if(s)plats[lv].push(s);}
+  }
+  const free=new Uint8Array(NN),fly=new Uint8Array(NN);
+  for(let l=0;l<NL;l++)for(let ix=0;ix<NX;ix++)for(let iy=0;iy<NY;iy++){
+    const x=ix*GS,y=iy*GS,i=nIdx(l,ix,iy);
+    if(x<BASE_R-1e-6||x>22-BASE_R+1e-6||y<BASE_R-1e-6||y>30-BASE_R+1e-6)continue;
+    if(l>0&&!plats[l].some(p=>ptInPolyJ(x,y,p)))continue;
+    fly[i]=1;
+    let ok=true;
+    for(const w of walls)if(segDist(x,y,w.ax,w.ay,w.bx,w.by)<BASE_R+w.ht-1e-6){ok=false;break;}
+    if(ok)free[i]=1;
+  }
+  // Otwarte krawędzie platform (nie przylegające do ścian) — do testu upadku
+  const edges={1:[],2:[]};
+  for(const lv of[1,2])for(const p of plats[lv])for(let i=0;i<p.length;i++){
+    const a=p[i],b=p[(i+1)%p.length],mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+    if(walls.some(w=>segDist(mx,my,w.ax,w.ay,w.bx,w.by)<w.ht+0.3))continue;
+    edges[lv].push([a.x,a.y,b.x,b.y]);
+  }
+  // Odcinki blokujące widoczność (współrzędne mapy) z wysokością szczytu ściany
+  const losSegs=[],saved=terrain;
+  try{
+    for(const t of saved){
+      terrain=[t];
+      const top=wallTop(t.type);
+      for(const[x1,y1,x2,y2]of allSegs())losSegs.push([y1/IN,x1/IN,y2/IN,x2/IN,top,t.id]);
+    }
+  }finally{terrain=saved;}
+  const platTerr=[];
+  for(const t of terrain)for(const lv of[1,2]){const sh=buildPlatformShape(t,lv);if(sh)platTerr.push({lv,poly:sh,tid:t.id});}
+  return {walls,obst,plats,free,fly,edges,losSegs,platTerr};
+}
+
+// Maski dynamiczne: pola zajęte przez innych fighterów i strefy zwarcia (≤1" od wroga)
+function dynMasks(m){
+  const occ=new Uint8Array(NN),eng=new Uint8Array(NN);
+  // Podstawki nie mogą się stykać (minimalny odstęp MIN_GAP); zajęte pole blokuje też inne poziomy,
+  // żeby fighter nie stał dokładnie nad/pod innym (na mapie 2D wyglądałoby to jak nałożenie)
+  const rr=2*BASE_R+MIN_GAP,re=1+2*BASE_R;
+  for(const o of models){
+    if(o.id===m.id)continue;
+    const enemy=o.s!==m.s,rad=Math.max(enemy?re:0,rr),l=o.lv||0;
+    const ix0=Math.max(0,Math.floor((o.x-rad)/GS)),ix1=Math.min(NX-1,Math.ceil((o.x+rad)/GS));
+    const iy0=Math.max(0,Math.floor((o.y-rad)/GS)),iy1=Math.min(NY-1,Math.ceil((o.y+rad)/GS));
+    for(let ix=ix0;ix<=ix1;ix++)for(let iy=iy0;iy<=iy1;iy++){
+      const d=Math.hypot(ix*GS-o.x,iy*GS-o.y);
+      if(d<rr)for(let ll=0;ll<NL;ll++)occ[nIdx(ll,ix,iy)]=1;
+      if(enemy&&d<=re+1e-6)eng[nIdx(l,ix,iy)]=1;
+    }
+  }
+  return {occ,eng};
+}
+
+// Kopiec binarny na tablicach typowanych (współdzielony bufor — Dijkstry nie są zagnieżdżane)
+const HEAP_K=new Float64Array(NN*10),HEAP_V=new Int32Array(NN*10);
+class MinHeap{
+  constructor(){this.n=0;}
+  get size(){return this.n;}
+  push(d,i){
+    const K=HEAP_K,V=HEAP_V;let k=this.n++;
+    while(k>0){const p=(k-1)>>1;if(K[p]<=d)break;K[k]=K[p];V[k]=V[p];k=p;}
+    K[k]=d;V[k]=i;
+  }
+  pop(){ // zwraca węzeł; klucz w this.d
+    const K=HEAP_K,V=HEAP_V;
+    this.d=K[0];const top=V[0];
+    const n=--this.n;
+    if(n>0){
+      const d=K[n],v=V[n];let k=0;
+      for(;;){let c=2*k+1;if(c>=n)break;if(c+1<n&&K[c+1]<K[c])c++;if(K[c]>=d)break;K[k]=K[c];V[k]=V[c];k=c;}
+      K[k]=d;V[k]=v;
+    }
+    return top;
+  }
+}
+const DIRS=[[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,Math.SQRT2],[1,-1,Math.SQRT2],[-1,1,Math.SQRT2],[-1,-1,Math.SQRT2]];
+
+// Zasięg ruchu (Dijkstra). mode: 'move' | 'disengage'
+function computeReach(m,budget,mode){
+  const isFly=mode==='move'&&hasTag(m,'FLY');
+  const {occ,eng}=dynMasks(m);
+  const dist=new Float64Array(NN).fill(Infinity),par=new Int32Array(NN).fill(-1);
+  const s=posIdx(m.x,m.y,m.lv||0);
+  dist[s]=0;
+  const h=new MinHeap();h.push(0,s);
+  const pass=i=>isFly?BX.fly[i]===1:(BX.free[i]===1&&!occ[i]);
+  while(h.size){
+    const i=h.pop(),d=h.d;
+    if(d>dist[i])continue;
+    if(mode==='move'&&i!==s&&eng[i])continue; // wejście w zwarcie kończy ruch
+    const l=nL(i),ix=nIX(i),iy=nIY(i);
+    for(const[dx,dy,c]of DIRS){
+      const jx=ix+dx,jy=iy+dy;
+      if(jx<0||jy<0||jx>=NX||jy>=NY)continue;
+      const j=nIdx(l,jx,jy);
+      if(!pass(j))continue;
+      if(dx&&dy&&(!pass(nIdx(l,ix+dx,iy))||!pass(nIdx(l,ix,iy+dy))))continue;
+      const nd=d+c*GS;
+      if(nd<=budget+1e-6&&nd<dist[j]){dist[j]=nd;par[j]=i;h.push(nd,j);}
+    }
+    if(mode==='move'){
+      for(const dl of[1,-1]){
+        const ll=l+dl;if(ll<0||ll>=NL)continue;
+        const j=nIdx(ll,ix,iy);if(!pass(j))continue;
+        const nd=d+(dl>0&&!isFly?LV_H:0);
+        if(nd<=budget+1e-6&&nd<dist[j]){dist[j]=nd;par[j]=i;h.push(nd,j);}
+      }
+    }
+  }
+  return {dist,par,start:s,eng,occ,mode,isFly,budget,mid:m.id};
+}
+function reachable(R,i){
+  return i!==R.start&&R.dist[i]<=R.budget+1e-6&&BX.free[i]===1&&!R.occ[i]&&(R.mode!=='disengage'||!R.eng[i]);
+}
+function pathNodes(R,i){const p=[];let k=i;while(k>=0){p.push(k);if(k===R.start)break;k=R.par[k];}return p.reverse();}
+
+// Pole odległości (ścieżką) do najbliższej strefy zwarcia z wrogiem — dla AI
+function computeField(m){
+  const isFly=hasTag(m,'FLY');
+  const key=m.s+(isFly?'F':'')+'|'+models.filter(o=>o.s!==m.s).map(o=>o.x+','+o.y+','+(o.lv||0)).join(';');
+  if(B&&B.fieldCache&&B.fieldCache.key===key)return B.fieldCache.dist;
+  const f=computeFieldRaw(m,isFly);
+  if(B)B.fieldCache={key,dist:f};
+  return f;
+}
+function computeFieldRaw(m,isFly){
+  const {eng}=dynMasks(m);
+  const dist=new Float64Array(NN).fill(Infinity);
+  const h=new MinHeap();
+  const pass=i=>isFly?BX.fly[i]===1:BX.free[i]===1;
+  for(let i=0;i<NN;i++)if(eng[i]&&pass(i)){dist[i]=0;h.push(0,i);}
+  while(h.size){
+    const i=h.pop(),d=h.d;
+    if(d>dist[i])continue;
+    const l=nL(i),ix=nIX(i),iy=nIY(i);
+    for(const[dx,dy,c]of DIRS){
+      const jx=ix+dx,jy=iy+dy;
+      if(jx<0||jy<0||jx>=NX||jy>=NY)continue;
+      const j=nIdx(l,jx,jy);if(!pass(j))continue;
+      const nd=d+c*GS;if(nd<dist[j]){dist[j]=nd;h.push(nd,j);}
+    }
+    for(const dl of[1,-1]){
+      const ll=l+dl;if(ll<0||ll>=NL)continue;
+      const j=nIdx(ll,ix,iy);if(!pass(j))continue;
+      const nd=d+(dl<0&&!isFly?LV_H:0); // pole liczone od celu: wejście w górę (odwrotnie = w dół) kosztuje
+      if(nd<dist[j]){dist[j]=nd;h.push(nd,j);}
+    }
+  }
+  return dist;
+}
+
+// ── Pomiary, widoczność, broń ──────────────────
+function edgeDist(a,b){return Math.max(0,Math.hypot(a.x-b.x,a.y-b.y,((a.lv||0)-(b.lv||0))*LV_H)-2*BASE_R);}
+// Wysokości (cale): ściany budynków z platformami sięgają parapetu 1. piętra, mury i bastiony są niższe;
+// linia widzenia biegnie od oczu do głowy fightera (EYE nad podłogą jego poziomu)
+const EYE=1.2;
+function wallTop(type){return ['v1','v2','b1','b3'].includes(type)?LV_H+0.5:2.5;}
+// Budynek, na którego platformie stoi fighter (jego parapet nie zasłania mu widoku)
+function standingOn(m){
+  const lv=m.lv||0;if(!lv)return null;
+  const p=BX.platTerr.find(q=>q.lv===lv&&ptInPolyJ(m.x,m.y,q.poly));
+  return p?p.tid:null;
+}
+function losClear(a,b){
+  const ha=(a.lv||0)*LV_H+EYE,hb=(b.lv||0)*LV_H+EYE;
+  const ta=standingOn(a),tb=standingOn(b);
+  for(const[x1,y1,x2,y2,top,tid]of BX.losSegs){
+    if(tid===ta||tid===tb)continue;
+    const t=segInter(a.x,a.y,b.x,b.y,x1,y1,x2,y2);
+    if(t>=0&&ha+(hb-ha)*t<top)return false;
+  }
+  return true;
+}
+// Zgodnie z zasadami mapy: ściany blokują widoczność tylko między fighterami na poziomie 0
+// Promienie od środka patrzącego do środka i dwóch boków podstawki celu — widać, jeśli którykolwiek jest wolny
+function losRays(a,b){
+  const dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy)||1,px=-dy/L*BASE_R*0.85,py=dx/L*BASE_R*0.85;
+  const lv=b.lv||0;
+  return [{x:b.x,y:b.y,lv},{x:b.x+px,y:b.y+py,lv},{x:b.x-px,y:b.y-py,lv}];
+}
+// Inny fighter (sojusznik lub wróg) na drodze promienia zasłania widok
+function modelBlocksRay(a,b,pt){
+  const lo=Math.min(a.lv||0,b.lv||0),hi=Math.max(a.lv||0,b.lv||0);
+  for(const o of models){
+    if(o.id===a.id||o.id===b.id)continue;
+    const ol=o.lv||0;if(ol<lo||ol>hi)continue;
+    if(segDist(o.x,o.y,a.x,a.y,pt.x,pt.y)<BASE_R*0.95)return true;
+  }
+  return false;
+}
+// Ściany blokują widoczność, gdy linia przechodzi poniżej ich szczytu; modele zawsze
+function canSee(a,b){
+  for(const pt of losRays(a,b)){
+    if(!losClear(a,pt))continue;
+    if(modelBlocksRay(a,b,pt))continue;
+    return true;
+  }
+  return false;
+}
+// Czy m jest w zwarciu; sub = hipotetyczna pozycja jednego z fighterów (dla AI)
+function isEngagedAt(m,sub){
+  return models.some(o=>{const q=(sub&&o.id===sub.id)?sub:o;return q.id!==m.id&&q.s!==m.s&&edgeDist(q,m)<=1+1e-6;});
+}
+// Ataku dystansowego nie można wykonać w zwarciu ani wycelować w fightera w zwarciu
+function rangedBlock(a,t,w,sub){
+  if(isMelee(w))return null;
+  const me=sub&&sub.id===a.id?sub:a;
+  if(isEngagedAt(me,sub))return 'strzelec jest w zwarciu';
+  if(isEngagedAt(t,sub))return 'cel jest w zwarciu';
+  return null;
+}
+function isEngaged(m){return models.some(o=>o.s!==m.s&&edgeDist(m,o)<=1+1e-6);}
+function wpnRange(w){
+  const p=String(w.r).replace(/[^0-9.\-]/g,'').split('-').map(Number);
+  return p.length>1?{min:p[0],max:p[1]}:{min:0,max:p[0]};
+}
+function isMelee(w){const r=wpnRange(w);return r.min===0&&r.max<=3;}
+function inRange(a,t,w){const d=edgeDist(a,t),r=wpnRange(w);return d<=r.max+1e-6&&d>=r.min-1e-6;}
+function parseDmg(d){const p=String(d).split('/').map(Number);return {h:p[0]||0,c:(p[1]!==undefined?p[1]:p[0])||0};}
+function canTarget(a,t,w){
+  if(t.s===a.s)return false;
+  if(!inRange(a,t,w)||rangedBlock(a,t,w)||!canSee(a,t))return false;
+  if(B.fx.some(e=>e.stat==='CANTTARGET'&&e.model===a.id&&e.protect===t.id))return false;
+  return true;
+}
+function attackOptions(m,restrict){
+  const res=[];
+  for(const w of getDB(m).wpn){
+    if(restrict&&restrict.scope&&(isMelee(w)?'melee':'ranged')!==restrict.scope)continue;
+    for(const t of models){
+      if(restrict&&restrict.target!=null&&t.id!==restrict.target)continue;
+      if(canTarget(m,t,w))res.push({w,t});
+    }
+  }
+  return res;
+}
+
+// ── Efekty (zdolności, reakcje) ────────────────
+// e: {stat,val,scope,until:'act'|'round'|'battle'|'nextAct',actOf,model|aura:{r,rel,vis,filter},once:'attack'|'move'|'moveEnd',cond,src,label}
+function addFx(e){e.id=++B.fxId;B.fx.push(e);return e;}
+function fxApplies(e,m,ctx){
+  if(e.model!==undefined&&e.model!==null&&e.model!==m.id)return false;
+  if(e.aura){
+    const src=liveModel(e.src);if(!src)return false;
+    if(e.aura.rel==='ally'&&src.s!==m.s)return false;
+    if(e.aura.rel==='enemy'&&src.s===m.s)return false;
+    if(src.id!==m.id){
+      if(edgeDist(src,m)>e.aura.r+1e-6)return false;
+      if(e.aura.vis&&!canSee(src,m))return false;
+    }
+    if(e.aura.filter&&!e.aura.filter(m,src))return false;
+  }
+  if(e.scope&&e.scope!=='all'&&(!ctx||ctx.scope!==e.scope))return false;
+  if(e.cond&&!e.cond(m,ctx||{}))return false;
+  return true;
+}
+function modSum(m,stat,ctx){let s=0;for(const e of B.fx)if(e.stat===stat&&fxApplies(e,m,ctx))s+=e.val;return s;}
+function hasFlag(m,stat,ctx){return B.fx.some(e=>e.stat===stat&&fxApplies(e,m,ctx));}
+function consumeOnce(m,kind,scope){
+  B.fx=B.fx.filter(e=>!(e.once===kind&&e.model===m.id&&(kind!=='attack'||!e.scope||e.scope==='all'||e.scope===scope)));
+}
+function statM(m){return Math.max(1,(getDB(m)?.M||3)+modSum(m,'M',{}));}
+function abilityValue(m,v){const mod=modSum(m,'VAL',{});let x=v+mod;if(mod>0)x=Math.min(6,x);return Math.max(1,x);}
+
+// ── Atak ───────────────────────────────────────
+function inCover(a,t,w){
+  if(isMelee(w)||edgeDist(a,t)<=1)return false;
+  for(const[x1,y1,x2,y2]of BX.obst){
+    const k=segInter(a.x,a.y,t.x,t.y,x1,y1,x2,y2);if(k<0)continue;
+    const px=a.x+(t.x-a.x)*k,py=a.y+(t.y-a.y)*k;
+    if(Math.hypot(px-t.x,py-t.y)<=1+BASE_R)return true;
+  }
+  return false;
+}
+function profile(a,t,w){
+  const ctx={scope:isMelee(w)?'melee':'ranged',att:a,tgt:t,w};
+  const A=Math.max(1,w.A+modSum(a,'A',ctx));
+  const S=w.S+modSum(a,'S',ctx);
+  const cover=inCover(a,t,w);
+  const T=Math.max(1,getDB(t).T+modSum(t,'T',ctx))+(cover?1:0);
+  const th=S>T?3:S===T?4:5;
+  const crit=hasFlag(a,'CRIT4',ctx)?4:6;
+  const allCrit=hasFlag(a,'ALLCRIT',ctx);
+  const d=parseDmg(w.d);
+  const bonus=modSum(a,'DMG',ctx),bonusC=modSum(a,'DMGC',ctx);
+  const red=modSum(t,'DMGRED',ctx)+modSum(a,'DMGRED_ATT',ctx);
+  const per=x=>red>0?Math.max(1,x-red):x;
+  return {ctx,A,S,T,th,crit,allCrit,dh:per(d.h+bonus),dc:per(d.c+bonus+bonusC),cover};
+}
+function evAttack(p){
+  if(p.allCrit)return p.A*((7-p.th)/6)*p.dc;
+  return p.A*(Math.max(0,p.crit-p.th)/6*p.dh+(7-p.crit)/6*p.dc);
+}
+async function doAttack(att,tgt,w){
+  chk();
+  const p=profile(att,tgt,w);
+  const melee=p.ctx.scope==='melee';
+  B.lastAttack={a:{x:att.x,y:att.y},b:{x:tgt.x,y:tgt.y}};
+  logB(`⚔ ${nm(att)} atakuje ${nm(tgt)}: <i>${w.name}</i> — A${p.A} S${p.S} vs T${p.T}${p.cover?' (osłona +1T)':''}, trafia na ${p.th}+, krytyk ${p.allCrit?'każde trafienie':p.crit+'+'}, obr. ${p.dh}/${p.dc}`);
+  draw();
+  let react=await targetedReaction(tgt,att,w,p,'pre');
+  await pause(isAI(att.s)?450:200);
+  let rolls=rollN(p.A);
+  if(!react){const r2=await targetedReaction(tgt,att,w,p,'post',rolls);if(r2){react=r2;rolls=r2.rolls;}}
+  let hits=0,crits=0,misses=0,ones=0;
+  for(const r of rolls){
+    if(r>=p.crit||r>=p.th){if(p.allCrit||r>=p.crit)crits++;else hits++;}
+    else{misses++;if(r===1)ones++;}
+  }
+  let dmg=hits*p.dh+crits*p.dc;
+  const cut=B.fx.find(e=>e.stat==='CUTLASS'&&fxApplies(e,att,p.ctx));
+  if(cut&&hits+crits>0)dmg+=cut.val;
+  const sup=B.fx.find(e=>e.stat==='SUPPRESS'&&fxApplies(e,att,p.ctx));
+  logB(`🎲 ${diceH(rolls,r=>(p.allCrit?r>=p.th:r>=p.crit)?'crit':(r>=p.th?'hit':'miss'))} → ${hits} traf. + ${crits} kryt.${cut&&hits+crits>0?` + ${cut.val} (${cut.label})`:''} = <b>${dmg}</b> obr.`);
+  consumeOnce(att,'attack',p.ctx.scope);
+  if(react&&react.name==='Red Thirst Strike'&&crits===0){
+    logB(`🩸 Red Thirst Strike: brak krytyków — ${nm(att)} dostaje 3 obr., ${nm(tgt)} leczy do 3.`);
+    heal(tgt,3);
+    await dealDamage(att,3,tgt,'Red Thirst Strike');
+  }
+  // Reakcje "gdy obrażenia wystarczą, by powalić"
+  let lethalBack=0,lethalName='';
+  if(melee&&dmg>=tgt.hp&&liveModel(tgt.id)&&canReact(tgt)){
+    const rn=reactName(tgt);
+    if((rn==='Daemonic Retribution'||rn==='Grav-Chute Evasion')&&!(hasTag(tgt,'BEAST')||(hasTag(tgt,'SCOUT')&&hasTag(tgt,'FLY')))){
+      if(await decideReact(tgt,`${mName(tgt)} zaraz padnie. Reakcja <b>${rn}</b>: atakujący otrzymuje K6 obrażeń.`,()=>true)){
+        spendReaction(tgt);lethalBack=d6();lethalName=rn;
+      }
+    }else if(rn==='Last Gasp Grenade'){
+      if(await decideReact(tgt,`${mName(tgt)} zaraz padnie. Reakcja <b>Last Gasp Grenade</b>: rzut K6, na 4+ atakujący dostaje 3 obrażenia.`,()=>true)){
+        spendReaction(tgt);const r=d6();lethalBack=r>=4?3:0;lethalName=`${rn} (rzut ${r})`;
+      }
+    }
+  }
+  if(liveModel(tgt.id))await dealDamage(tgt,dmg,att);
+  if(lethalBack&&liveModel(att.id))await dealDamage(att,lethalBack,null,lethalName);
+  if(react&&react.name==='Reflexive Counter-fire'&&liveModel(att.id)){
+    const back=(misses-ones)+ones*2;
+    if(back>0)await dealDamage(att,back,tgt,'Reflexive Counter-fire');
+    else logB('Reflexive Counter-fire: brak pudeł.');
+  }
+  if(sup&&liveModel(tgt.id)){
+    addFx({stat:'M',val:-sup.val,model:tgt.id,until:'round',src:att.id,label:'Suppressive Fire'});
+    logB(`${nm(tgt)}: −${sup.val} Move do końca rundy (Suppressive Fire).`);
+  }
+  if(liveModel(tgt.id)&&(tgt.lv||0)>0&&nearOpenEdge(tgt)){
+    const r=d6();
+    logB(`Test upadku ${nm(tgt)} (przy krawędzi platformy): ${dieH(r,r===1?'miss':'hit')}`);
+    if(r===1)await fallDown(tgt);
+  }
+  draw();
+}
+function heal(m,v){if(!liveModel(m.id)||v<=0)return;const before=m.hp;m.hp=Math.min(maxW(m),m.hp+v);if(m.hp>before)logB(`💚 ${nm(m)} odzyskuje ${m.hp-before} (→ ${m.hp}/${maxW(m)})`);}
+async function dealDamage(t,amount,src,reason){
+  if(amount<=0||!liveModel(t.id))return;
+  t.hp=Math.max(0,t.hp-amount);
+  logB(`💥 ${nm(t)} otrzymuje <b>${amount}</b> obr.${reason?` (${reason})`:''} → ${t.hp}/${maxW(t)}`);
+  draw();
+  if(t.hp<=0)await takeDown(t,src);
+}
+async function takeDown(m,by){
+  models=models.filter(x=>x.id!==m.id);
+  B.dead.push(m);
+  if(sel&&sel._type==='model'&&sel.id===m.id){sel=null;clearStatsPanel();}
+  const killerSide=by?by.s:other(m.s);
+  if(killerSide!==m.s)B.kills[killerSide]+=getDB(m)?.P||0;
+  if(by&&by.id===B.activeId&&by.s!==m.s)B.killedThisAct=true;
+  logB(`☠ ${nm(m)} zostaje powalony!`);
+  onTakenDown(m,killerSide);
+  draw();
+  for(const s of['p','l'])if(!models.some(x=>x.s===s))throw new BattleEnd({winner:other(s),reason:'wipe'});
+  await allyDownReaction(m);
+}
+function nearOpenEdge(m){
+  const lv=m.lv||0;if(!lv)return false;
+  return BX.edges[lv].some(([ax,ay,bx,by])=>segDist(m.x,m.y,ax,ay,bx,by)<=0.5+BASE_R);
+}
+function impactDamage(){const r=d6();return {r,d:r===1?3:(r<=3?1:0)};}
+async function fallDown(m){
+  const l=(m.lv||0)-1;if(l<0)return;
+  const {occ}=dynMasks(m);
+  let best=-1,bd=Infinity;
+  for(let ix=0;ix<NX;ix++)for(let iy=0;iy<NY;iy++){
+    const i=nIdx(l,ix,iy);if(!BX.free[i]||occ[i])continue;
+    const d=Math.hypot(ix*GS-m.x,iy*GS-m.y);if(d<bd){bd=d;best=i;}
+  }
+  if(best<0)return;
+  const p=nPos(best);m.x=p.x;m.y=p.y;m.lv=p.lv;
+  const imp=impactDamage();
+  logB(`⬇ ${nm(m)} spada na poziom ${l}! Obrażenia od upadku: ${dieH(imp.r)} → ${imp.d}`);
+  draw();
+  if(imp.d)await dealDamage(m,imp.d,null,'upadek');
+}
+
+// ── Ruch ───────────────────────────────────────
+function moveRestrictOK(i,restrict,m){
+  if(!restrict)return true;
+  const p=nPos(i);
+  if(restrict.endWithin1Of!=null){const t=liveModel(restrict.endWithin1Of);if(!t||edgeDist(p,t)>1+1e-6)return false;}
+  if(restrict.endBeyond3Of!=null){const t=liveModel(restrict.endBeyond3Of);if(t&&edgeDist(p,t)<=3)return false;}
+  if(m){ // Distract the Big One: nie może kończyć ruchu dalej od źródła
+    for(const e of B.fx)if(e.stat==='DISTRACT'&&e.model===m.id){const s=liveModel(e.src);if(s&&edgeDist(p,s)>edgeDist(m,s)+1e-6)return false;}
+  }
+  return true;
+}
+function moveBudget(m,kind,restrict){
+  if(restrict&&restrict.budget!=null)return restrict.budget;
+  return kind==='disengage'?3:statM(m);
+}
+function actionLegal(m,kind,restrict){
+  if(kind==='move'){
+    if(hasFlag(m,'NOMOVE',{}))return 'Nie może wykonywać ruchu (efekt)';
+    if(isEngaged(m))return 'W zwarciu — użyj odskoku';
+    return null;
+  }
+  if(kind==='disengage'){
+    if(hasFlag(m,'NODISENGAGE',{}))return 'Nie może odskoczyć (efekt)';
+    if(!isEngaged(m))return 'Nie jest w zwarciu';
+    return null;
+  }
+  if(kind==='attack')return attackOptions(m,restrict).length?null:'Brak celu (zasięg, widoczność, zwarcie)';
+  if(kind==='wait')return null;
+  if(kind==='pickup'){
+    if(scen().kind!=='treasure')return 'Tylko w scenariuszu ze skarbami';
+    if(m.carry!=null)return 'Już niesie skarb';
+    return treasureNear(m)?null:'Brak skarbu w 1"';
+  }
+  return 'Nieznana akcja';
+}
+async function doMove(m,R,dest,kind){
+  chk();
+  const path=pathNodes(R,dest);
+  const steps=B.fast?1:Math.max(1,Math.floor(path.length/16));
+  if(!B.fast)for(let k=steps;k<path.length-1;k+=steps){const p=nPos(path[k]);m.x=p.x;m.y=p.y;m.lv=p.lv;draw();await sleep(18);}
+  const p=nPos(dest);m.x=p.x;m.y=p.y;m.lv=p.lv;
+  if(B.activeId===m.id)B.movedThisAct=true;
+  logB(`🏃 ${nm(m)} ${kind==='disengage'?'odskakuje':'rusza się'} o ${R.dist[dest].toFixed(1)}"${p.lv?` (poziom ${p.lv})`:''}`);
+  draw();
+  if(!R.isFly){
+    let drops=0;for(let k=1;k<path.length;k++)if(nL(path[k])<nL(path[k-1]))drops++;
+    for(let k=0;k<drops&&liveModel(m.id);k++){
+      const imp=impactDamage();
+      logB(`Zeskok ${nm(m)} (3"): ${dieH(imp.r)} → ${imp.d} obr.`);
+      if(imp.d)await dealDamage(m,imp.d,null,'zeskok');
+    }
+  }
+  if(kind==='move'&&liveModel(m.id)){
+    const amb=B.fx.filter(e=>e.stat==='AMBUSH'&&e.model===m.id);
+    consumeOnce(m,'move');
+    if(amb.length&&isEngaged(m)){
+      B.fx=B.fx.filter(e=>!amb.includes(e));
+      const e=amb[0];
+      const cands=models.filter(o=>o.s!==m.s&&edgeDist(m,o)<=1+1e-6&&canSee(m,o)&&!hasFlag(o,'NOABTARGET',{}));
+      const t=await pickModelFor(m.s,cands,o=>tgtValue(o,e.val),`${e.label}: wybierz wroga w promieniu 1"`,false);
+      if(t)await dealDamage(t,e.val,m,e.label);
+    }
+    if(liveModel(m.id))await moveEndReactions(m);
+  }
+}
+
+// ── Reakcje ────────────────────────────────────
+function reactName(m){return (getDB(m)?.react||'—').split(' — ')[0].trim();}
+function canReact(r){
+  if(!B||!liveModel(r.id)||r.reactedRound||r.id===B.activeId)return false;
+  if(r.activated&&!r.waiting)return false;
+  if(hasFlag(r,'NOREACT',{}))return false;
+  return true;
+}
+function spendReaction(r){
+  r.reactedRound=true;
+  if(!r.activated)r.reactPenalty=1;
+  logB(`⚡ Reakcja: ${nm(r)} — <b>${reactName(r)}</b>${!r.activated?' (−1 akcja w jego aktywacji)':''}`);
+}
+async function decideReact(r,text,aiFn){
+  if(isAI(r.s))return !!aiFn();
+  const cost=!r.activated?'<br><span class="bm-note">Koszt: fighter straci 1 akcję w swojej aktywacji w tej rundzie.</span>':'';
+  const v=await askChoice('⚡ Reakcja',text+cost,[{v:1,l:'Użyj reakcji',cls:'exp'},{v:0,l:'Nie'}]);
+  chk();return v===1;
+}
+async function targetedReaction(tgt,att,w,p,stage,rolls){
+  if(!canReact(tgt))return null;
+  const rn=reactName(tgt),melee=isMelee(w);
+  if(stage==='pre'){
+    if(rn==='Reflexive Counter-fire'){
+      if(!getDB(tgt).wpn.some(x=>inRange(tgt,att,x))||!canSee(tgt,att))return null;
+      const expMiss=p.A*(p.th-1)/6;
+      if(await decideReact(tgt,`${mName(tgt)} jest celem ataku. Reakcja <b>Reflexive Counter-fire</b>: za każdy pudłujący rzut atakujący dostaje 1 obrażenie (za wynik 1 — 2).`,()=>expMiss>=1.4||evAttack(p)>=tgt.hp*0.7)){
+        spendReaction(tgt);return {name:rn};
+      }
+    }
+    if(rn==='Red Thirst Strike'&&melee){
+      const pNo=Math.pow((p.crit-1)/6,p.A);
+      if(await decideReact(tgt,`${mName(tgt)} jest celem ataku w zwarciu. Reakcja <b>Red Thirst Strike</b>: jeśli nie będzie krytyków, atakujący dostaje 3 obr., a ${mName(tgt)} leczy do 3.`,()=>pNo>=0.35)){
+        spendReaction(tgt);return {name:rn};
+      }
+    }
+    return null;
+  }
+  if(rn!=='Combat Reflexes'&&rn!=='Reactive Phase Shift')return null;
+  const dbl=B.dice[tgt.s].filter(d=>!d.used&&d.type==='D');
+  if(!dbl.length)return null;
+  const die=dbl.reduce((a,b)=>a.val<=b.val?a:b);
+  let idx=0;rolls.forEach((r,i)=>{if(r>rolls[idx])idx=i;});
+  const valOf=r=>(p.allCrit?r>=p.th:r>=p.crit)?p.dc:(r>=p.th?p.dh:0);
+  const gain=valOf(rolls[idx])-valOf(die.val);
+  if(gain<=0)return null;
+  if(await decideReact(tgt,`Rzuty ataku: ${diceH(rolls)}. Reakcja <b>${rn}</b>: zamień najlepszy rzut (${rolls[idx]}) na wartość Twojej kości Double (${die.val}) — kość zostanie zużyta.`,()=>gain>=2||valOf(rolls[idx])>=tgt.hp)){
+    die.used=true;spendReaction(tgt);
+    const nr=rolls.slice();nr[idx]=die.val;
+    logB(`${rn}: rzut ${rolls[idx]} → ${die.val}`);
+    return {name:rn,rolls:nr};
+  }
+  return null;
+}
+async function allyDownReaction(dead){
+  for(const r of models){
+    if(r.s!==dead.s||!canReact(r)||reactName(r)!=='Vengeance Oath')continue;
+    const near=models.some(o=>o.s!==r.s&&edgeDist(o,r)<=10);
+    if(await decideReact(r,`Sprzymierzony fighter padł. Reakcja <b>Vengeance Oath</b> (${mName(r)}): do końca rundy +1 obrażeń za trafienie w zwarciu dla sojuszników w promieniu 6".`,()=>near)){
+      spendReaction(r);
+      addFx({stat:'DMG',val:1,scope:'melee',until:'round',aura:{r:6,rel:'ally'},src:r.id,label:'Vengeance Oath'});
+      return;
+    }
+  }
+}
+async function moveEndReactions(mv){
+  const opts=[];
+  for(const r of models){
+    if(r.s===mv.s||!canReact(r))continue;
+    const rn=reactName(r),d=edgeDist(r,mv),vis=canSee(r,mv);
+    if(rn==="Plunder's Snare"&&d<=6)opts.push({r,rn});
+    else if(rn==='Synaptic Camouflage'&&d<=3){
+      const shield=models.some(o=>o.s===r.s&&o.id!==r.id&&canSee(mv,o)&&getDB(mv).wpn.some(w=>isMelee(w)&&inRange(mv,o,w)));
+      if(shield)opts.push({r,rn});
+    }else if(d<=3&&vis){
+      let allies=[];
+      if(rn==='Rally the Legion'||rn==='Sneaky Ambush')allies=models.filter(o=>o.s===r.s&&o.id!==r.id&&edgeDist(o,r)<=3);
+      else if(rn==='Scarper!')allies=models.filter(o=>o.s===r.s&&o.id!==r.id&&edgeDist(o,r)<=3&&bandOf(o).startsWith('Ratlings'));
+      else if(rn==='Gang Up')allies=models.filter(o=>o.s===r.s&&o.id!==r.id&&bandOf(o).startsWith('Gretchin'));
+      if(allies.length)opts.push({r,rn,allies});
+    }
+  }
+  if(!opts.length)return;
+  const side=other(mv.s);
+  let pick=null;
+  if(isAI(side))pick=aiPickMoveReaction(opts,mv);
+  else{
+    const ch=await askChoice('⚡ Reakcja?',`${nm(mv)} zakończył ruch w pobliżu Twoich fighterów. Możesz zareagować (każdy fighter raz na rundę).`,
+      opts.map((o,i)=>({v:i,l:`${mName(o.r)}: ${o.rn}${!o.r.activated?' (−1 akcja)':''}`,sub:REACT_SHORT[o.rn]||''})).concat([{v:null,l:'Nie reaguj'}]));
+    chk();
+    if(ch!==null&&ch!==undefined)pick=opts[ch];
+  }
+  if(!pick)return;
+  spendReaction(pick.r);
+  const r=pick.r;
+  if(pick.rn==="Plunder's Snare"){
+    const roll=d6();
+    if(roll>=5){
+      let choice;
+      if(isAI(side))choice=mv.hp<=4||!hasTag(mv,'FLY')&&statM(mv)<=4?'dmg':'stop';
+      else{choice=await askChoice("Plunder's Snare",`Rzut ${dieH(roll,'crit')} — wybierz efekt dla ${nm(mv)}:`,[{v:'dmg',l:'4 obrażenia'},{v:'stop',l:'Brak ruchu do końca rundy'}]);chk();}
+      if(choice==='stop'){addFx({stat:'NOMOVE',val:1,model:mv.id,until:'round',src:r.id,label:"Plunder's Snare"});logB(`${nm(mv)} nie może się ruszać do końca rundy.`);}
+      else await dealDamage(mv,4,r,"Plunder's Snare");
+    }else{logB(`Plunder's Snare: rzut ${dieH(roll)}`);await dealDamage(mv,2,r,"Plunder's Snare");}
+    return;
+  }
+  if(pick.rn==='Synaptic Camouflage'){
+    addFx({stat:'CANTTARGET',val:1,model:mv.id,protect:r.id,until:'round',src:r.id,label:'Synaptic Camouflage'});
+    logB(`${nm(mv)} nie może wybierać ${nm(r)} jako celu do końca rundy.`);
+    return;
+  }
+  const ally=await pickModelFor(side,pick.allies,o=>aiReactionAllyScore(pick.rn,o,mv),`${pick.rn}: wybierz sojusznika`,false);
+  if(!ally)return;
+  if(pick.rn==='Sneaky Ambush')await grantInterject(ally,['attack'],{target:mv.id},pick.rn);
+  else if(pick.rn==='Scarper!')await grantInterject(ally,['move','disengage'],{endBeyond3Of:mv.id},pick.rn);
+  else await grantInterject(ally,['move'],{endWithin1Of:mv.id},pick.rn);
+}
+const REACT_SHORT={
+  "Plunder's Snare":'Rzut: 5+ = 4 obr. albo brak ruchu; inaczej 2 obr.',
+  'Synaptic Camouflage':'Wróg nie może celować w tego fightera do końca rundy.',
+  'Rally the Legion':'Sojusznik w 3" wykonuje ruch kończący się w 1" od wroga.',
+  'Gang Up':'Sojusznik Gretchin wykonuje ruch kończący się w 1" od wroga.',
+  'Sneaky Ambush':'Sojusznik w 3" wykonuje atak na tego wroga.',
+  'Scarper!':'Sojusznik Ratlings w 3" ucieka (ruch/odskok) dalej niż 3".'
+};
+
+// Dodatkowa akcja fightera spoza bieżącej aktywacji (zdolności i reakcje)
+async function grantInterject(ally,types,restrict,label){
+  chk();
+  if(!liveModel(ally.id))return false;
+  const legal=types.filter(t=>!actionLegal(ally,t,restrict));
+  if(!legal.length){logB(`${nm(ally)} nie może wykonać dodatkowej akcji (${label}).`);return false;}
+  if(isAI(ally.s))return await aiBonusAction(ally,legal,restrict||{});
+  let kind=legal[0];
+  const prevActor=B.actorId;B.actorId=ally.id;
+  try{
+    for(;;){
+      if(legal.length>1||!B.human){
+        kind=await askChoice(`Dodatkowa akcja — ${mName(ally)}`,`${label}: wybierz akcję.`,legal.map(t=>({v:t,l:ACT_PL[t]})).concat([{v:null,l:'Pomiń'}]));
+        chk();
+        if(!kind)return false;
+      }
+      const ok=await humanDoAction(ally,kind,restrict||{});
+      if(ok)return true;
+      if(legal.length===1){
+        const again=await askChoice(`Dodatkowa akcja — ${mName(ally)}`,`${label}: anulowano. Pominąć akcję?`,[{v:1,l:'Spróbuj ponownie'},{v:0,l:'Pomiń'}]);
+        chk();if(!again)return false;
+      }
+    }
+  }finally{if(B)B.actorId=prevActor;}
+}
+const ACT_PL={move:'Ruch',attack:'Atak',disengage:'Odskok',wait:'Czekaj',pickup:'Podnieś skarb'};
+
+// ── Wybór modelu (gracz klika, AI liczy) ───────
+async function pickModelFor(side,cands,scorer,prompt,cancellable){
+  if(!cands.length)return null;
+  if(isAI(side)){
+    let best=null,bs=-Infinity;
+    for(const c of cands){const s=scorer(c);if(s>bs){bs=s;best=c;}}
+    return best;
+  }
+  if(cands.length===1&&!cancellable)return cands[0];
+  const r=await uiPickModel(cands.map(c=>c.id),prompt,cancellable);
+  chk();return r;
+}
+
+// ── Inicjatywa i rundy ─────────────────────────
+function rollInitiativeFor(){
+  const dice=rollN(6),cnt={};
+  dice.forEach(v=>cnt[v]=(cnt[v]||0)+1);
+  let singles=0;const ab=[];
+  for(const[v,c]of Object.entries(cnt)){
+    if(c===1)singles++;
+    else ab.push({type:c===2?'D':c===3?'T':'Q',val:+v,used:false});
+  }
+  return {dice,singles,ab};
+}
+async function initiativePhase(){
+  chk();
+  B.phase='init';
+  const res={p:rollInitiativeFor(),l:rollInitiativeFor()};
+  let init;
+  if(res.p.singles!==res.l.singles)init=res.p.singles>res.l.singles?'p':'l';
+  else{
+    let a,b;do{a=d6();b=d6();}while(a===b);
+    init=a>b?'p':'l';
+    res.rolloff={p:a,l:b};
+  }
+  for(const s of['p','l']){B.dice[s]=res[s].ab.map(d=>({...d,id:++B.dieId}));B.wild[s]=1;}
+  B.init=init;
+  const line=s=>`${sideName(s)}: ${diceH(res[s].dice)} — singles: ${res[s].singles}, kości zdolności: ${B.dice[s].length?B.dice[s].map(d=>d.type+d.val).join(', '):'brak'}`;
+  logB(`━━ <b>Runda ${B.round}/${B.rounds}</b> ━━`);
+  logB(line('p'));logB(line('l'));
+  if(res.rolloff)logB(`Remis singli — roll-off: ${sideName('p')} ${res.rolloff.p}, ${sideName('l')} ${res.rolloff.l}`);
+  logB(`🏁 Inicjatywę ma: <b>${sideName(init)}</b>. Każda strona dostaje 1 dziką kość.`);
+  renderBattleUI();
+  if(B.human){
+    const fmt=s=>`<div class="bm-side"><b>${sideName(s)}</b><div>${diceH(res[s].dice)}</div><div class="bm-note">Singles: ${res[s].singles} · Kości zdolności: ${B.dice[s].length?B.dice[s].map(d=>`<span class="adie ${d.type}">${d.type}${d.val}</span>`).join(' '):'brak'} · Dzika kość: 1</div></div>`;
+    await askChoice(`Runda ${B.round}/${B.rounds} — inicjatywa`,fmt(B.human)+fmt(other(B.human))+(res.rolloff?`<div class="bm-note">Remis singli — roll-off ${res.rolloff[B.human]} : ${res.rolloff[other(B.human)]}</div>`:'')+`<div class="bm-big">Zaczyna: <b>${sideName(init)}</b></div>`,[{v:1,l:'Dalej',cls:'exp'}]);
+    chk();
+  }
+}
+async function combatPhase(){
+  B.phase='combat';
+  let turn=B.init;
+  for(;;){
+    chk();
+    const avail=s=>models.filter(m=>m.s===s&&!m.activated);
+    if(!avail('p').length&&!avail('l').length)break;
+    if(!avail(turn).length)turn=other(turn);
+    B.turn=turn;renderBattleUI();
+    let m;
+    if(isAI(turn)){B.thinking=true;renderBattleUI();await pause(250);m=aiPickFighter(turn);B.thinking=false;}
+    else m=await uiPickFighter(turn);
+    chk();
+    if(!m||!liveModel(m.id))continue;
+    await activate(m);
+    turn=other(turn);
+  }
+}
+async function activate(m){
+  chk();
+  B.activeId=m.id;B.actorId=m.id;
+  B.actLeft=Math.max(0,2-(m.reactPenalty||0));m.reactPenalty=0;
+  B.abilityUsed=false;B.bonus=[];B.killedThisAct=false;B.movedThisAct=false;
+  B.fx=B.fx.filter(e=>!(e.until==='nextAct'&&e.src===m.id));
+  logB(`▶ ${sideName(m.s)}: aktywacja ${nm(m)}${B.actLeft<2?` (${B.actLeft} akcja — reakcja przed aktywacją)`:''}`);
+  if(!isAI(m.s)&&(m.lv||0)!==level)setLevel(m.lv||0);
+  renderBattleUI();draw();
+  try{
+    if(isAI(m.s))await aiActivation(m);
+    else await humanActivation(m);
+  }finally{
+    if(B&&!B.aborted){
+      const rk=B.fx.find(e=>e.stat==='RECKLESS'&&e.model===m.id);
+      B.fx=B.fx.filter(e=>!(e.until==='act'&&e.actOf===m.id));
+      m.activated=true;m.actionsLeft=0;
+      B.activeId=null;B.actorId=null;B.bonus=[];B.ui=null;
+      renderBattleUI();draw();
+      if(rk&&liveModel(m.id)&&dmgTaken(m)>0)await dealDamage(m,dmgTaken(m),null,'Reckless Overcharge');
+    }
+  }
+}
+function controlOf(o){
+  const cnt={p:0,l:0};
+  for(const m of models)if(Math.hypot(m.x-o.x,m.y-o.y,((m.lv||0)-(o.lv||0))*LV_H)-BASE_R<=3)cnt[m.s]++;
+  return cnt.p>cnt.l?'p':cnt.l>cnt.p?'l':null;
+}
+function endOfRound(){
+  scoreRound();
+  models.forEach(m=>{m.activated=false;m.waiting=false;m.reactedRound=false;m.actionsLeft=2;});
+  B.fx=B.fx.filter(e=>e.until==='battle'||e.until==='nextAct');
+  B.dice={p:[],l:[]};B.wild={p:0,l:0};
+}
+function decideWinner(){
+  const vp=B.vp,k=B.kills;
+  if(vp.p!==vp.l)return {winner:vp.p>vp.l?'p':'l',reason:'vp'};
+  if(k.p!==k.l)return {winner:k.p>k.l?'p':'l',reason:'kills'};
+  return {winner:null,reason:'draw'};
+}
+async function runBattle(){
+  const myB=B;
+  try{
+    for(B.round=1;B.round<=B.rounds;B.round++){
+      await initiativePhase();
+      await combatPhase();
+      endOfRound();
+    }
+    finishBattle(decideWinner());
+  }catch(e){
+    if(e instanceof BattleEnd){if(B===myB&&!B.aborted)finishBattle(e.result);}
+    else if(e instanceof BattleAbort){/* bitwa przerwana przez gracza */}
+    else{console.error(e);if(B===myB){logB('❌ Błąd silnika: '+e.message);B.error=e;}}
+  }
+}
+
+// ── Zdolności: kości, dostępność, wykonanie ────
+function dieOptions(side,type){
+  const tier={D:2,T:3,Q:4},res=[];
+  for(const d of B.dice[side]){
+    if(d.used)continue;
+    const gap=tier[type]-tier[d.type];
+    if(gap===0)res.push({die:d,wild:0,val:d.val});
+    else if(gap>0&&B.wild[side]>=gap)res.push({die:d,wild:gap,val:d.val});
+  }
+  return res;
+}
+function abilitiesOf(m){
+  const db=getDB(m),list=[];
+  for(const u of UNIVERSAL)list.push({name:u,type:ABI[u].type,band:'',desc:ABI[u].desc,spec:ABI[u],uni:true});
+  for(const txt of db.ab){
+    const mm=txt.match(/^(.+?) ([DTQ]) \[([^\]]+)\] — ([\s\S]*)$/);if(!mm)continue;
+    const name=mm[1].trim(),type=mm[2],band=mm[3];
+    const spec=ABI[name+'|'+band]||ABI[name+'|'+type]||ABI[name]||null;
+    list.push({name,type,band,desc:mm[4],spec});
+  }
+  return list;
+}
+function mkCtx(m,ab,opt){
+  return {m,name:ab.name,type:ab.type,spec:ab.spec,opt,val:abilityValue(m,opt?opt.val:1),
+    pick:(cands,scorer,prompt)=>pickModelFor(m.s,cands,scorer,prompt,true)};
+}
+function abilityBlock(m,ab,opt){
+  if(!ab.spec)return 'Niezaimplementowana';
+  if(B.abilityUsed)return 'Już użyto zdolności w tej aktywacji';
+  if(hasFlag(m,'NOABIL',{}))return 'Zablokowane przez wroga (Jamming Signal)';
+  if(!opt)return `Brak kości ${TYPE_PL[ab.type]}`;
+  const c=mkCtx(m,ab,opt),sp=ab.spec;
+  if(sp.cond){const r=sp.cond(c);if(r)return r;}
+  if(sp.tgt&&!findTargets(m,sp.tgt).length)return 'Brak celu';
+  if(sp.aoe&&!aoeTargets(m,sp.aoe).length)return 'Brak wrogów w zasięgu';
+  return null;
+}
+function usableAbilities(m){
+  const res=[];
+  for(const ab of abilitiesOf(m)){
+    if(!ab.spec)continue;
+    const opts=dieOptions(m.s,ab.type).filter(o=>!abilityBlock(m,ab,o));
+    if(opts.length)res.push({ab,opts});
+  }
+  return res;
+}
+async function executeAbility(c){
+  chk();
+  let committed=false;
+  c.commit=()=>{
+    if(committed)return;committed=true;
+    c.opt.die.used=true;
+    if(c.opt.wild)B.wild[c.m.s]-=c.opt.wild;
+    B.abilityUsed=true;
+    logB(`✨ ${nm(c.m)} używa <b>${c.name}</b> (${TYPE_PL[c.type]}, wartość ${c.val}${c.opt.wild?', z dziką kością':''})`);
+    renderBattleUI();
+  };
+  const ok=await runAbilitySpec(c);
+  if(ok!==false)c.commit();
+  renderBattleUI();draw();
+  return ok!==false;
+}
+function findTargets(m,t){
+  return models.filter(o=>{
+    if(t.rel==='enemy'){if(o.s===m.s)return false;if(hasFlag(o,'NOABTARGET',{}))return false;}
+    else if(t.rel==='ally'){if(o.s!==m.s||o.id===m.id)return false;}
+    else if(t.rel==='allyAny'){if(o.s!==m.s)return false;}
+    if(t.r!=null&&edgeDist(m,o)>t.r+1e-6)return false;
+    if(t.vis&&o.id!==m.id&&!canSee(m,o))return false;
+    if(t.lv==='floor'&&(o.lv||0)!==0)return false;
+    if(t.lv==='plat'&&(o.lv||0)===0)return false;
+    if(t.filter&&!t.filter(o,m))return false;
+    return true;
+  });
+}
+function aoeTargets(m,a){return findTargets(m,{rel:'enemy',r:a.r,vis:a.vis!==false,filter:a.filter});}
+function tblDmg(tab,r,v){for(const[a,b,d]of tab)if(r>=a&&r<=b)return d==='v'?v:d;return 0;}
+function tblEV(tab,v){let s=0;for(let r=1;r<=6;r++)s+=tblDmg(tab,r,v);return s/6;}
+async function runAbilitySpec(c){
+  const sp=c.spec,m=c.m;
+  if(sp.run)return await sp.run(c);
+  if(sp.tgt&&sp.tab){ // obrażenia w jeden cel
+    const n=sp.n(c.val),ev=n*tblEV(sp.tab,c.val);
+    const t=await c.pick(findTargets(m,sp.tgt),o=>tgtValue(o,ev),`${c.name}: wybierz cel`);
+    if(!t)return false;
+    c.commit();
+    const rolls=rollN(n);let d=0;rolls.forEach(r=>d+=tblDmg(sp.tab,r,c.val));
+    logB(`${c.name} → ${nm(t)}: ${diceH(rolls,r=>tblDmg(sp.tab,r,c.val)?'hit':'miss')} = <b>${d}</b>`);
+    await dealDamage(t,d,m,c.name);
+    return true;
+  }
+  if(sp.aoe){ // obrażenia obszarowe
+    const ts=aoeTargets(m,sp.aoe);
+    c.commit();
+    for(const t of ts){
+      if(!liveModel(t.id))continue;
+      if(sp.aoe.tab){
+        const r=d6(),d=tblDmg(sp.aoe.tab,r,c.val);
+        logB(`${c.name} → ${nm(t)}: ${dieH(r,d?'hit':'miss')}`);
+        await dealDamage(t,d,m,c.name);
+      }else await dealDamage(t,c.val,m,c.name);
+    }
+    return true;
+  }
+  if(sp.heal){c.commit();heal(m,sp.heal(c));return true;}
+  c.commit();
+  if(sp.fx){
+    for(const e of sp.fx(c))addFx(e);
+    logB(`${c.name}: ${sp.short||'efekt aktywny'}`);
+  }
+  if(sp.bonus)for(const b of sp.bonus(c)){B.bonus.push(b);logB(`${nm(m)} zyskuje dodatkową akcję: ${b.types.map(t=>ACT_PL[t]).join(' / ')}`);}
+  return true;
+}
+function selfFx(c,stat,val,scope,until,extra){return Object.assign({stat,val,scope:scope||null,until,model:c.m.id,src:c.m.id,actOf:c.m.id,label:c.name},extra||{});}
+function modelFx(c,t,stat,val,scope,until,extra){return Object.assign({stat,val,scope:scope||null,until,model:t.id,src:c.m.id,actOf:c.m.id,label:c.name},extra||{});}
+function auraFx(c,stat,val,scope,r,rel,o){o=o||{};return Object.assign({stat,val,scope:scope||null,until:o.until||'round',aura:{r,rel,vis:!!o.vis,filter:o.filter},src:c.m.id,actOf:c.m.id,label:c.name},o.extra||{});}
+function enemiesWithin(m,r,vis){return models.filter(o=>o.s!==m.s&&edgeDist(m,o)<=r+1e-6&&(!vis||canSee(m,o)));}
+function alliesWithin(m,r,vis,incSelf){return models.filter(o=>o.s===m.s&&(incSelf||o.id!==m.id)&&edgeDist(m,o)<=r+1e-6&&(!vis||o.id===m.id||canSee(m,o)));}
+
+// ═══════════════════════════════════════════════
+// ZDOLNOŚCI — implementacje (klucz: nazwa | nazwa|BANDA | nazwa|typ)
+// ai: kategoria dla komputera (jak ocenia opłacalność użycia)
+// ═══════════════════════════════════════════════
+const UNIVERSAL=['Rush','Onslaught','Respite'];
+const ABI={};
+function defA(k,s){ABI[k]=s;}
+const notSelf=(o,m)=>o.id!==m.id;
+const isBand=pre=>(o=>bandOf(o).startsWith(pre));
+const killedReq=c=>B.killedThisAct?null:'Tylko po powaleniu wroga w tej aktywacji';
+const enemyWithin3=c=>enemiesWithin(c.m,3).length?null:'Wymaga wroga w promieniu 3"';
+// Dodatkowa akcja sojusznika wykonywana natychmiast
+async function allyActs(c,cands,types,restrict,prompt,before){
+  const a=await c.pick(cands,o=>aiInterjectValue(o,types,restrict),prompt);
+  if(!a)return false;
+  c.commit();
+  if(before)await before(a);
+  if(liveModel(a.id))await grantInterject(a,types,restrict||{},c.name);
+  return true;
+}
+
+// ── Uniwersalne ──
+defA('Rush',{type:'D',desc:'Do końca aktywacji dodaj 1 do cechy Move tego fightera.',ai:'move',moveBonus:()=>1,short:'+1 Move do końca aktywacji',fx:c=>[selfFx(c,'M',1,null,'act')]});
+defA('Onslaught',{type:'D',desc:'Do końca aktywacji dodaj 1 do cechy Attacks akcji ataku w zwarciu tego fightera.',ai:'melee',short:'+1 Attacks w zwarciu do końca aktywacji',fx:c=>[selfFx(c,'A',1,'melee','act')]});
+defA('Respite',{type:'D',desc:'Usuń temu fighterowi liczbę punktów obrażeń równą wartości tej zdolności.',ai:'heal',heal:c=>c.val});
+
+// ── Phobos Strike Team ──
+defA('Reinforced Plating',{ai:'T',short:'+1 Toughness do końca rundy',fx:c=>[selfFx(c,'T',1,null,'round')]});
+defA('Aerial Superiority Strike',{ai:'atk',short:'+1 obr. przeciw celom z FLY',fx:c=>[selfFx(c,'DMG',1,'all','act',{cond:(m,x)=>x.tgt&&hasTag(x.tgt,'FLY')})]});
+defA('Overcharged Servo-Armor',{ai:'melee',short:'+1 Strength i Attacks w zwarciu',fx:c=>[selfFx(c,'S',1,'melee','act'),selfFx(c,'A',1,'melee','act')]});
+defA('Denial Field',{ai:'debuff',r:6,short:'wrogowie w 6": −1 Attacks',fx:c=>[auraFx(c,'A',-1,'all',6,'enemy')]});
+defA('Rally the Squad|T',{ai:'auraAtk',r:3,short:'sojusznicy w 3": +1 Attacks',fx:c=>{const all=objectives.some(o=>Math.hypot(o.x-c.m.x,o.y-c.m.y)<=3+BASE_R);return [auraFx(c,'A',1,all?'all':'melee',3,'ally')];}});
+defA('Void Shielding',{ai:'misc',short:'nie może być celem wrogich zdolności; +2 obr. przeciw Mystic/Priest',
+  aiScore:c=>enemiesWithin(c.m,12).length?1.1:0,
+  fx:c=>[selfFx(c,'NOABTARGET',1,null,'nextAct'),selfFx(c,'DMG',2,'all','round',{cond:(m,x)=>x.tgt&&(hasTag(x.tgt,'MYSTIC')||hasTag(x.tgt,'PRIEST'))})]});
+defA('Void Shard Barrage',{ai:'dmg',tgt:{rel:'enemy',vis:true},n:v=>v,tab:[[3,6,3]]});
+defA('Tactical Withdrawal',{ai:'bonusDis',cond:enemyWithin3,bonus:c=>[{types:['disengage']}]});
+
+// ── Legionaries of Chaos ──
+defA('Blood for the Blood God',{ai:'bonusMove',cond:c=>alliesWithin(c.m,6).some(o=>dmgTaken(o)>0)?null:'Wymaga rannego sojusznika w 6"',bonus:c=>[{types:['move']}]});
+defA('Aura of Malice',{ai:'misc',short:'widoczni wrogowie w 9": −1 do wartości zdolności',aiScore:c=>enemiesWithin(c.m,9,true).length*0.45,fx:c=>[auraFx(c,'VAL',-1,null,9,'enemy',{vis:true})]});
+defA('Unholy Resilience',{ai:'auraT',r:6,short:'sojusznicy w 6": +1 Toughness',fx:c=>[auraFx(c,'T',1,null,6,'ally')]});
+defA('Warp Bolt',{ai:'dmg',tgt:{rel:'enemy',r:6,vis:true},n:()=>2,tab:[[4,5,1],[6,6,'v']]});
+defA('Havoc Barrage',{ai:'dmg',tgt:{rel:'enemy',r:12,vis:true,lv:'plat'},
+  aiScore:c=>{let b=0;for(const t of findTargets(c.m,{rel:'enemy',r:12,vis:true,lv:'plat'})){const ts=[t,...models.filter(o=>o.s===t.s&&o.id!==t.id&&edgeDist(o,t)<=6)];b=Math.max(b,ts.reduce((s,o)=>s+tgtValue(o,1.5),0));}return b;},
+  run:async c=>{
+    const t=await c.pick(findTargets(c.m,{rel:'enemy',r:12,vis:true,lv:'plat'}),o=>tgtValue(o,1.5),`${c.name}: wybierz wroga na platformie`);
+    if(!t)return false;c.commit();
+    const ts=[t,...models.filter(o=>o.s===t.s&&o.id!==t.id&&edgeDist(o,t)<=6)];
+    for(const o of ts){if(!liveModel(o.id))continue;const r=d6();logB(`${c.name} → ${nm(o)}: ${dieH(r,r>=4?'hit':'miss')}`);if(r>=4)await dealDamage(o,3,c.m,c.name);}
+    return true;}});
+defA('Chain Lightning Curse',{ai:'dmg',tgt:{rel:'enemy',r:12,vis:true},n:v=>v,tab:[[2,6,1]]});
+defA('Daemonic Ward',{ai:'auraT',r:6,short:'sojusznicy w 6": −1 obr. z każdego trafienia (min. 1)',fx:c=>[auraFx(c,'DMGRED',1,null,6,'ally')]});
+defA('Warp Storm Surge',{ai:'auraMove',r:12,short:'sojusznicy zaczynający ruch w 12": +wartość do Move',fx:c=>[auraFx(c,'M',c.val,null,12,'ally')]});
+defA('Krak Grenade Throw',{ai:'dmg',tgt:{rel:'enemy',r:6,vis:true},n:()=>2,tab:[[4,5,1],[6,6,'v']]});
+defA("Champion's Command",{ai:'auraAtk',r:6,short:'widoczni sojusznicy w 6": +1 Strength w zwarciu',fx:c=>[auraFx(c,'S',1,'melee',6,'ally',{vis:true})]});
+defA('Chaos Charge',{ai:'move',moveBonus:()=>3,short:'+3 Move w następnym ruchu',fx:c=>[selfFx(c,'M',3,null,'act',{once:'move'})]});
+defA('Daemonic Blessing',{ai:'allyBuff',run:async c=>{
+  const t=await c.pick(findTargets(c.m,{rel:'ally',r:3,vis:true}),o=>aiAllyMeleeValue(o),`${c.name}: wybierz sojusznika w 3"`);
+  if(!t)return false;c.commit();
+  addFx(modelFx(c,t,'S',c.val,'melee','round',{once:'attack'}));logB(`${nm(t)}: +${c.val} Strength w następnym ataku w zwarciu.`);return true;}});
+defA('Meltagun Blast',{ai:'dmg',tgt:{rel:'enemy',r:12,vis:true,lv:'floor'},n:v=>v,tab:[[4,5,1],[6,6,2]]});
+defA('Undying Devotion',{ai:'bonusMoveAtk',cond:c=>dmgTaken(c.m)>=5?null:'Wymaga co najmniej 5 obrażeń',bonus:c=>[{types:['move']},{types:['attack']}]});
+defA('Blood Pact',{ai:'auraAtk',r:6,cond:killedReq,short:'widoczni sojusznicy w 6": +1 Attacks w zwarciu',fx:c=>[auraFx(c,'A',1,'melee',6,'ally',{vis:true})]});
+defA('Icon of Chaos',{ai:'auraT',r:3,short:'sojusznicy w 3": +połowa wartości do Toughness',fx:c=>[auraFx(c,'T',half(c.val),null,3,'ally')]});
+defA('Chaos Frenzy',{ai:'bonusMoveAtk',short:'+wartość do Move do końca rundy',fx:c=>[selfFx(c,'M',c.val,null,'round')],bonus:c=>[{types:['move']},{types:['attack']}]});
+defA("Berserker's Fury",{ai:'melee',short:'+wartość do Attacks w zwarciu',fx:c=>[selfFx(c,'A',c.val,'melee','act')]});
+defA('Daemonic Surge',{ai:'move',moveBonus:()=>3,short:'+3 Move w następnym ruchu',fx:c=>[selfFx(c,'M',3,null,'act',{once:'move'})]});
+defA('Suppressive Fire',{ai:'atkMisc',short:'następny atak: cel −połowa wartości Move do końca rundy',fx:c=>[selfFx(c,'SUPPRESS',Math.max(1,half(c.val)),'all','act',{once:'attack'})]});
+
+// ── Nemesis Claw ──
+defA('Warp-Charged Bolt',{ai:'dmg',tgt:{rel:'enemy',r:9,vis:true},n:()=>2,tab:[[4,5,1],[6,6,'v']]});
+defA('Targeting Overlay',{ai:'ranged',short:'+połowa wartości do Strength następnego ataku dystansowego',fx:c=>[selfFx(c,'S',half(c.val),'ranged','act',{once:'attack'})]});
+defA('Command Uplink',{ai:'misc',short:'sojusznicy w 12": +wartość do wartości zdolności (max 6)',aiScore:c=>alliesWithin(c.m,12).filter(o=>!o.activated).length>=2?1.0:0,fx:c=>[auraFx(c,'VAL',c.val,null,12,'ally',{filter:notSelf})]});
+defA('Devastator Barrage',{ai:'dmg',tgt:{rel:'enemy',r:9,vis:true},n:()=>9,tab:[[4,6,1]]});
+defA('Chaos Detonation',{ai:'aoe',aoe:{r:3}});
+
+// ── Kommandos ──
+defA('Careful Aim',{ai:'ranged',cond:c=>B.movedThisAct?'Tylko jeśli fighter nie ruszał się w tej aktywacji':null,short:'następny atak dystansowy: krytyk na 4+',fx:c=>[selfFx(c,'CRIT4',1,'ranged','act',{once:'attack'})]});
+defA('Choppa Smash',{ai:'dmg',tgt:{rel:'enemy',r:1,vis:true},n:v=>half(v),tab:[[3,6,3]]});
+defA('Get Down, Ladz!',{ai:'auraT',r:6,short:'Kommandos Minion w 6": +1 Move i Toughness',fx:c=>{const f=o=>bandOf(o)==='Kommandos'&&hasTag(o,'MINION');return [auraFx(c,'M',1,null,6,'ally',{filter:f}),auraFx(c,'T',1,null,6,'ally',{filter:f})];}});
+defA('Toxic Blade|KOMMANDOS',{ai:'atk',short:'+1 obr. za każde trafienie do końca aktywacji',fx:c=>[selfFx(c,'DMG',1,'all','act')]});
+defA('Cover Me, Boyz!',{ai:'allyAct',tgt:{rel:'ally',r:3,filter:o=>bandOf(o)==='Kommandos'&&hasTag(o,'BULWARK')},
+  run:c=>allyActs(c,findTargets(c.m,{rel:'ally',r:3,filter:o=>bandOf(o)==='Kommandos'&&hasTag(o,'BULWARK')}),['move','attack'],{},`${c.name}: wybierz sojusznika (Bulwark)`)});
+defA('Promethium Belcher',{ai:'aoe',aoe:{r:3,tab:[[3,4,1],[5,6,'v']]}});
+defA('Smoke Grenade',{ai:'debuff',r:6,short:'wrogowie w 6": −1 Attacks',fx:c=>[auraFx(c,'A',-1,'all',6,'enemy')]});
+defA("Kunnin' Ambush Tactics",{ai:'allyAct',
+  cond:c=>{const a=alliesWithin(c.m,6,false,true).filter(o=>hasTag(o,'WARRIOR')).length,e=enemiesWithin(c.m,6).length;return a>e?null:'Wymaga przewagi Warriorów w promieniu 6"';},
+  aiScore:c=>alliesWithin(c.m,6).filter(o=>hasTag(o,'WARRIOR')).reduce((s,o)=>s+aiInterjectValue(o,['move','attack'],{scope:'melee'}),0),
+  run:async c=>{
+    c.commit();
+    const allies=alliesWithin(c.m,6,false,true).filter(o=>hasTag(o,'WARRIOR'));
+    for(const a of allies){
+      if(!liveModel(a.id))continue;
+      if(a.id===c.m.id){B.bonus.push({types:['move','attack'],restrict:{scope:'melee'}});continue;}
+      await grantInterject(a,['move','attack'],{scope:'melee'},c.name);
+    }
+    return true;}});
+defA("Krump 'Em Good",{ai:'auraAtk',r:6,short:'Minion w 6": +1 Attacks w zwarciu',fx:c=>[auraFx(c,'A',1,'melee',6,'ally',{filter:o=>hasTag(o,'MINION')})]});
+
+// ── Ratlings ──
+defA('Stimm Shot',{ai:'ranged',aiTmpFx:c=>[selfFx(c,'DMG',Math.round(c.val/2),'ranged','act')],aiCost:c=>c.val/6,run:async c=>{
+  c.commit();
+  const rolls=rollN(c.val),ones=rolls.filter(r=>r===1).length,good=rolls.filter(r=>r>=4).length;
+  logB(`${c.name}: ${diceH(rolls,r=>r===1?'miss':r>=4?'hit':'')}`);
+  if(good){addFx(selfFx(c,'DMG',good,'ranged','act',{once:'attack'}));logB(`Następny atak dystansowy: +${good} obr. za trafienie.`);}
+  if(ones)await dealDamage(c.m,ones,null,c.name);
+  return true;}});
+defA('Field Medic',{ai:'healAlly',tgt:{rel:'allyAny',r:4,vis:true,filter:o=>hasTag(o,'BEAST')},run:async c=>{
+  const t=await c.pick(findTargets(c.m,{rel:'allyAny',r:4,vis:true,filter:o=>hasTag(o,'BEAST')}),o=>dmgTaken(o),`${c.name}: wybierz sojusznika (Beast)`);
+  if(!t)return false;c.commit();heal(t,half(c.val));return true;}});
+defA('Duck and Cover',{ai:'bonusDis',cond:enemyWithin3,run:async c=>{
+  c.commit();const r=d6();logB(`${c.name}: ${dieH(r,r>=2?'hit':'miss')}`);
+  if(r>=2){B.bonus.push({types:['disengage']});logB(`${nm(c.m)} zyskuje dodatkowy odskok.`);}
+  return true;}});
+defA('Chain Sniping',{ai:'dmg',tgt:{rel:'enemy',r:6,vis:true},
+  aiScore:c=>Math.min(c.val,1+models.filter(o=>o.s!==c.m.s).length-1)*1.0,
+  run:async c=>{
+    const first=await c.pick(findTargets(c.m,{rel:'enemy',r:6,vis:true}),o=>tgtValue(o,1),`${c.name}: wybierz pierwszy cel (6")`);
+    if(!first)return false;c.commit();
+    const chosen=[first];let prev=first;
+    while(chosen.length<c.val){
+      const nx=models.filter(o=>o.s!==c.m.s&&!chosen.includes(o)&&!hasFlag(o,'NOABTARGET',{})&&edgeDist(prev,o)<=3&&canSee(prev,o));
+      if(!nx.length)break;
+      nx.sort((a,b)=>edgeDist(prev,a)-edgeDist(prev,b));prev=nx[0];chosen.push(prev);
+    }
+    for(const t of chosen)await dealDamage(t,1,c.m,c.name);
+    return true;}});
+defA('Advance, Recruits!',{ai:'allyAct',tgt:{rel:'ally',r:6,vis:true,filter:o=>bandOf(o).startsWith('Ratlings')&&!hasTag(o,'HERO')&&!hasTag(o,'MONSTER')},
+  run:async c=>{
+    const cands=findTargets(c.m,{rel:'ally',r:6,vis:true,filter:o=>bandOf(o).startsWith('Ratlings')&&!hasTag(o,'HERO')&&!hasTag(o,'MONSTER')});
+    const a=await c.pick(cands,o=>aiInterjectValue(o,['attack'],{}),`${c.name}: wybierz sojusznika`);
+    if(!a)return false;c.commit();
+    const killsBefore=B.dead.length;
+    await grantInterject(a,['attack'],{},c.name);
+    const killed=B.dead.length>killsBefore;
+    if(liveModel(a.id))await grantInterject(a,['move'],{budget:c.val},c.name);
+    if(liveModel(a.id)&&(!killed||!isEngaged(a))){const d=d6();logB(`${c.name}: warunek niespełniony — K6 = ${d}`);await dealDamage(a,d,null,c.name);}
+    return true;}});
+defA('Commanding Presence',{ai:'auraAtk',r:6,short:'widoczni sojusznicy w 6": +1 Attacks w zwarciu',fx:c=>[auraFx(c,'A',1,'melee',6,'ally',{vis:true})]});
+defA('Jamming Signal',{ai:'misc',short:'wrogowie w 3" nie mogą używać zdolności',aiScore:c=>enemiesWithin(c.m,3).length*0.8,fx:c=>[auraFx(c,'NOABIL',1,null,3,'enemy')]});
+defA('Hit and Run',{ai:'bonusDis',short:'+1 obr. za trafienie krytyczne',fx:c=>[selfFx(c,'DMGC',1,'all','act')],bonus:c=>[{types:['move','disengage']}]});
+defA('Long-Range Scope',{ai:'rangedTgt',aiTmpFx:(c,plan)=>[modelFx(c,plan.t,'T',-c.val,null,'act')],tgt:{rel:'enemy',r:18,vis:true},run:async c=>{
+  const t=await c.pick(findTargets(c.m,{rel:'enemy',r:18,vis:true}),o=>aiScopeTargetValue(c,o),`${c.name}: wybierz wroga (18")`);
+  if(!t)return false;c.commit();
+  addFx(modelFx(c,t,'T',-c.val,null,'act'));
+  let msg=`${nm(t)}: −${c.val} Toughness do końca aktywacji`;
+  if(!B.movedThisAct&&c.val>=getDB(t).T){addFx(selfFx(c,'ALLCRIT',1,'ranged','act',{once:'attack',cond:(m,x)=>x.tgt&&x.tgt.id===t.id}));msg+=', każde trafienie następnego strzału = krytyk';}
+  logB(msg+'.');return true;}});
+defA('Overcharged Shot',{ai:'bonusAtk',short:'dodatkowy atak z +połowa wartości obr.',fx:c=>[selfFx(c,'DMG',half(c.val),'all','act',{once:'attack'})],bonus:c=>[{types:['attack']}]});
+defA('Motivate the Squad',{ai:'allyAct',tgt:{rel:'ally',r:4,vis:true,filter:o=>hasTag(o,'BEAST')},
+  run:c=>allyActs(c,findTargets(c.m,{rel:'ally',r:4,vis:true,filter:o=>hasTag(o,'BEAST')}),['attack'],{scope:'melee'},`${c.name}: wybierz sojusznika (Beast)`)});
+defA('Reckless Overcharge',{ai:'bonusAtk',risky:true,short:'dodatkowy atak; na koniec aktywacji obrażenia = już otrzymane',fx:c=>[selfFx(c,'RECKLESS',1,null,'act')],bonus:c=>[{types:['attack']}]});
+defA('Melee Ambush',{ai:'ambush',short:'po ruchu kończącym się w 1" od wroga: wartość obrażeń',fx:c=>[selfFx(c,'AMBUSH',c.val,null,'act')]});
+
+// ── Blood Angels ──
+defA('Field Stimm',{ai:'heal',heal:c=>c.val});
+defA('Rally the Squad|D',{ai:'allyAct',tgt:{rel:'ally',r:4,vis:true,filter:o=>hasTag(o,'BEAST')},
+  run:c=>allyActs(c,findTargets(c.m,{rel:'ally',r:4,vis:true,filter:o=>hasTag(o,'BEAST')}),['attack'],{},`${c.name}: wybierz sojusznika (Beast)`)});
+defA('Righteous Fury',{ai:'bonusAtk',cond:killedReq,bonus:c=>[{types:['move','attack']}]});
+defA('Charge of the Angels',{ai:'move',moveBonus:()=>3,short:'+3 Move w następnym ruchu',fx:c=>[selfFx(c,'M',3,null,'act',{once:'move'})]});
+defA('Jump Pack Slam',{ai:'ambush',short:'po ruchu kończącym się w 1" od wroga: wartość obrażeń',fx:c=>[selfFx(c,'AMBUSH',c.val,null,'act')]});
+defA('Sanguine Rage',{ai:'allyAct',tgt:{rel:'ally',r:2,vis:true},
+  run:c=>allyActs(c,findTargets(c.m,{rel:'ally',r:2,vis:true}),['move','attack'],{},`${c.name}: wybierz sojusznika w 2"`,async a=>{await dealDamage(a,half(c.val),null,c.name);})});
+defA('Flamer Burst',{ai:'aoe',aoe:{r:3}});
+defA('Storm Bolter Barrage',{ai:'ranged',short:'+3 Attacks i Strength następnego ataku dystansowego',fx:c=>[selfFx(c,'A',3,'ranged','act',{once:'attack'}),selfFx(c,'S',3,'ranged','act',{once:'attack'})]});
+defA('Power Fist Smash',{ai:'dmg',tgt:{rel:'enemy',r:1,vis:true},n:()=>2,tab:[[3,5,1],[6,6,'v']]});
+
+// ── Tyranids ──
+defA('Constrict',{ai:'misc',tgt:{rel:'enemy',r:3,vis:true},
+  aiScore:c=>findTargets(c.m,{rel:'enemy',r:3,vis:true}).some(o=>!o.activated)?1.2:0.3,
+  run:async c=>{
+    const t=await c.pick(findTargets(c.m,{rel:'enemy',r:3,vis:true}),o=>(o.activated?0:2)+(getDB(o).P||0)/100,`${c.name}: wybierz wroga (3")`);
+    if(!t)return false;c.commit();
+    const r=d6();logB(`${c.name}: ${dieH(r,r>=3?'hit':'miss')}`);
+    if(r>=3){addFx(modelFx(c,t,'NOMOVE',1,null,'round'));addFx(modelFx(c,t,'NODISENGAGE',1,null,'round'));logB(`${nm(t)} nie może się ruszać ani odskoczyć do końca rundy.`);}
+    return true;}});
+defA('First Wave Surge',{ai:'bonusMove',cond:c=>B.round===1?null:'Tylko w 1. rundzie',bonus:c=>[{types:['move'],restrict:{budget:c.val}}]});
+defA('Bio-Acid Spray',{ai:'misc',tgt:{rel:'enemy',r:12,vis:true},
+  aiScore:c=>findTargets(c.m,{rel:'enemy',r:12,vis:true}).some(o=>!o.activated)?1.0:0,
+  run:async c=>{
+    const t=await c.pick(findTargets(c.m,{rel:'enemy',r:12,vis:true}),o=>(o.activated?0:2)+meleePower(o)+rangedPower(o),`${c.name}: wybierz wroga (12")`);
+    if(!t)return false;c.commit();addFx(modelFx(c,t,'A',-1,'all','round'));logB(`${nm(t)}: −1 Attacks do końca rundy.`);return true;}});
+defA('Flurry of Claws',{ai:'melee',short:'+połowa wartości do Attacks następnego ataku w zwarciu',fx:c=>[selfFx(c,'A',half(c.val),'melee','act',{once:'attack'})]});
+defA('Hive Fleet Surge',{ai:'auraAtk',r:6,cond:c=>B.round===3?null:'Tylko w 3. rundzie',short:'sojusznicy w 6": +1 Attacks i Strength w zwarciu',fx:c=>[auraFx(c,'A',1,'melee',6,'ally'),auraFx(c,'S',1,'melee',6,'ally')]});
+defA('Spore Mine Burst',{ai:'dmg',tgt:{rel:'enemy',r:10,vis:true},n:()=>6,tab:[[4,5,1],[6,6,2]]});
+defA('Adrenal Glands Surge',{ai:'auraAtk',r:6,short:'+1 Strength w zwarciu (ten fighter i Tyranidzi Agile/Minion w 6")',
+  fx:c=>[auraFx(c,'S',1,'melee',6,'ally',{vis:true,filter:(o,s)=>o.id===s.id||(bandOf(o).startsWith('Tyranids')&&(hasTag(o,'AGILE')||hasTag(o,'MINION')))})]});
+defA('Bio-Electric Discharge',{ai:'aoe',aoe:{r:3}});
+defA('Spore Barrage',{ai:'ranged',short:'+1 Attacks ataków dystansowych do końca aktywacji',fx:c=>[selfFx(c,'A',1,'ranged','act')]});
+defA('Scything Sweep',{ai:'aoe',aoe:{r:2,tab:[[5,5,1],[6,6,'v']]}});
+
+// ── Gretchin Mob ──
+defA('Backstab',{ai:'melee',cond:c=>alliesWithin(c.m,1,true).length?null:'Wymaga widocznego sojusznika w 1"',short:'+1 Attacks i Strength w zwarciu',fx:c=>[selfFx(c,'A',1,'melee','act'),selfFx(c,'S',1,'melee','act')]});
+defA('Adrenaline Rush',{ai:'auraAtk',r:6,short:'Gretchin z Fly/Beast w 6": +1 Attacks',fx:c=>[auraFx(c,'A',1,'all',6,'ally',{filter:o=>bandOf(o).startsWith('Gretchin')&&(hasTag(o,'FLY')||hasTag(o,'BEAST'))})]});
+defA('Scurry Speed',{ai:'auraMove',r:6,short:'Destroyer w 6": +1 Move',fx:c=>[auraFx(c,'M',1,null,6,'ally',{filter:o=>hasTag(o,'DESTROYER')})]});
+defA('Squig Bite',{ai:'aoe',aoe:{r:3,tab:[[3,4,1],[5,6,'v']]}});
+defA("Shiv 'Em",{ai:'auraAtk',r:6,short:'widoczni sojusznicy w 6": +1 Attacks w zwarciu',fx:c=>[auraFx(c,'A',1,'melee',6,'ally',{vis:true})]});
+defA("Boss's Order: Stab!",{ai:'auraAtk',r:6,short:'Gretchin w 6": +wartość do Attacks w zwarciu',fx:c=>[auraFx(c,'A',c.val,'melee',6,'ally',{filter:o=>bandOf(o).startsWith('Gretchin')})]});
+defA('Sneak Attack',{ai:'bonusMoveAtk',short:'krytyki następnego ataku w zwarciu: +wartość obr.',fx:c=>[selfFx(c,'DMGC',c.val,'melee','act',{once:'attack'})],bonus:c=>[{types:['move']},{types:['attack'],restrict:{scope:'melee'}}]});
+defA('Distract the Big One',{ai:'misc',tgt:{rel:'enemy',r:6,vis:true,filter:o=>hasTag(o,'MONSTER')},aiScore:()=>0.5,run:async c=>{
+  const t=await c.pick(findTargets(c.m,{rel:'enemy',r:6,vis:true,filter:o=>hasTag(o,'MONSTER')}),()=>1,`${c.name}: wybierz potwora`);
+  if(!t)return false;c.commit();addFx(modelFx(c,t,'DISTRACT',1,null,'round'));logB(`${nm(t)} nie może kończyć ruchu dalej od ${nm(c.m)}.`);return true;}});
+defA('Toxic Blade|GRETCHIN MOB',{ai:'allyBuff',tgt:{rel:'ally',r:3,vis:true},run:async c=>{
+  const t=await c.pick(findTargets(c.m,{rel:'ally',r:3,vis:true}),o=>aiAllyMeleeValue(o),`${c.name}: wybierz sojusznika w 3"`);
+  if(!t)return false;c.commit();addFx(modelFx(c,t,'S',c.val,'melee','round',{once:'attack'}));logB(`${nm(t)}: +${c.val} Strength w następnym ataku w zwarciu.`);return true;}});
+
+// ── Necrons ──
+defA('Damage-Triggered Overdrive',{ai:'perm',cond:c=>dmgTaken(c.m)>=15?null:'Wymaga co najmniej 15 obrażeń',short:'+1 Attacks w zwarciu do końca bitwy',fx:c=>[selfFx(c,'A',1,'melee','battle')]});
+defA('Targeting Matrix Calibration',{ai:'ranged',short:'+połowa wartości do Strength następnego ataku dystansowego',fx:c=>[selfFx(c,'S',half(c.val),'ranged','act',{once:'attack'})]});
+defA('Combat Subroutine Activation',{ai:'melee',short:'+1 Attacks i Strength następnego ataku w zwarciu',fx:c=>[selfFx(c,'A',1,'melee','act',{once:'attack'}),selfFx(c,'S',1,'melee','act',{once:'attack'})]});
+defA("Overlord's Command Amplifier",{ai:'misc',short:'sojusznicy w 12": +wartość do wartości zdolności (max 6)',aiScore:c=>alliesWithin(c.m,12).filter(o=>!o.activated).length>=2?1.0:0,fx:c=>[auraFx(c,'VAL',c.val,null,12,'ally',{filter:notSelf})]});
+defA('Serrated Gauss Edge',{ai:'dmg',tgt:{rel:'enemy',r:1,vis:true},n:v=>v,tab:[[2,5,1],[6,6,3]]});
+defA('Command Protocol Broadcast',{ai:'auraAtk',r:9,short:'widoczni sojusznicy w 9": +1 Attacks w zwarciu',fx:c=>[auraFx(c,'A',1,'melee',9,'ally',{vis:true})]});
+
+// ── Salamanders ──
+defA('Combat Stims Surge',{ai:'melee',short:'+połowa wartości do Attacks następnego ataku w zwarciu',fx:c=>[selfFx(c,'A',half(c.val),'melee','act',{once:'attack'})]});
+defA('Tactical Discipline',{ai:'auraT',r:6,short:'sojusznicy w 6": +1 Toughness',fx:c=>[auraFx(c,'T',1,null,6,'ally')]});
+defA('Rapid Infiltration',{ai:'move',moveBonus:()=>3,short:'+3 Move w następnym ruchu',fx:c=>[selfFx(c,'M',3,null,'act',{once:'move'})]});
+defA('Suppressing Volley',{ai:'ranged',short:'+2 Attacks następnego ataku dystansowego',fx:c=>[selfFx(c,'A',2,'ranged','act',{once:'attack'})]});
+defA('Marked for Death',{ai:'dmg',tgt:{rel:'enemy',r:20,vis:true},n:()=>1,tab:[[3,4,3],[5,5,6],[6,6,10]]});
+defA('Orbital Beacon Strike',{ai:'aoe',aoe:{r:3}});
+
+// ── Freebooterz ──
+defA('Finishing Blow',{ai:'melee',short:'+1 obr. w zwarciu przeciw celom z ≥5 obrażeniami',fx:c=>[selfFx(c,'DMG',1,'melee','act',{cond:(m,x)=>x.tgt&&dmgTaken(x.tgt)>=5})]});
+defA("Cap'n's Challenge",{ai:'misc',run:async c=>{
+  const cands=findTargets(c.m,{rel:'enemy',r:c.val});
+  const t=await c.pick(cands,o=>meleePower(o)+rangedPower(o)+(o.activated?0:2),`${c.name}: wybierz wroga (${c.val}")`);
+  if(!t)return false;c.commit();
+  const sid=c.m.id;
+  addFx(modelFx(c,t,'DMGRED_ATT',2,null,'round',{cond:(m,x)=>x.tgt&&x.tgt.id!==sid}));
+  logB(`${nm(t)}: −2 obr. z każdego trafienia, chyba że celuje w ${nm(c.m)}.`);return true;},
+  cond:c=>findTargets(c.m,{rel:'enemy',r:c.val}).length?null:'Brak wroga w zasięgu wartości',
+  aiScore:c=>findTargets(c.m,{rel:'enemy',r:c.val}).some(o=>!o.activated)?1.3:0});
+defA('Swarm the Plank',{ai:'allyAct',tgt:{rel:'enemy',r:1},
+  aiScore:c=>{let b=0;for(const t of findTargets(c.m,{rel:'enemy',r:1})){const fs=models.filter(o=>o.s===c.m.s&&o.id!==c.m.id&&bandOf(o)==='Freebooterz'&&edgeDist(o,t)<=3);b=Math.max(b,fs.reduce((s,o)=>s+aiInterjectValue(o,['attack'],{target:t.id}),0));}return b;},
+  run:async c=>{
+    const t=await c.pick(findTargets(c.m,{rel:'enemy',r:1}),o=>tgtValue(o,3),`${c.name}: wybierz wroga w 1"`);
+    if(!t)return false;c.commit();
+    const fs=models.filter(o=>o.s===c.m.s&&bandOf(o)==='Freebooterz'&&edgeDist(o,t)<=3);
+    for(const a of fs){
+      if(!liveModel(t.id))break;
+      if(a.id===c.m.id){B.bonus.push({types:['attack'],restrict:{target:t.id}});continue;}
+      await grantInterject(a,['attack'],{target:t.id},c.name);
+    }
+    return true;}});
+defA("Bosun's Bellow",{ai:'misc',short:'wrogowie w 6" nie mogą reagować',aiScore:c=>enemiesWithin(c.m,6).length*0.6,fx:c=>[auraFx(c,'NOREACT',1,null,6,'enemy')]});
+defA('Cutlass Disembowel',{ai:'ranged',short:'jeśli następny atak dystansowy trafi: +wartość obr.',fx:c=>[selfFx(c,'CUTLASS',c.val,'ranged','act',{once:'attack'})]});
+defA('Frenzied Boarding',{ai:'dmg',tgt:{rel:'enemy',r:2,vis:true},
+  aiScore:c=>{const ts=findTargets(c.m,{rel:'enemy',r:2,vis:true});return ts.length?Math.max(...ts.map(o=>tgtValue(o,Math.max(2,c.val)*1.6))):0;},
+  run:async c=>{
+    const t=await c.pick(findTargets(c.m,{rel:'enemy',r:2,vis:true}),o=>tgtValue(o,6),`${c.name}: wybierz wroga w 2"`);
+    if(!t)return false;c.commit();
+    const rolls=rollN(Math.max(2,c.val)),u=[...new Set(rolls)].sort((a,b)=>a-b);
+    let best=1,cur=1;for(let i=1;i<u.length;i++){cur=u[i]===u[i-1]+1?cur+1:1;best=Math.max(best,cur);}
+    const d=best>=2?best*3:0;
+    logB(`${c.name}: ${diceH(rolls)} — najdłuższy ciąg: ${best>=2?best:0} → <b>${d}</b>`);
+    await dealDamage(t,d,c.m,c.name);return true;}});
+
+// Typy zdolności z bazy (D/T/Q) dopisywane przy starcie
+(function fillAbilityTypes(){
+  for(const f of DB)for(const txt of f.ab){
+    const mm=txt.match(/^(.+?) ([DTQ]) \[([^\]]+)\] — /);if(!mm)continue;
+    const s=ABI[mm[1].trim()+'|'+mm[3]]||ABI[mm[1].trim()+'|'+mm[2]]||ABI[mm[1].trim()];
+    if(s&&!s.type)s.type=mm[2];
+  }
+})();
+
+// ═══════════════════════════════════════════════
+// SCENARIUSZE — zasady punktowania + ocena pozycji dla AI
+// ═══════════════════════════════════════════════
+const VPW=6;     // ile punktów oceny AI wart jest 1 PZ (≈ 6 obrażeń zadanych wrogowi)
+const CTRL_R=3;  // promień kontroli celu
+const SCENARIOS={
+  objectives:{name:'Utrzymaj cele',kind:'obj',template:'line3',
+    desc:'Na koniec każdej rundy 1 PZ za każdy kontrolowany cel (więcej Twoich fighterów w 3" od celu).',
+    vpFor:o=>o.vp||1,scores:()=>true},
+  escalation:{name:'Eskalacja',kind:'obj',template:'line3',
+    desc:'Cele punktowane od 2. rundy, coraz drożej: w rundzie N cel daje N−1 PZ (R2: 1, R3: 2, R4: 3).',
+    vpFor:(o,r)=>(o.vp||1)*Math.max(0,r-1),scores:r=>r>=2},
+  heart:{name:'Serce pola bitwy',kind:'obj',template:'heart',
+    desc:'Na koniec każdej rundy: centralny cel 3 PZ, boczne cele po 1 PZ.',
+    vpFor:o=>o.vp||1,scores:()=>true},
+  seize:{name:'Zajmij i utrzymaj',kind:'obj',template:'line3',persistent:true,
+    desc:'Cel kontrolowany na koniec rundy staje się Twój i zostaje Twój, dopóki wróg go nie przejmie (remis nie zmienia właściciela). Na koniec każdej rundy 1 PZ za każdy posiadany cel.',
+    vpFor:o=>o.vp||1,scores:()=>true},
+  assassinate:{name:'Zabójstwo',kind:'kills',template:'none',
+    desc:'Przywódcą bandy jest jej najdroższy Hero (👑). Powalenie wrogiego przywódcy: 5 PZ, każdego innego wroga: 1 PZ.',
+    killVP:m=>B.leaders&&B.leaders[m.s]===m.id?5:1},
+  purge:{name:'Rzeź',kind:'kills',template:'none',
+    desc:'PZ za powalonych wrogów: 1 za fightera, 2 za Hero.',
+    killVP:m=>hasTag(m,'HERO')?2:1},
+  treasure:{name:'Łupy',kind:'treasure',template:'treasure',
+    desc:'Na mapie leżą skarby. Fighter w 1" od skarbu może go podnieść akcją. Na koniec każdej rundy 1 PZ za każdy niesiony skarb, na koniec bitwy dodatkowo 2 PZ. Powalony fighter upuszcza skarb.'},
+  breakthrough:{name:'Przełamanie',kind:'zone',template:'none',
+    desc:'Od 2. rundy, na koniec każdej rundy 1 PZ za każdego własnego fightera w strefie rozstawienia wroga (6" od jego krawędzi).'}
+};
+function scen(){return (B&&B.scen)||SCENARIOS.objectives;}
+function scoredObjs(){return objectives.filter(o=>o.kind!=='treasure');}
+function treasures(){return objectives.filter(o=>o.kind==='treasure');}
+
+// ── Strefy rozstawienia: krawędź planszy najbliższa środkowi bandy ──
+function computeZones(ms){
+  const res={};
+  const edges=['x0','x22','y0','y30'];
+  const dEdge=(c,e)=>e==='x0'?c.x:e==='x22'?22-c.x:e==='y0'?c.y:30-c.y;
+  const cen=s=>{const a=ms.filter(m=>m.s===s);if(!a.length)return {x:11,y:s==='p'?30:0};return {x:a.reduce((t,m)=>t+m.x,0)/a.length,y:a.reduce((t,m)=>t+m.y,0)/a.length};};
+  const cp=cen('p'),cl=cen('l');
+  const best=c=>edges.slice().sort((a,b)=>dEdge(c,a)-dEdge(c,b))[0];
+  res.p=best(cp);res.l=best(cl);
+  if(res.p===res.l){const opp={x0:'x22',x22:'x0',y0:'y30',y30:'y0'};res.l=opp[res.p];}
+  return res;
+}
+function zoneDist(p,e){
+  const D=6;
+  if(e==='x0')return Math.max(0,p.x-D);
+  if(e==='x22')return Math.max(0,(22-D)-p.x);
+  if(e==='y0')return Math.max(0,p.y-D);
+  return Math.max(0,(30-D)-p.y);
+}
+function inZone(p,e){return zoneDist(p,e)<=1e-6;}
+
+// ── Szablony znaczników scenariusza ──
+function scenTemplate(id,ms){
+  const sc=SCENARIOS[id];if(!sc||sc.template==='none')return null;
+  const z=computeZones(ms||models);
+  const alongY=z.p[0]==='y'; // bandy naprzeciw siebie wzdłuż osi y
+  const P=(a,b)=>alongY?{x:a,y:b}:{x:b*22/30,y:a*30/22};
+  let pts;
+  if(sc.template==='line3')pts=[{...P(4,15)},{...P(11,15)},{...P(18,15)}];
+  else if(sc.template==='heart')pts=[{...P(4,15),vp:1},{...P(11,15),vp:3},{...P(18,15),vp:1}];
+  else if(sc.template==='treasure')pts=[{...P(5,15),kind:'treasure'},{...P(11,15),kind:'treasure'},{...P(17,15),kind:'treasure'}];
+  let id0=Math.max(300,ntid);
+  return pts.map(p=>({id:id0++,x:snap(p.x),y:snap(p.y),lv:0,...(p.vp?{vp:p.vp}:{}),...(p.kind?{kind:p.kind}:{})}));
+}
+function scenNeedsTemplate(sc){
+  if(sc.kind==='obj')return !scoredObjs().length;
+  if(sc.kind==='treasure')return !treasures().length;
+  return false;
+}
+function applyScenarioMarkers(){
+  const id=document.getElementById('vsScen').value;
+  const t=scenTemplate(id);
+  if(!t){sts('Ten scenariusz nie używa znaczników na mapie.');return;}
+  objectives=t;ntid=Math.max(ntid,...t.map(o=>o.id+1));
+  sts('✓ Rozstawiono znaczniki scenariusza „'+SCENARIOS[id].name+'”.');
+  draw();saveLocal();
+}
+
+// ── Punktacja ──
+function objCount(o,s,excludeId){return models.filter(x=>x.s===s&&x.id!==excludeId&&objDist(x,o)<=CTRL_R).length;}
+function scoreRound(){
+  const sc=scen(),r=B.round,got={p:0,l:0},notes=[];
+  if(sc.kind==='obj'&&sc.scores(r)){
+    for(const o of scoredObjs()){
+      let c=controlOf(o);
+      if(sc.persistent){if(c)o.owner=c;c=o.owner||null;}
+      if(c){const v=sc.vpFor(o,r);got[c]+=v;notes.push(`cel${(o.vp||1)>1?' ('+o.vp+' PZ)':''} → ${sideName(c)} +${v}`);}
+    }
+  }
+  if(sc.kind==='treasure'){
+    for(const o of treasures()){
+      const c=o.carrier!=null?liveModel(o.carrier):null;
+      if(c){const v=1+(r===B.rounds?2:0);got[c.s]+=v;notes.push(`skarb u ${mName(c)} → +${v}`);}
+    }
+  }
+  if(sc.kind==='zone'&&r>=2){
+    for(const m of models)if(inZone(m,B.zones[other(m.s)])){got[m.s]++;notes.push(`${mName(m)} w strefie wroga`);}
+  }
+  if(sc.kind==='obj'||sc.kind==='treasure'||sc.kind==='zone'){
+    B.vp.p+=got.p;B.vp.l+=got.l;
+    logB(`🚩 Koniec rundy ${B.round} (${sc.name}): ${sideName('p')} +${got.p}, ${sideName('l')} +${got.l}${notes.length?' — '+notes.join('; '):''}. Wynik PZ: ${B.vp.p} : ${B.vp.l}`);
+  }else logB(`🚩 Koniec rundy ${B.round}. Wynik PZ: ${B.vp.p} : ${B.vp.l}`);
+}
+function onTakenDown(m,killerSide){
+  const sc=scen();
+  if(sc.kind==='kills'&&killerSide!==m.s){
+    const v=sc.killVP(m);B.vp[killerSide]+=v;
+    logB(`🏅 ${sideName(killerSide)} +${v} PZ za powalenie ${nm(m)}${B.leaders&&B.leaders[m.s]===m.id?' (przywódca!)':''}. Wynik PZ: ${B.vp.p} : ${B.vp.l}`);
+  }
+  if(m.carry!=null){
+    const o=objectives.find(t=>t.id===m.carry);
+    if(o){o.carrier=null;o.x=m.x;o.y=m.y;o.lv=m.lv||0;logB(`💰 ${nm(m)} upuszcza skarb.`);}
+    delete m.carry;
+  }
+}
+// Akcja „Podnieś skarb”
+function treasureNear(m){return treasures().find(o=>o.carrier==null&&Math.hypot(m.x-o.x,m.y-o.y,((m.lv||0)-(o.lv||0))*LV_H)-BASE_R<=1+1e-6)||null;}
+function doPickup(m){
+  const o=treasureNear(m);if(!o)return false;
+  o.carrier=m.id;m.carry=o.id;
+  logB(`💰 ${nm(m)} podnosi skarb.`);draw();return true;
+}
+
+// ── Ocena dla AI ──
+function aiScenOn(side){return !(B&&B.aiBlind&&B.aiBlind[side]);}
+// Waga PZ za ten cel w pozostałych rundach (bieżąca runda liczy się w pełni, przyszłe częściowo)
+function objWeight(o,sc){
+  let w=0;
+  for(let r=B.round;r<=B.rounds;r++)if(sc.scores(r))w+=sc.vpFor(o,r)*(r===B.round?1:0.4);
+  return w;
+}
+function ctrlScore(f,e,o,side,sc){
+  if(f>e)return 1;
+  if(e>f)return -1;
+  if(sc.persistent)return o.owner===side?1:(o.owner?-1:0);
+  return 0;
+}
+// Ilu wrogów spodziewać się przy celu na koniec rundy (obecni + część nieaktywowanych, którzy zdążą dojść)
+function expectedFoes(o,side){
+  let e=0;
+  for(const x of models){
+    if(x.s===side)continue;
+    const d=objDist(x,o);
+    if(d<=CTRL_R)e+=1;
+    else if(!x.activated&&d<=statM(x)*2)e+=0.5;
+  }
+  return e;
+}
+function treasureValue(){return (B.rounds-B.round+1)+2;}
+function zoneWeight(){let w=0;for(let r=Math.max(2,B.round);r<=B.rounds;r++)w+=(r===B.round?1:0.4);return w;}
+// Statyczne pole odległości (ścieżką, bez modeli) do strefy 3" wokół punktu — cache na bitwę
+function pointField(o,isFly,rad){
+  const key=o.x+','+o.y+','+(o.lv||0)+'|'+(isFly?1:0)+'|'+rad;
+  B.ptFields=B.ptFields||{};
+  if(B.ptFields[key])return B.ptFields[key];
+  const dist=new Float64Array(NN).fill(Infinity),h=new MinHeap();
+  const pass=i=>isFly?BX.fly[i]===1:BX.free[i]===1;
+  for(let i=0;i<NN;i++){if(!pass(i))continue;const p=nPos(i);if(Math.hypot(p.x-o.x,p.y-o.y,(p.lv-(o.lv||0))*LV_H)-BASE_R<=rad){dist[i]=0;h.push(0,i);}}
+  while(h.size){
+    const i=h.pop(),d=h.d;if(d>dist[i])continue;
+    const l=nL(i),ix=nIX(i),iy=nIY(i);
+    for(const[dx,dy,c]of DIRS){const jx=ix+dx,jy=iy+dy;if(jx<0||jy<0||jx>=NX||jy>=NY)continue;const j=nIdx(l,jx,jy);if(!pass(j))continue;const nd=d+c*GS;if(nd<dist[j]){dist[j]=nd;h.push(nd,j);}}
+    for(const dl of[1,-1]){const ll=l+dl;if(ll<0||ll>=NL)continue;const j=nIdx(ll,ix,iy);if(!pass(j))continue;const nd=d+(dl<0&&!isFly?LV_H:0);if(nd<dist[j]){dist[j]=nd;h.push(nd,j);}}
+  }
+  B.ptFields[key]=dist;return dist;
+}
+// 1 w strefie; poza nią maleje z odległością ścieżką (ok. 2,5 ruchu), z łagodnym ogonem na dalekie dystanse
+function distFactor(d,m){return Math.max(0.45*(1-d/(statM(m)*2.5)),0.18*(1-d/40),0);}
+function reachFactor(m,i,o,rad,inside){
+  if(inside)return 1;
+  const d=pointField(o,hasTag(m,'FLY'),rad)[i];
+  if(!isFinite(d))return 0;
+  return distFactor(d,m);
+}
+// Informacje o celach liczone raz na decyzję
+function aiScenInfo(m){
+  const sc=scen(),info={objs:[],sc};
+  if(!aiScenOn(m.s))return info;
+  if(sc.kind==='obj'){
+    for(const o of scoredObjs()){
+      const w=objWeight(o,sc);if(w<=0)continue;
+      const f0=objCount(o,m.s,m.id),e=expectedFoes(o,m.s);
+      let gain=ctrlScore(f0+1,e,o,m.s,sc)-ctrlScore(f0,e,o,m.s,sc);
+      if(gain<=0&&e-f0<=2)gain=Math.max(0,(ctrlScore(f0+2,e,o,m.s,sc)-ctrlScore(f0,e,o,m.s,sc))/2)*0.6;
+      if(gain>0)info.objs.push({o,w,gain});
+    }
+  }
+  return info;
+}
+// Nowa wycena celów ataku (B.aiLegacy[strona] wyłącza ją w testach porównawczych)
+function aiV2(side){return !(B&&B.aiLegacy&&B.aiLegacy[side]);}
+// Ile PZ wart jest jeden fighter wroga jako „ciało” do kontroli celów w pozostałych rundach:
+// im mniej fighterów ma wróg i im więcej PZ zostało do zdobycia, tym cenniejsze każde zabójstwo
+function bodyVP(t){
+  const sc=scen();if(sc.kind!=='obj'||!aiScenOn(other(t.s)))return 0;
+  let W=0;for(const o of scoredObjs())W+=objWeight(o,sc);
+  const nThem=models.filter(m=>m.s===t.s).length;
+  return Math.min(1.5,W/Math.max(3,nThem*1.5));
+}
+// Wartość pozycji wynikająca ze scenariusza (w punktach oceny)
+function scenPosVal(m,p,i,info){
+  const sc=info.sc;
+  if(!aiScenOn(m.s))return 0;
+  let v=0;
+  if(sc.kind==='obj'){
+    for(const it of info.objs)v+=VPW*it.w*it.gain*reachFactor(m,i,it.o,CTRL_R,objDist(p,it.o)<=CTRL_R);
+  }else if(sc.kind==='treasure'){
+    const tv=treasureValue();
+    if(m.carry!=null){
+      // Niosący skarb: unika wrogów, którzy mogą go dosięgnąć
+      for(const e of models)if(e.s!==m.s&&edgeDist(p,e)<=statM(e)+maxReach(e))v-=VPW*0.25;
+    }else{
+      for(const o of treasures()){
+        if(o.carrier!=null){
+          const c=liveModel(o.carrier);
+          if(c&&c.s!==m.s)v+=VPW*tv*0.35*reachFactor(m,i,{x:c.x,y:c.y,lv:c.lv||0},1,edgeDist(p,c)<=1);
+          continue;
+        }
+        const near=Math.hypot(p.x-o.x,p.y-o.y,(p.lv-(o.lv||0))*LV_H)-BASE_R<=1;
+        v+=VPW*tv*0.8*reachFactor(m,i,o,1,near);
+      }
+    }
+  }else if(sc.kind==='zone'){
+    const ez=B.zones[other(m.s)],w=zoneWeight();
+    if(inZone(p,ez))v+=VPW*w;
+    else v+=VPW*w*Math.max(distFactor(zoneDist(p,ez),m),0.5*(1-zoneDist(p,ez)/30));
+  }else if(sc.kind==='kills'){
+    // Ranni i przywódca unikają zasięgu wrogów; reszta ciągnie do wrogiego przywódcy
+    const leader=B.leaders&&B.leaders[m.s]===m.id;
+    if(leader||m.hp<maxW(m)*0.4){
+      for(const e of models)if(e.s!==m.s&&edgeDist(p,e)<=statM(e)+maxReach(e))v-=VPW*(leader?0.5:0.2);
+    }
+    if(sc===SCENARIOS.assassinate&&!leader){
+      const el=B.leaders&&liveModel(B.leaders[other(m.s)]);
+      if(el)v+=VPW*0.6*reachFactor(m,i,{x:el.x,y:el.y,lv:el.lv||0},1,edgeDist(p,el)<=1);
+    }
+  }
+  return v;
+}
+// Dodatkowe PZ za powalenie celu t (z perspektywy jego wroga)
+function scenKillVP(t){
+  const sc=scen(),att=other(t.s);
+  if(!aiScenOn(att))return 0;
+  let vp=0;
+  if(sc.kind==='kills')vp+=sc.killVP(t);
+  else if(sc.kind==='obj'){
+    for(const o of scoredObjs()){
+      if(objDist(t,o)>CTRL_R)continue;
+      const w=objWeight(o,sc);if(w<=0)continue;
+      const f=objCount(o,att),e=objCount(o,t.s);
+      vp+=w*(ctrlScore(f,e-1,o,att,sc)-ctrlScore(f,e,o,att,sc));
+    }
+  }else if(sc.kind==='treasure'){if(t.carry!=null)vp+=treasureValue();}
+  else if(sc.kind==='zone'){if(inZone(t,B.zones[att]))vp+=zoneWeight();}
+  return vp;
+}
+
+// ═══════════════════════════════════════════════
+// AI PRZECIWNIKA
+// ═══════════════════════════════════════════════
+function aiNoise(){if(!B)return 1;return B.diff==='easy'?(0.55+Math.random()*0.9):B.diff==='normal'?(0.9+Math.random()*0.2):1;}
+function weaponPower(w){const d=parseDmg(w.d);return w.A*(d.h*0.5+d.c/6);}
+function meleePower(m){let b=0;for(const w of getDB(m).wpn)if(isMelee(w))b=Math.max(b,weaponPower(w));return b;}
+function rangedPower(m){let b=0;for(const w of getDB(m).wpn)if(!isMelee(w)&&wpnRange(w).max>=5)b=Math.max(b,weaponPower(w));return b;}
+function aiRole(m){const r=rangedPower(m),me=meleePower(m);return r>0&&r>=me*0.8?'ranged':'melee';}
+// Wartość ataku: oczekiwane obrażenia, premia za powalenie i za droższe cele
+function tgtValue(t,ev){
+  const P=getDB(t)?.P||100;
+  const body=B&&aiV2(other(t.s))?bodyVP(t):0;
+  let v;
+  if(body>0){
+    // Scenariusz z celami: liczy się liczba fighterów, nie ich koszt — zabicie słabego, taniego modelu
+    // to jeden przeciwnik mniej przy celach; rany bez zabicia są warte mniej
+    v=Math.min(ev,t.hp)*0.7;
+    const pk=ev>=t.hp*0.9?0.9:Math.pow(Math.min(1,ev/t.hp),2)*0.6;
+    v+=(ev>=t.hp*0.9?2.5:0)+VPW*body*pk;
+  }else{
+    v=Math.min(ev,t.hp)*(1+P/700);
+    if(ev>=t.hp*0.9)v+=3+P/60;
+  }
+  // Scenariusz: ile PZ daje (lub odbiera wrogowi) powalenie tego fightera
+  const vp=B?scenKillVP(t):0;
+  if(vp>0){const pk=ev>=t.hp*0.9?0.9:Math.pow(Math.min(1,ev/t.hp),2)*0.6;v+=VPW*vp*pk;}
+  return v;
+}
+function maxReach(m){let r=0;for(const w of getDB(m).wpn)r=Math.max(r,wpnRange(w).max);return r;}
+function bestAttackAt(m,pos,restrict){
+  const fake=Object.assign({},m,{x:pos.x,y:pos.y,lv:pos.lv});
+  const mr=maxReach(m);
+  if(!models.some(t=>t.s!==m.s&&edgeDist(fake,t)<=mr+1e-6))return null;
+  let best=null;
+  for(const w of getDB(m).wpn){
+    if(restrict&&restrict.scope&&(isMelee(w)?'melee':'ranged')!==restrict.scope)continue;
+    for(const t of models){
+      if(t.s===m.s)continue;
+      if(restrict&&restrict.target!=null&&t.id!==restrict.target)continue;
+      if(!inRange(fake,t,w)||rangedBlock(fake,t,w,fake)||!canSee(fake,t))continue;
+      if(B.fx.some(e=>e.stat==='CANTTARGET'&&e.model===m.id&&e.protect===t.id))continue;
+      const ev=evAttack(profile(fake,t,w)),val=tgtValue(t,ev);
+      if(!best||val>best.val)best={w,t,ev,val};
+    }
+  }
+  return best;
+}
+function objDist(p,o){return Math.hypot(p.x-o.x,p.y-o.y,((p.lv||0)-(o.lv||0))*LV_H)-BASE_R;}
+function posVal(m,p,i,field,role,eng,info){
+  let v=0;
+  const f=Math.min(field[i]===Infinity?60:field[i],60);
+  // Pogoń za wrogiem słabnie, gdy scenariusz punktuje pozycję (cele, skarby, strefy)
+  const posScen=info&&aiScenOn(m.s)&&info.sc.kind!=='kills';
+  v-=(role==='melee'?(posScen?0.1:0.22):0.06)*(m.carry!=null?0.2:1)*f;
+  if(role==='ranged'){
+    if(eng&&eng[i])v-=2.5;
+    for(const e of models){
+      if(e.s===m.s)continue;
+      if(meleePower(e)>rangedPower(e)&&edgeDist(p,e)<statM(e)+1)v-=0.35;
+    }
+  }
+  if(info)v+=scenPosVal(m,p,i,info);
+  // Rozstawienie: nie zbijaj się z sojusznikami (mniej celów dla zdolności obszarowych, czytelniejsza plansza)
+  if(aiV2(m.s)){
+    for(const o of models){
+      if(o.s!==m.s||o.id===m.id)continue;
+      const e=edgeDist(p,o);
+      if(e<1)v-=0.35*(1-e);
+    }
+  }
+  return v;
+}
+function aiBestMove(m,kind,restrict,acts){
+  const budget=moveBudget(m,kind,restrict);
+  const R=computeReach(m,budget,kind);
+  const field=computeField(m),role=aiRole(m),info=aiScenInfo(m);
+  const si=R.start;
+  const base=posVal(m,{x:m.x,y:m.y,lv:m.lv||0},si,field,role,R.eng,info);
+  const constrained=restrict&&(restrict.endWithin1Of!=null||restrict.endBeyond3Of!=null);
+  let best=null;
+  for(let i=0;i<NN;i++){
+    if(!reachable(R,i))continue;
+    if(!constrained&&((nIX(i)|nIY(i))&1)&&!R.eng[i])continue;
+    if(!moveRestrictOK(i,restrict,m))continue;
+    const p=nPos(i);
+    let s=posVal(m,p,i,field,role,R.eng,info)-base;
+    if(acts>=2){const a=bestAttackAt(m,p,null);if(a)s+=a.val*0.95;}
+    if(!R.isFly&&p.lv<(m.lv||0))s-=0.6*((m.lv||0)-p.lv);
+    s=s*aiNoise()+Math.random()*0.01;
+    if(!best||s>best.score)best={kind,dest:i,R,score:s,eng:!!R.eng[i]};
+  }
+  return best;
+}
+function aiDecide(m,types,restrict,acts){
+  const here={x:m.x,y:m.y,lv:m.lv||0};
+  const eng=isEngaged(m);
+  const opts=[];
+  if(types.includes('attack')){
+    const a=bestAttackAt(m,here,restrict);
+    if(a)opts.push({kind:'attack',t:a.t,w:a.w,score:a.val*aiNoise()+0.2});
+  }
+  if(types.includes('pickup')&&!actionLegal(m,'pickup',restrict)&&aiScenOn(m.s))opts.push({kind:'pickup',score:VPW*treasureValue()+1});
+  if(types.includes('move')&&!actionLegal(m,'move',restrict)){
+    const mv=aiBestMove(m,'move',restrict,acts);if(mv)opts.push(mv);
+  }
+  if(types.includes('disengage')&&eng&&!actionLegal(m,'disengage',restrict)){
+    const dv=aiBestMove(m,'disengage',restrict,acts);if(dv)opts.push(dv);
+  }
+  if(!opts.length)return null;
+  opts.sort((a,b)=>b.score-a.score);
+  const constrained=restrict&&(restrict.endWithin1Of!=null||restrict.endBeyond3Of!=null||restrict.target!=null);
+  return (opts[0].score>0.05||constrained)?opts[0]:null;
+}
+async function executePlan(m,plan){
+  if(plan.kind==='attack'){if(liveModel(plan.t.id))await doAttack(m,plan.t,plan.w);}
+  else if(plan.kind==='pickup')doPickup(m);
+  else await doMove(m,plan.R,plan.dest,plan.kind);
+}
+async function aiBonusAction(m,types,restrict){
+  const plan=aiDecide(m,types,restrict,1);
+  if(!plan){logB(`${nm(m)} rezygnuje z dodatkowej akcji.`);return false;}
+  await pause(350);
+  await executePlan(m,plan);
+  return true;
+}
+function aiPickFighter(side){
+  const cands=models.filter(m=>m.s===side&&!m.activated);
+  let best=null,bs=-Infinity;
+  for(const m of cands){
+    let s;
+    const a=bestAttackAt(m,{x:m.x,y:m.y,lv:m.lv||0},null);
+    if(a)s=a.val+1;
+    else if(isEngaged(m))s=0.5;
+    else{
+      // Ocena najlepszego ruchu (uwzględnia scenariusz); fighter trzymający cel ma niski wynik i czeka do końca rundy
+      const mv=aiBestMove(m,'move',{},2);
+      s=mv?Math.max(0,mv.score):0;
+    }
+    if(treasureNear(m)&&m.carry==null&&scen().kind==='treasure')s+=VPW*treasureValue();
+    s=s*aiNoise()+Math.random()*0.05;
+    if(s>bs){bs=s;best=m;}
+  }
+  return best||cands[0];
+}
+async function aiActivation(m){
+  let guard=0;
+  while(liveModel(m.id)&&guard++<12){
+    chk();
+    if(B.actLeft+B.bonus.length<=0)break;
+    if(!B.abilityUsed)await aiMaybeAbility(m,'pre',null);
+    if(!liveModel(m.id))break;
+    let types,restrict={},slot;
+    if(B.actLeft>0){types=['move','attack','disengage','pickup'];slot='act';}
+    else{const b=B.bonus[0];types=b.types;restrict=b.restrict||{};slot='bonus';}
+    let plan=aiDecide(m,types,restrict,B.actLeft+B.bonus.length);
+    if(plan&&plan.kind==='attack'&&!B.abilityUsed){
+      await aiMaybeAbility(m,'preAttack',plan);
+      if(!liveModel(m.id))break;
+      if(!liveModel(plan.t.id))plan=aiDecide(m,types,restrict,B.actLeft+B.bonus.length);
+    }
+    if(slot==='act')B.actLeft--;else B.bonus.shift();
+    renderBattleUI();
+    if(!plan){
+      if(slot==='act'){m.waiting=true;logB(`${nm(m)} czeka (Wait).`);}
+      continue;
+    }
+    await pause(380);
+    await executePlan(m,plan);
+    await pause(250);
+  }
+}
+// ── Zdolności komputera ──
+function aiBuffGain(c,plan){
+  const m=c.m;
+  if(!liveModel(plan.t.id))return 0;
+  const before=tgtValue(plan.t,evAttack(profile(m,plan.t,plan.w)));
+  const tmp=c.spec.aiTmpFx?c.spec.aiTmpFx(c,plan):(c.spec.fx?c.spec.fx(c):[]);
+  const ids=tmp.map(e=>addFx(e).id);
+  let after;
+  try{after=tgtValue(plan.t,evAttack(profile(m,plan.t,plan.w)));}
+  finally{B.fx=B.fx.filter(e=>!ids.includes(e.id));}
+  return after-before-(c.spec.aiCost?c.spec.aiCost(c):0);
+}
+function aiInterjectValue(o,types,restrict){
+  let v=0;
+  if(types.includes('attack')){const a=bestAttackAt(o,{x:o.x,y:o.y,lv:o.lv||0},restrict);if(a)v=Math.max(v,a.val);}
+  if(types.includes('move')&&!isEngaged(o)&&!hasFlag(o,'NOMOVE',{}))v=Math.max(v,aiRole(o)==='melee'?1.0:0.4);
+  return v;
+}
+function aiAllyMeleeValue(o){
+  const a=bestAttackAt(o,{x:o.x,y:o.y,lv:o.lv||0},{scope:'melee'});
+  if(a)return a.val*0.6;
+  if(!o.activated&&models.some(e=>e.s!==o.s&&edgeDist(o,e)<=statM(o)+1))return 1;
+  return 0;
+}
+function aiScopeTargetValue(c,o){return tgtValue(o,rangedPower(c.m)*(1+c.val/getDB(o).T));}
+function aiReactionAllyScore(rn,o,mv){
+  if(rn==='Sneaky Ambush'){const a=bestAttackAt(o,{x:o.x,y:o.y,lv:o.lv||0},{target:mv.id});return a?a.val:0;}
+  if(rn==='Scarper!')return dmgTaken(o)/maxW(o)+(edgeDist(o,mv)<=3?1:0);
+  return edgeDist(o,mv)<=statM(o)+1?meleePower(o)+1:0;
+}
+function aiPickMoveReaction(opts,mv){
+  let best=null,bs=0.9;
+  for(const o of opts){
+    let s=0;
+    if(o.rn==="Plunder's Snare")s=2.5;
+    else if(o.rn==='Synaptic Camouflage')s=1.2;
+    else if(o.allies)s=Math.max(0,...o.allies.map(a=>aiReactionAllyScore(o.rn,a,mv)))*(o.rn==='Sneaky Ambush'?1:0.6);
+    if(o.rn==='Scarper!')s=Math.min(s,0.95);
+    if(!o.r.activated)s-=1.0;
+    if(s>bs){bs=s;best=o;}
+  }
+  return best;
+}
+function aiAbilityScore(c,phase,plan,cache){
+  const sp=c.spec,m=c.m;
+  const pre=phase==='pre';
+  if(sp.aiScore)return pre?sp.aiScore(c):0;
+  switch(sp.ai){
+    case 'dmg':{
+      if(!pre||!sp.tab)return 0;
+      const ev=sp.n(c.val)*tblEV(sp.tab,c.val);let b=0;
+      for(const t of findTargets(m,sp.tgt))b=Math.max(b,tgtValue(t,ev));
+      return b;
+    }
+    case 'aoe':
+      if(!pre)return 0;
+      return aoeTargets(m,sp.aoe).reduce((s,t)=>s+tgtValue(t,sp.aoe.tab?tblEV(sp.aoe.tab,c.val):c.val),0);
+    case 'melee':case 'ranged':case 'atk':case 'rangedTgt':case 'atkMisc':{
+      if(phase!=='preAttack'||!plan)return 0;
+      const sc=isMelee(plan.w)?'melee':'ranged';
+      if(sp.ai==='melee'&&sc!=='melee')return 0;
+      if((sp.ai==='ranged'||sp.ai==='rangedTgt')&&sc!=='ranged')return 0;
+      if(sp.ai==='atkMisc')return plan.t.activated?0.3:1.0;
+      if(sp.ai==='rangedTgt'&&edgeDist(m,plan.t)>18)return 0;
+      return aiBuffGain(c,plan);
+    }
+    case 'T':return pre&&enemiesWithin(m,10).length?1.4:0;
+    case 'auraT':return pre?alliesWithin(m,sp.r,false,true).filter(o=>enemiesWithin(o,10).length).length*0.9:0;
+    case 'auraAtk':return pre?alliesWithin(m,sp.r,false,true).filter(o=>(!o.activated||o.id===m.id)&&enemiesWithin(o,8).length).length*0.9:0;
+    case 'auraMove':return pre?alliesWithin(m,sp.r,false,true).filter(o=>!o.activated&&o.id!==m.id).length*0.6:0;
+    case 'debuff':return pre?enemiesWithin(m,sp.r).filter(o=>!o.activated).length*0.9:0;
+    case 'heal':return pre&&dmgTaken(m)>=3?Math.min(sp.heal(c),dmgTaken(m))*0.7:0;
+    case 'healAlly':return pre?Math.max(0,...findTargets(m,sp.tgt).map(o=>Math.min(dmgTaken(o),half(c.val))))*0.7:0;
+    case 'bonusAtk':{
+      if(!pre)return 0;
+      const a=bestAttackAt(m,{x:m.x,y:m.y,lv:m.lv||0},null);if(!a)return 0;
+      return a.val*0.9-(sp.risky?dmgTaken(m)*0.9+1:0);
+    }
+    case 'bonusMove':{
+      if(!pre||isEngaged(m))return 0;
+      const f=cache.field()[posIdx(m.x,m.y,m.lv||0)];
+      return f>statM(m)*0.8&&f<60?1.6:0.3;
+    }
+    case 'bonusMoveAtk':{
+      if(!pre)return 0;
+      if(isEngaged(m)){const a=bestAttackAt(m,{x:m.x,y:m.y,lv:m.lv||0},null);return a?a.val*0.8:0;}
+      const f=cache.field()[posIdx(m.x,m.y,m.lv||0)];
+      return f<=statM(m)*2?2.4:0.8;
+    }
+    case 'bonusDis':
+      if(!pre||!isEngaged(m))return 0;
+      return aiRole(m)==='ranged'?2.2:(m.hp<maxW(m)*0.35?1.4:0);
+    case 'allyAct':{
+      if(!pre||!sp.tgt)return 0;
+      const types=sp.ai==='allyAct'?['move','attack']:['attack'];
+      return Math.max(0,...findTargets(m,sp.tgt).map(o=>aiInterjectValue(o,types,{})))*0.9;
+    }
+    case 'allyBuff':return pre?Math.max(0,...findTargets(m,{rel:'ally',r:3,vis:true}).map(aiAllyMeleeValue))*0.6:0;
+    case 'perm':return pre?2:0;
+    case 'ambush':{
+      if(!pre||isEngaged(m)||actionLegal(m,'move',{}))return 0;
+      const mv=cache.move();return mv&&mv.eng?c.val*0.9:0;
+    }
+    case 'move':{
+      if(!pre||isEngaged(m)||actionLegal(m,'move',{}))return 0;
+      if(B.actLeft+B.bonus.length<1)return 0;
+      const base=cache.move();if(!base)return 0;
+      const tmp=addFx(selfFx(c,'M',sp.moveBonus(c),null,'act'));
+      let boosted;
+      try{boosted=aiBestMove(m,'move',{},B.actLeft+B.bonus.length);}
+      finally{B.fx=B.fx.filter(e=>e!==tmp);}
+      return boosted?boosted.score-base.score-0.3:0;
+    }
+  }
+  return 0;
+}
+async function aiMaybeAbility(m,phase,plan){
+  if(B.abilityUsed||!liveModel(m.id)||hasFlag(m,'NOABIL',{}))return;
+  if(B.diff==='easy'&&Math.random()<0.5)return;
+  let fieldC=null,moveC;
+  const cache={
+    field:()=>fieldC||(fieldC=computeField(m)),
+    move:()=>moveC!==undefined?moveC:(moveC=aiBestMove(m,'move',{},B.actLeft+B.bonus.length))
+  };
+  let best=null;
+  for(const {ab,opts} of usableAbilities(m)){
+    // Najtańsza pasująca kość: najpierw bez dzikiej, wartość decyduje
+    const sorted=opts.slice().sort((a,b)=>(a.wild-b.wild)||(a.val-b.val));
+    const tried=new Set();
+    for(const o of sorted){
+      const key=o.val+'/'+o.wild;if(tried.has(key))continue;tried.add(key);
+      const c=mkCtx(m,ab,o);
+      let s;
+      try{s=aiAbilityScore(c,phase,plan,cache);}catch(e){console.error(e);s=0;}
+      const cost=0.6+o.wild*1.0+o.val*0.05;
+      const net=s*aiNoise()-cost;
+      if(net>0.5&&(!best||net>best.net))best={c,net};
+    }
+  }
+  if(!best)return;
+  await pause(300);
+  await executeAbility(best.c);
+}
+
+// ═══════════════════════════════════════════════
+// BITWA — interfejs gracza
+// ═══════════════════════════════════════════════
+function uiWait(obj){
+  return new Promise(res=>{
+    obj.resolve=v=>{if(B&&B.ui===obj)B.ui=null;res(v);renderBattleUI();draw();};
+    B.ui=obj;renderBattleUI();draw();
+  });
+}
+function uiPickFighter(side){return uiWait({kind:'pick',side});}
+function uiAction(m){return uiWait({kind:'action',m});}
+function uiPickModel(ids,prompt,cancellable){return uiWait({kind:'model',ids,prompt,cancellable});}
+function uiPickNode(R,okFn,prompt){
+  const nodes=[];for(let i=0;i<NN;i++)if(okFn(i))nodes.push(i);
+  const byLv=[0,0,0];nodes.forEach(i=>byLv[nL(i)]++);
+  if(!byLv[level]){const l=byLv.indexOf(Math.max(...byLv));if(l>=0&&l!==level)setLevel(l);}
+  return uiWait({kind:'node',R,nodes,byLv,prompt});
+}
+function uiResolve(v){if(B&&B.ui&&B.ui.resolve)B.ui.resolve(v);}
+
+// ── Modal wyboru ──
+let bModalResolve=null,bModalOpts=[];
+function askChoice(title,body,opts){
+  return new Promise(res=>{
+    bModalOpts=opts;
+    document.getElementById('bmTitle').innerHTML=title;
+    document.getElementById('bmBody').innerHTML=body||'';
+    document.getElementById('bmBody').style.display=body?'block':'none';
+    document.getElementById('bmOpts').innerHTML=opts.map((o,i)=>
+      `<button class="bm-opt ${o.cls||''}" ${o.dis?'disabled':''} onclick="bModalPick(${i})"><span class="bm-l">${o.l}</span>${o.sub?`<span class="bm-sub">${o.sub}</span>`:''}</button>`).join('');
+    document.getElementById('bModal').classList.add('open');
+    bModalResolve=v=>{document.getElementById('bModal').classList.remove('open');bModalResolve=null;res(v);};
+  });
+}
+function bModalPick(i){if(bModalResolve)bModalResolve(bModalOpts[i]?bModalOpts[i].v:null);}
+
+// ── Aktywacja gracza ──
+async function humanActivation(m){
+  for(;;){
+    chk();
+    if(!liveModel(m.id))return;
+    const abil=!B.abilityUsed&&usableAbilities(m).length>0;
+    if(B.actLeft<=0&&!B.bonus.length&&!abil)return;
+    const ch=await uiAction(m);
+    chk();
+    if(!ch||ch.kind==='end')return;
+    if(ch.kind==='ability'){await humanUseAbility(m);continue;}
+    const restrict=ch.bonus!=null?(B.bonus[ch.bonus].restrict||{}):{};
+    const ok=await humanDoAction(m,ch.kind,restrict);
+    chk();
+    if(ok){if(ch.bonus!=null)B.bonus.splice(ch.bonus,1);else B.actLeft--;}
+    renderBattleUI();
+  }
+}
+async function humanDoAction(m,kind,restrict){
+  const why=actionLegal(m,kind,restrict);
+  if(why){sts('⚠ '+why);return false;}
+  if(kind==='wait'){m.waiting=true;logB(`${nm(m)} czeka (Wait) — może później zareagować bez utraty akcji.`);return true;}
+  if(kind==='pickup')return doPickup(m);
+  if(kind==='attack')return await humanAttack(m,restrict);
+  return await humanMove(m,kind,restrict);
+}
+async function humanMove(m,kind,restrict){
+  const budget=moveBudget(m,kind,restrict);
+  const R=computeReach(m,budget,kind);
+  const ok=i=>reachable(R,i)&&moveRestrictOK(i,restrict,m);
+  if((m.lv||0)!==level)setLevel(m.lv||0);
+  let any=false;for(let i=0;i<NN;i++)if(ok(i)){any=true;break;}
+  if(!any){sts(`⚠ ${mName(m)}: brak dostępnych pól dla tej akcji.`);return false;}
+  const extra=restrict&&restrict.endWithin1Of!=null?' — musi skończyć w 1" od wroga':restrict&&restrict.endBeyond3Of!=null?' — musi skończyć dalej niż 3" od wroga':'';
+  const dest=await uiPickNode(R,ok,`${kind==='disengage'?'Odskok':'Ruch'} ${mName(m)} — max ${budget}"${extra}. Dotknij podświetlone pole.`);
+  chk();
+  if(dest==null)return false;
+  await doMove(m,R,dest,kind);
+  return true;
+}
+async function humanAttack(m,restrict){
+  const opts=attackOptions(m,restrict);
+  if(!opts.length){sts('⚠ Brak celu.');return false;}
+  const ids=[...new Set(opts.map(o=>o.t.id))];
+  const t=await uiPickModel(ids,`Atak ${mName(m)} — dotknij cel (czerwone obwódki).`,true);
+  chk();
+  if(!t)return false;
+  const ws=opts.filter(o=>o.t.id===t.id).map(o=>o.w);
+  let w=ws[0];
+  if(ws.length>1){
+    const i=await askChoice(`Broń — ${mName(m)} → ${mName(t)}`,'',ws.map((w,k)=>{const p=profile(m,t,w);return {v:k,l:w.name,sub:`A${p.A} S${p.S} vs T${p.T}${p.cover?' (osłona)':''} · trafia ${p.th}+ · obr. ${p.dh}/${p.dc} · średnio ≈ ${evAttack(p).toFixed(1)}`};}).concat([{v:null,l:'Anuluj'}]));
+    chk();
+    if(i==null)return false;
+    w=ws[i];
+  }
+  await doAttack(m,t,w);
+  return true;
+}
+async function humanUseAbility(m){
+  const list=abilitiesOf(m);
+  const opts=list.map((ab,i)=>{
+    const dopts=dieOptions(m.s,ab.type);
+    let block;
+    if(!dopts.length)block=abilityBlock(m,ab,null);
+    else{const okO=dopts.find(o=>!abilityBlock(m,ab,o));block=okO?null:abilityBlock(m,ab,dopts[0]);}
+    return {v:i,l:`<span class="adie ${ab.type}">${ab.type}</span> ${ab.name}`,sub:(block?`⛔ ${block}. `:'')+ab.desc,dis:!!block};
+  });
+  opts.push({v:null,l:'Anuluj'});
+  const i=await askChoice(`✨ Zdolności — ${mName(m)}`,`Twoje kości: ${diceChips(m.s)||'brak'}<div class="bm-note">Jedna zdolność na aktywację. Wartość zdolności = wartość użytej kości.</div>`,opts);
+  chk();
+  if(i==null)return;
+  const ab=list[i];
+  const dopts=dieOptions(m.s,ab.type).filter(o=>!abilityBlock(m,ab,o)).sort((a,b)=>(a.wild-b.wild)||(b.val-a.val));
+  if(!dopts.length)return;
+  let o=dopts[0];
+  if(dopts.length>1){
+    const j=await askChoice(`${ab.name} — wybierz kość`,'',dopts.map((d,k)=>({v:k,l:`${d.die.type}${d.val}${d.wild?` + dzika → ${ab.type}${d.val}`:''}`,sub:`wartość zdolności: ${abilityValue(m,d.val)}`})).concat([{v:null,l:'Anuluj'}]));
+    chk();
+    if(j==null)return;
+    o=dopts[j];
+  }
+  const ok=await executeAbility(mkCtx(m,ab,o));
+  if(!ok)sts('Anulowano zdolność.');
+}
+function battleAct(kind,bonusIdx){
+  if(!B||!B.ui)return;
+  if(B.ui.kind==='action')uiResolve({kind,bonus:bonusIdx==null?null:bonusIdx});
+}
+function battleCancel(){if(B&&B.ui&&(B.ui.kind==='node'||(B.ui.kind==='model'&&B.ui.cancellable)))uiResolve(null);}
+
+// ── Kliknięcia na mapie w trybie bitwy ──
+function hoverNode(){
+  const u=B&&B.ui;if(!u||u.kind!=='node')return -1;
+  const {jx,jy}=cToJ(mouse.x,mouse.y);
+  let best=-1,bd=0.8;
+  for(const i of u.nodes){if(nL(i)!==level)continue;const p=nPos(i),d=Math.hypot(p.x-jx,p.y-jy);if(d<bd){bd=d;best=i;}}
+  return best;
+}
+function battleClick(cx,cy){
+  mouse={x:cx,y:cy};
+  const u=B.ui,m=modelAt(cx,cy);
+  if(u){
+    if(u.kind==='pick'&&m&&m.s===u.side&&!m.activated){uiResolve(m);return;}
+    if(u.kind==='model'&&m&&u.ids.includes(m.id)){uiResolve(m);return;}
+    if(u.kind==='node'){
+      const h=hoverNode();
+      if(h>=0){uiResolve(h);return;}
+      if(!m){sts('⚠ Tego miejsca nie da się osiągnąć'+(u.byLv.some((n,l)=>n&&l!==level)?' na tym poziomie — przełącz widok poziomu.':'.'));return;}
+    }
+  }
+  if(m){sel={...m,_type:'model'};showStats(m);draw();}
+  else if(sel){sel=null;clearStatsPanel();draw();}
+}
+
+// ── Rysowanie nakładek bitwy ──
+function drawBattleUnder(){
+  const sk=scen().kind;
+  const sideCol=(s,a)=>s===(B.human||'p')?`rgba(74,158,255,${a})`:`rgba(224,80,80,${a})`;
+  for(const o of objectives){
+    if(o.kind==='treasure'){
+      if(o.carrier!=null)continue;
+      const {cx,cy}=jToC(o.x,o.y);G.globalAlpha=ma(o.lv||0);
+      G.beginPath();G.arc(cx,cy,(1+BASE_R)*IN,0,Math.PI*2);G.strokeStyle='rgba(240,184,64,.5)';G.setLineDash([3,3]);G.lineWidth=1.2;G.stroke();G.setLineDash([]);G.globalAlpha=1;
+      continue;
+    }
+    if(sk!=='obj')continue;
+    const {cx,cy}=jToC(o.x,o.y),c=controlOf(o);
+    G.globalAlpha=ma(o.lv||0);
+    if(scen().persistent&&o.owner){G.beginPath();G.arc(cx,cy,(3+BASE_R)*IN,0,Math.PI*2);G.fillStyle=sideCol(o.owner,.08);G.fill();}
+    G.beginPath();G.arc(cx,cy,(3+BASE_R)*IN,0,Math.PI*2);
+    G.strokeStyle=c?sideCol(c,.6):'rgba(80,200,120,.35)';
+    G.setLineDash([5,4]);G.lineWidth=1.5;G.stroke();G.setLineDash([]);G.globalAlpha=1;
+  }
+  if(sk==='zone'&&B.zones){
+    for(const s of['p','l']){
+      const e=B.zones[s],D=6*IN;G.fillStyle=sideCol(s,.07);
+      if(e==='y0')G.fillRect(0,0,D,H);else if(e==='y30')G.fillRect(W-D,0,D,H);else if(e==='x0')G.fillRect(0,0,W,D);else G.fillRect(0,H-D,W,D);
+    }
+  }
+  const u=B.ui;
+  if(u&&u.kind==='node'){
+    const s=GS*IN;
+    G.fillStyle=u.R.mode==='disengage'?'rgba(240,184,64,.25)':'rgba(80,200,120,.22)';
+    for(const i of u.nodes){if(nL(i)!==level)continue;const p=nPos(i);G.fillRect(p.y*IN-s/2,p.x*IN-s/2,s,s);}
+    const h=hoverNode();
+    if(h>=0){
+      const path=pathNodes(u.R,h);
+      G.beginPath();
+      path.forEach((k,j)=>{const p=nPos(k);j?G.lineTo(p.y*IN,p.x*IN):G.moveTo(p.y*IN,p.x*IN);});
+      G.strokeStyle='#f0b840';G.lineWidth=2;G.stroke();
+      const p=nPos(h);
+      G.beginPath();G.arc(p.y*IN,p.x*IN,11,0,Math.PI*2);G.strokeStyle='#f0b840';G.stroke();
+      G.fillStyle='rgba(24,24,30,.85)';G.fillRect(p.y*IN+12,p.x*IN-20,44,15);
+      G.fillStyle='#f0b840';G.font='bold 11px "Consolas","Courier New",monospace';G.textAlign='center';
+      G.fillText(u.R.dist[h].toFixed(1)+'"',p.y*IN+34,p.x*IN-8);
+    }
+  }
+  if(B.lastAttack){
+    const a=B.lastAttack.a,b=B.lastAttack.b;
+    G.beginPath();G.moveTo(a.y*IN,a.x*IN);G.lineTo(b.y*IN,b.x*IN);
+    G.strokeStyle='rgba(224,80,80,.55)';G.lineWidth=2;G.setLineDash([6,4]);G.stroke();G.setLineDash([]);
+  }
+}
+function drawBattleOver(){
+  const u=B.ui;
+  for(const m of models){
+    const {cx,cy}=jToC(m.x,m.y);
+    G.globalAlpha=ma(m.lv||0);
+    G.beginPath();G.arc(cx,cy,13,0,Math.PI*2);
+    G.strokeStyle=isAI(m.s)?'rgba(224,80,80,.9)':'rgba(74,158,255,.9)';G.lineWidth=1.5;G.stroke();
+    if(m.id===B.activeId||m.id===B.actorId){G.beginPath();G.arc(cx,cy,18,0,Math.PI*2);G.strokeStyle='#f0b840';G.lineWidth=3;G.stroke();}
+    if(m.carry!=null){G.beginPath();G.arc(cx+11,cy+11,6,0,Math.PI*2);G.fillStyle='#f0b840';G.fill();G.fillStyle='#18181e';G.font='bold 8px -apple-system,Arial,sans-serif';G.textAlign='center';G.fillText('$',cx+11,cy+14);}
+    if(scen()===SCENARIOS.assassinate&&B.leaders&&(B.leaders.p===m.id||B.leaders.l===m.id)){G.font='12px -apple-system,Arial,sans-serif';G.textAlign='center';G.fillText('👑',cx,cy-15);}
+    if(u&&u.kind==='pick'&&m.s===u.side&&!m.activated){G.beginPath();G.arc(cx,cy,18,0,Math.PI*2);G.strokeStyle='#50c878';G.lineWidth=2;G.setLineDash([4,3]);G.stroke();G.setLineDash([]);}
+    if(u&&u.kind==='model'&&u.ids.includes(m.id)){const actor=liveModel(B.actorId);G.beginPath();G.arc(cx,cy,18,0,Math.PI*2);G.strokeStyle=actor&&actor.s===m.s?'#50c878':'#e05050';G.lineWidth=2.5;G.setLineDash([4,3]);G.stroke();G.setLineDash([]);}
+    G.globalAlpha=1;
+  }
+}
+
+// ── Pasek bitwy i panel ──
+function diceChips(side){
+  if(!B)return '';
+  const d=B.dice[side].map(x=>`<span class="adie ${x.type}${x.used?' used':''}">${x.type}${x.val}</span>`).join('');
+  const w=B.wild[side]?`<span class="adie W" title="Dzika kość">★${B.wild[side]>1?'×'+B.wild[side]:''}</span>`:'';
+  return d+w;
+}
+function renderBattleLog(){
+  const el=document.getElementById('bLog');
+  if(el&&B)el.innerHTML=B.log.slice(-150).reverse().map(l=>`<div class="bl">${l}</div>`).join('');
+  const last=document.getElementById('bbLast');
+  if(last&&B)last.innerHTML=B.log.slice(-1)[0]||'';
+}
+function renderBattleUI(){
+  const bar=document.getElementById('battleBar');if(!bar)return;
+  const on=!!(B&&B.active);
+  bar.style.display=on?'flex':'none';
+  document.body.classList.toggle('in-battle',on);
+  document.getElementById('vsSetup').style.display=on?'none':'block';
+  document.getElementById('vsLive').style.display=on?'block':'none';
+  if(!on){renderVsSetup();return;}
+  const h=B.human||'p',ai=other(h);
+  document.getElementById('roundPill').textContent='R'+B.round+'/'+B.rounds;
+  document.getElementById('bbInfo').innerHTML=
+    `<span class="bb-pill">Runda ${B.round}/${B.rounds}</span>`+
+    `<span class="bb-pill" title="${scen().desc}">${scen().name} · PZ <b style="color:var(--ap)">${B.vp[h]}</b> : <b style="color:var(--al)">${B.vp[ai]}</b></span>`+
+    `<span class="bb-pill">Tura: <b>${B.turn?sideName(B.turn):'—'}</b></span>`+
+    `<span class="bb-dice">${diceChips(h)}</span>`+
+    `<span class="bb-lv">Widok: ${[0,1,2].map(l=>`<button class="${l===level?['lv0','lv1','lv2'][l]:''}" onclick="setLevel(${l});renderBattleUI()">${l}</button>`).join('')}</span>`;
+  const act=document.getElementById('bbActions');
+  const u=B.ui;
+  let html='';
+  if(B.over)html=`<span class="bb-msg">Bitwa zakończona.</span>`;
+  else if(!u){
+    html=isAI(B.turn)||B.thinking?`<span class="bb-msg">🤖 Komputer gra…</span>`:`<span class="bb-msg">…</span>`;
+  }else if(u.kind==='pick'){
+    html=`<span class="bb-msg">Twoja tura — dotknij swojego fightera, którego chcesz aktywować (zielone obwódki).</span>`;
+  }else if(u.kind==='action'){
+    const m=u.m;
+    const pips=[0,1].map(i=>`<span class="gs-pip${i<B.actLeft?' on':''}"></span>`).join('');
+    const btn=(kind,label,bonusIdx,restrict)=>{
+      const why=(bonusIdx==null&&B.actLeft<=0)?'Brak akcji':actionLegal(m,kind,restrict);
+      return `<button class="${bonusIdx!=null?'bb-bonus':''}" ${why?`disabled title="${why}"`:''} onclick="battleAct('${kind}',${bonusIdx==null?'null':bonusIdx})">${label}</button>`;
+    };
+    html=`<span class="bb-act">${nm(m)} <span class="gs-pips">${pips}</span></span>`+
+      btn('move','🏃 Ruch')+btn('attack','⚔ Atak')+btn('disengage','↩ Odskok')+btn('wait','⏸ Czekaj')+(scen().kind==='treasure'?btn('pickup','💰 Podnieś'):'');
+    B.bonus.forEach((b,i)=>b.types.forEach(t=>{html+=btn(t,'＋'+ACT_PL[t],i,b.restrict||{});}));
+    const ab=!B.abilityUsed&&usableAbilities(m).length;
+    html+=`<button class="bp" ${B.abilityUsed?'disabled title="Już użyto zdolności"':''} onclick="battleAct('ability')">✨ Zdolność${ab?'':' ·'}</button>`;
+    html+=`<button class="exp" onclick="battleAct('end')">✓ Koniec aktywacji</button>`;
+  }else if(u.kind==='node'){
+    const lv=u.byLv.map((n,l)=>n?`poz.${l}: ${n}`:'').filter(Boolean).join(', ');
+    html=`<span class="bb-msg">${u.prompt} <span class="bb-sub">(${lv})</span></span><button onclick="battleCancel()">✕ Anuluj</button>`;
+  }else if(u.kind==='model'){
+    html=`<span class="bb-msg">${u.prompt}</span>`+(u.cancellable?`<button onclick="battleCancel()">✕ Anuluj</button>`:'');
+  }
+  act.innerHTML=html;
+  renderBattleLog();
+  renderVsLive();
+}
+function renderVsLive(){
+  if(!B)return;
+  const h=B.human||'p',ai=other(h);
+  const side=s=>{
+    const alive=models.filter(m=>m.s===s);
+    return `<div class="gs-side ${s===h?'p':'l'}"><div class="gs-side-t">${sideName(s)}</div>
+      <div class="vs-line">Fighterzy: ${alive.length} · Powaleni wrogowie: ${B.kills[s]} pkt</div>
+      <div class="vs-line">PZ: <b>${B.vp[s]}</b></div>
+      <div class="vs-line">${diceChips(s)||'<i>brak kości</i>'}</div></div>`;
+  };
+  document.getElementById('vsSides').innerHTML=`<div class="vs-scen"><b>Scenariusz: ${scen().name}</b><div class="bb-sub">${scen().desc}</div></div><div class="gs-2col">${side(h)}${side(ai)}</div>`;
+  const fx=B.fx.map(e=>{const s=liveModel(e.src),t=e.model!=null?liveModel(e.model):null;
+    return `<div class="vs-fx">${e.label||e.stat}: ${t?mName(t):(e.aura?`aura ${e.aura.r}" (${s?mName(s):'?'})`:'')} <span class="bb-sub">[${{act:'do końca aktywacji',round:'do końca rundy',battle:'do końca bitwy',nextAct:'do następnej aktywacji'}[e.until]||''}]</span></div>`;}).join('');
+  document.getElementById('vsFx').innerHTML=fx||'<div class="bb-sub">Brak aktywnych efektów.</div>';
+}
+function renderVsSetup(){
+  const el=document.getElementById('vsSetupSides');if(!el)return;
+  const ss=document.getElementById('vsScen');
+  if(ss&&!ss.options.length){
+    ss.innerHTML=Object.entries(SCENARIOS).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join('');
+    let saved=null;try{saved=localStorage.getItem('warcry-scenario');}catch(e){}
+    if(saved&&SCENARIOS[saved])ss.value=saved;
+  }
+  if(ss){const d=document.getElementById('vsScenDesc');if(d)d.textContent=SCENARIOS[ss.value].desc;}
+  for(const gid of['genP','genL']){const g=document.getElementById(gid);if(g&&!g.options.length)g.innerHTML=genBandOptions();}
+  const side=s=>{
+    const ms=models.filter(m=>m.s===s&&getDB(m));
+    const bands=[...new Set(ms.map(m=>bandOf(m)))];
+    const pts=ms.reduce((a,m)=>a+(getDB(m).P||0),0);
+    return `<div class="gs-side ${s}"><div class="gs-side-t">Strona ${s.toUpperCase()}</div><div class="vs-line">${ms.length} fighterów · ${pts} pkt</div><div class="vs-line bb-sub">${bands.join(', ')||'—'}</div></div>`;
+  };
+  el.innerHTML=`<div class="gs-2col">${side('p')}${side('l')}</div>`;
+}
+
+// ── Generator band i automatyczne rozstawienie ──
+const GEN_MAX_FIGHTERS=15,GEN_MAX_HEROES=3;
+// Losowy skład bandy w limicie punktów: przywódca (Hero), do 2 kolejnych Hero, reszta z naciskiem na różnorodność
+function generateWarband(band,limit){
+  const pool=DB.filter(f=>f.band===band);
+  const heroes=pool.filter(f=>f.tags.includes('HERO')),rest=pool.filter(f=>!f.tags.includes('HERO'));
+  const pickW=(cands,picked)=>{
+    const w=cands.map(f=>1/(1+picked.filter(p=>p.key===f.key).length*1.5));
+    let r=Math.random()*w.reduce((a,b)=>a+b,0);
+    for(let i=0;i<cands.length;i++){r-=w[i];if(r<=0)return cands[i];}
+    return cands[cands.length-1];
+  };
+  let best=null;
+  for(let attempt=0;attempt<60;attempt++){
+    const picked=[];let left=limit;
+    let lead=heroes.filter(f=>f.P<=left*0.5);
+    if(!lead.length){const ch=heroes.slice().sort((a,b)=>a.P-b.P)[0];if(ch&&ch.P<=left*0.65)lead=[ch];}
+    if(lead.length){const h=lead[Math.floor(Math.random()*lead.length)];picked.push(h);left-=h.P;}
+    for(let k=1;k<GEN_MAX_HEROES;k++){
+      if(Math.random()<0.45)continue;
+      const c=heroes.filter(f=>f.P<=left-150&&!picked.includes(f));
+      if(c.length){const h=pickW(c,picked);picked.push(h);left-=h.P;}
+    }
+    for(;;){
+      if(picked.length>=GEN_MAX_FIGHTERS)break;
+      let c=rest.filter(f=>f.P<=left);
+      if(!c.length)c=heroes.filter(f=>f.P<=left&&picked.filter(p=>p.tags.includes('HERO')).length<GEN_MAX_HEROES&&!picked.includes(f));
+      if(!c.length)break;
+      const f=pickW(c,picked);picked.push(f);left-=f.P;
+    }
+    const pts=limit-left;
+    const score=pts-(picked.length<3?1000:0)+Math.random()*5;
+    if(!best||score>best.score)best={picked,pts,score};
+  }
+  return best;
+}
+// Rozstawienie w strefie bandy: wręcz z przodu, strzelcy z tyłu, na wolnych polach, z odstępem
+function deployWarband(list,side,taken){
+  const edge=side==='p'?'y30':'y0';
+  const front=side==='p'?24.5:5.5,back=side==='p'?28:2;
+  const sorted=list.slice().sort((a,b)=>{
+    const ra=aiRoleDB(a),rb=aiRoleDB(b);
+    return (ra===rb?0:ra==='melee'?-1:1);
+  });
+  const nFront=sorted.filter(f=>aiRoleDB(f)==='melee').length,nBack=sorted.length-nFront;
+  const placed=[];let iF=0,iB=0;
+  for(const f of sorted){
+    const isFront=aiRoleDB(f)==='melee';
+    const n=isFront?nFront:nBack,i=isFront?iF++:iB++;
+    const row=isFront?front:back;
+    const want={x:2+(18*(i+0.5))/Math.max(1,n),y:row+(n>9?((i%2)?(side==='p'?1.2:-1.2):0):0)};
+    let bestP=null,bd=Infinity;
+    for(let ix=0;ix<NX;ix++)for(let iy=0;iy<NY;iy++){
+      const x=ix*GS,y=iy*GS;
+      if(!inZone({x,y},edge))continue;
+      if(!BX.free[nIdx(0,ix,iy)])continue;
+      if(taken.some(t=>Math.hypot(t.x-x,t.y-y)<2*BASE_R+0.6))continue;
+      const d=Math.hypot(x-want.x,y-want.y);
+      if(d<bd){bd=d;bestP={x,y};}
+    }
+    if(!bestP)continue;
+    taken.push(bestP);placed.push({f,...bestP});
+  }
+  return placed;
+}
+function aiRoleDB(f){
+  let me=0,ra=0;
+  for(const w of f.wpn){const p=weaponPower(w);if(isMelee(w))me=Math.max(me,p);else if(wpnRange(w).max>=5)ra=Math.max(ra,p);}
+  return ra>0&&ra>=me*0.8?'ranged':'melee';
+}
+function genBandOptions(){return `<option value="">🎲 Losowa</option>`+BANDS.map(b=>`<option value="${b.replace(/"/g,'&quot;')}">${b}</option>`).join('');}
+function runGenerator(){
+  if(B&&B.active)return;
+  if(models.length&&!confirm('Generator zastąpi wszystkie modele na mapie nowymi bandami. Kontynuować?'))return;
+  const limit=+document.getElementById('genPts').value||1000;
+  const pickBand=(id,avoid)=>{
+    const v=document.getElementById(id).value;
+    if(v)return v;
+    const c=BANDS.filter(b=>b!==avoid);return c[Math.floor(Math.random()*c.length)];
+  };
+  const bp=pickBand('genP',null),bl=pickBand('genL',bp);
+  const savedBX=BX;
+  BX=buildBattleGeometry();
+  const taken=[],res={};
+  let id=1;const ms=[];
+  for(const[s,band]of[['p',bp],['l',bl]]){
+    const wb=generateWarband(band,limit);
+    res[s]={band,pts:wb.pts,list:wb.picked};
+    for(const pl of deployWarband(wb.picked,s,taken)){
+      ms.push({id:id++,s,n:pl.f.n.replace(/[^a-zA-Z]/g,'').substring(0,5),fk:pl.f.key,x:snap(pl.x),y:snap(pl.y),lv:0,hp:pl.f.W});
+    }
+  }
+  BX=savedBX;
+  models=ms;nid=id;sel=null;clearStatsPanel();
+  models.forEach(ensureModelFields);
+  const sum=s=>{
+    const cnt={};res[s].list.forEach(f=>cnt[f.n]=(cnt[f.n]||0)+1);
+    const warn=res[s].list.length<3?`<div class="vs-line" style="color:var(--ay)">⚠ Limit ${limit} pkt jest za niski dla tej bandy — mniej niż 3 fighterów.</div>`:'';
+    return `<div class="gs-side ${s}"><div class="gs-side-t">${s.toUpperCase()}: ${res[s].band}</div><div class="vs-line">${res[s].list.length} fighterów · ${res[s].pts}/${limit} pkt</div>${warn}<div class="vs-line bb-sub">${Object.entries(cnt).map(([n,c])=>(c>1?c+'× ':'')+n).join(', ')}</div></div>`;
+  };
+  document.getElementById('genResult').innerHTML=`<div class="gs-2col">${sum('p')}${sum('l')}</div>`;
+  renderVsSetup();gsRenderModelList();draw();saveLocal();
+  sts(`✓ Wygenerowano bandy: ${bp} (${res.p.pts} pkt) vs ${bl} (${res.l.pts} pkt) — rozstawione w strefach.`);
+}
+
+// ── Start / koniec bitwy ──
+function startBattle(){
+  if(B&&B.active)return;
+  const sideSel=document.getElementById('vsSide').value;
+  const demo=sideSel==='ai';
+  const valid=models.filter(m=>getDB(m));
+  if(!valid.some(m=>m.s==='p')||!valid.some(m=>m.s==='l')){alert('Każda strona musi mieć na mapie co najmniej jednego fightera z bazy.');return;}
+  const snapshot=JSON.parse(JSON.stringify({terrain:terrain.map(t=>({...t,rects:undefined})),models,objectives,level,game:gameState}));
+  models=valid;
+  models.forEach(m=>{m.hp=maxW(m);m.lv=m.lv||0;m.activated=false;m.waiting=false;m.reactedRound=false;m.reactPenalty=0;m.actionsLeft=2;});
+  B={active:true,human:demo?null:sideSel,aiSides:demo?['p','l']:[other(sideSel)],
+    rounds:+document.getElementById('vsRounds').value||4,diff:document.getElementById('vsDiff').value||'normal',
+    fast:false,round:0,snapshot,fx:[],fxId:0,dieId:0,log:[],dice:{p:[],l:[]},wild:{p:0,l:0},
+    vp:{p:0,l:0},kills:{p:0,l:0},dead:[],ui:null,bonus:[],actLeft:0,turn:null};
+  const scId=document.getElementById('vsScen').value;
+  B.scen=SCENARIOS[scId]||SCENARIOS.objectives;
+  try{localStorage.setItem('warcry-scenario',scId);}catch(e){}
+  B.zones=computeZones(models);
+  B.leaders={};
+  for(const s of['p','l']){
+    const ms=models.filter(m=>m.s===s);
+    const heroes=ms.filter(m=>hasTag(m,'HERO'));
+    const pool=heroes.length?heroes:ms;
+    B.leaders[s]=pool.reduce((a,b)=>(getDB(b).P>getDB(a).P?b:a)).id;
+  }
+  objectives.forEach(o=>{delete o.owner;delete o.carrier;});
+  let autoMarkers=false;
+  if(scenNeedsTemplate(B.scen)){const t=scenTemplate(scId,models);if(t){objectives=B.scen.kind==='treasure'?scoredObjs().concat(t):t;autoMarkers=true;}}
+  BX=buildBattleGeometry();
+  sel=null;losA=null;rangeA=null;pendingF=null;tool='move';drag=false;
+  clearStatsPanel();
+  logB(`⚔ Bitwa rozpoczęta: ${demo?'komputer kontra komputer':`grasz stroną ${sideSel.toUpperCase()}`} · ${B.rounds} rundy · poziom: ${{easy:'łatwy',normal:'normalny',hard:'trudny'}[B.diff]}`);
+  logB(`📜 Scenariusz: <b>${B.scen.name}</b> — ${B.scen.desc}`);
+  if(autoMarkers)logB('📍 Na mapie nie było znaczników dla tego scenariusza — rozstawiono je automatycznie.');
+  if(B.scen===SCENARIOS.assassinate)logB(`👑 Przywódcy: ${nm(liveModel(B.leaders.p))} i ${nm(liveModel(B.leaders.l))}`);
+  if(window.innerWidth<860)showTab('Mapa');
+  renderBattleUI();draw();
+  return runBattle();
+}
+async function finishBattle(res){
+  if(!B)return;
+  B.over=true;B.result=res;B.ui=null;
+  let title;
+  if(res.winner===null)title='🤝 Remis';
+  else if(B.human)title=res.winner===B.human?'🏆 Zwycięstwo!':'💀 Porażka';
+  else title='🏁 Wygrywa '+sideName(res.winner);
+  const why={wipe:'banda przeciwnika została wybita',vp:'więcej punktów zwycięstwa (cele)',kills:'więcej punktów powalonych wrogów',draw:'równe punkty i straty'}[res.reason]||'';
+  logB(`${title} — ${why}`);
+  renderBattleUI();
+  if(B.fast)return;
+  const h=B.human||'p',ai=other(h);
+  const body=`<div class="bm-big">${why}</div>
+    <div class="bm-note">${objectives.length?`PZ: ${sideName(h)} ${B.vp[h]} : ${B.vp[ai]} ${sideName(ai)}<br>`:''}Powaleni wrogowie (pkt): ${sideName(h)} ${B.kills[h]} : ${B.kills[ai]} ${sideName(ai)}<br>Rozegrane rundy: ${Math.min(B.round,B.rounds)}/${B.rounds}</div>`;
+  const v=await askChoice(title,body,[{v:'restore',l:'Przywróć mapę sprzed bitwy',cls:'exp'},{v:'keep',l:'Zostaw planszę po bitwie'}]);
+  exitBattle(v!=='keep');
+}
+function exitBattle(restore){
+  if(!B)return;
+  if(restore&&B.snapshot){
+    const s=B.snapshot;
+    terrain=(s.terrain||[]).map(t=>({...t,rects:buildRects(t.type,t.ox,t.oy,t.rot||0)}));
+    models=s.models||[];objectives=s.objectives||[];
+    if(s.game)gameState=Object.assign({round:1,wildP:0,wildL:0},s.game);
+  }else{
+    models.forEach(m=>{m.activated=false;m.actionsLeft=2;m.reactionUsed=false;m.waiting=false;delete m.reactedRound;delete m.reactPenalty;});
+  }
+  B.aborted=true;B.active=false;
+  if(B.ui&&B.ui.resolve)B.ui.resolve(null);
+  if(bModalResolve)bModalResolve(null);
+  B=null;BX=null;
+  sel=null;clearStatsPanel();
+  models.forEach(ensureModelFields);
+  renderBattleUI();updateGameUI();gsRenderModelList();
+  sts(restore?'✓ Bitwa zakończona — przywrócono mapę sprzed bitwy.':'✓ Bitwa zakończona — plansza pozostawiona.');
+  draw();saveLocal();
+}
+function endBattleManual(){
+  if(!B)return;
+  if(B.over){exitBattle(true);return;}
+  if(!confirm('Przerwać bitwę i przywrócić mapę sprzed bitwy?'))return;
+  exitBattle(true);
+}
+function openBattleSetup(){
+  showTab('Game');
+  const el=document.getElementById('vsCard');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+  renderVsSetup();
+}
+// Efekty działające na fightera (do panelu statystyk)
+function fxListFor(m){
+  if(!B)return [];
+  return B.fx.filter(e=>{
+    if(e.model===m.id)return true;
+    if(!e.aura)return false;
+    const src=liveModel(e.src);if(!src)return false;
+    if(e.aura.rel==='ally'&&src.s!==m.s)return false;
+    if(e.aura.rel==='enemy'&&src.s===m.s)return false;
+    if(src.id!==m.id&&edgeDist(src,m)>e.aura.r)return false;
+    if(e.aura.filter&&!e.aura.filter(m,src))return false;
+    return true;
+  }).map(e=>`${e.label||e.stat} (${e.stat} ${e.val>0?'+':''}${e.val}${e.scope&&e.scope!=='all'?' '+(e.scope==='melee'?'zwarcie':'dystans'):''})`);
+}
+
+// ═══════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════
 (async function init(){
@@ -2320,7 +4768,7 @@ function updateGhBadge(){
   if(!loaded)resetAll();
   models.forEach(ensureModelFields);
   setLevel(level||0);setTool('move');
-  updateGameUI();gsRenderModelList();updateGhBadge();
+  updateGameUI();gsRenderModelList();updateGhBadge();renderBattleUI();
   if(!ghConfig)setGhStatus('Sesja zapisywana lokalnie. Podłącz GitHub, by dzielić się stanem z Claude.');
   sts(loaded?'✓ Wczytano zapisany stan.':'Gotowy. Nowa sesja.');
   draw();
