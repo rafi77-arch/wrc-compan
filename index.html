@@ -7420,36 +7420,108 @@ function v3WorldUV(geo){
   uv.needsUpdate=true;return geo;
 }
 function terrainTopLevel(t){return buildPlatformShape(t,2)?2:buildPlatformShape(t,1)?1:0;}
+// Zrujnowane gotyckie fortyfikacje (inspiracja: Kill Team Volkus) — tylko wygląd, zasady liczą proste ściany
+function v3MergeAdd(bucket,geo){const g=geo.index?geo.toNonIndexed():geo;bucket.push(g);if(g!==geo)geo.dispose();}
+function v3Merged(list){
+  let n=0;for(const g of list)n+=g.attributes.position.count;
+  const pos=new Float32Array(n*3),nor=new Float32Array(n*3),uv=new Float32Array(n*2);let o=0;
+  for(const g of list){const c=g.attributes.position.count;pos.set(g.attributes.position.array,o*3);nor.set(g.attributes.normal.array,o*3);uv.set(g.attributes.uv.array,o*2);o+=c;g.dispose();}
+  const m=new THREE.BufferGeometry();m.setAttribute('position',new THREE.BufferAttribute(pos,3));m.setAttribute('normal',new THREE.BufferAttribute(nor,3));m.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+  return m;
+}
 function build3DTerrain(){
   clear3DGroup(V3.terrG);
   // ściany półprzezroczyste — fighterzy wewnątrz budynków i za murami pozostają widoczni
   if(!V3.mats){const brick=v3Tex('brick',1,1),deck=v3Tex('deck',.25,.25),rub=v3Tex('rubble',1,1);
-    V3.mats={wall:new THREE.MeshStandardMaterial({color:0xaeb2c2,map:brick,roughness:.9,transparent:true,opacity:.66}),
+    V3.mats={wall:new THREE.MeshStandardMaterial({color:0xaeb2c2,map:brick,roughness:.9,transparent:true,opacity:.7}),
+      trim:new THREE.MeshStandardMaterial({color:0x8a8e9c,map:brick,roughness:.85,transparent:true,opacity:.8}),
       light:new THREE.MeshStandardMaterial({color:0xd0d4e2,map:brick,roughness:.9,transparent:true,opacity:.55}),
       rub:new THREE.MeshStandardMaterial({color:0xc8b8a0,map:rub,roughness:1}),
+      metal:new THREE.MeshStandardMaterial({color:0x4a505c,roughness:.45,metalness:.7}),
       plat:[null,new THREE.MeshStandardMaterial({color:0x7fc89c,map:deck,roughness:.7,metalness:.25}),new THREE.MeshStandardMaterial({color:0xe2c46c,map:deck,roughness:.7,metalness:.25})]};
-    for(const m of[V3.mats.wall,V3.mats.light,V3.mats.rub,V3.mats.plat[1],V3.mats.plat[2]])m.userData.keep=true;}
-  const wallMat=V3.mats.wall,lightMat=V3.mats.light,rubMat=V3.mats.rub,platMat=V3.mats.plat;
-  const box=(sx,sy,sz,x,y,z,mat)=>{const geo=new THREE.BoxGeometry(sx,sy,sz);geo.translate(x,y,z);v3WorldUV(geo);const m=new THREE.Mesh(geo,mat);m.castShadow=true;m.receiveShadow=true;V3.terrG.add(m);};
+    for(const k in V3.mats)[].concat(V3.mats[k]).forEach(m=>{if(m)m.userData.keep=true;});}
+  const M=V3.mats,buckets=new Map();
+  const add=(mat,geo)=>{if(!buckets.has(mat))buckets.set(mat,[]);v3MergeAdd(buckets.get(mat),geo);};
+  // prostopadłościan w układzie świata (opcjonalny obrót wokół pionu), z teksturą w skali planszy
+  const box=(sx,sy,sz,x,y,z,mat,ry)=>{if(sx<=0.01||sy<=0.01||sz<=0.01)return;const g=new THREE.BoxGeometry(sx,sy,sz);if(ry)g.rotateY(ry);g.translate(x,y,z);v3WorldUV(g);add(mat,g);};
   for(const t of terrain){
     const base=(t.level||0)*LV_H,rot=t.rot||0;
+    const rnd=texRng(((t.ox*73856093)^(t.oy*19349663)^((rot+1)*83492791)^(t.type.charCodeAt(0)*2654435761))>>>0);
     if(t.type==='rb'){
-      const horiz=rot%2===0,bw=horiz?2:3,bh=horiz?3:2;
-      box(bh,0.5,bw,t.oy+bh/2,base+0.25,t.ox+bw/2,rubMat);
-      for(let k=0;k<5;k++){const a=(k*2.399+t.ox+t.oy)%6.28,rr=0.3+((k*0.37)%0.6);box(0.35+0.1*k%0.3,0.35,0.3,t.oy+bh/2+Math.cos(a)*rr*bh/2,base+0.6,t.ox+bw/2+Math.sin(a)*rr*bw/2,rubMat);}
+      const horiz=rot%2===0,bw=horiz?2:3,bh=horiz?3:2,cx=t.oy+bh/2,cz=t.ox+bw/2;
+      box(bh*0.9,0.3,bw*0.9,cx,base+0.15,cz,M.rub);
+      for(let k=0;k<16;k++){const sz=0.18+rnd()*0.45;box(sz*(1+rnd()),sz*(0.5+rnd()*0.7),sz,cx+(rnd()-.5)*bh*0.85,base+0.3+rnd()*0.25,cz+(rnd()-.5)*bw*0.85,rnd()<.25?M.trim:M.rub,rnd()*3);}
+      // złamana kolumna w gruzie
+      if(rnd()<0.7){const h=0.6+rnd()*0.8;box(0.32,h,0.32,cx+(rnd()-.5)*bh*0.4,base+h/2,cz+(rnd()-.5)*bw*0.4,M.trim);}
       continue;
     }
-    const top=terrainTopLevel(t);
-    const hgt=V3_WALL[t.type]!=null&&!top?V3_WALL[t.type]:top*LV_H+0.8;
-    const mat=t.type==='lw'||t.type==='fs'?lightMat:wallMat;
-    for(const r of buildRects(t.type,t.ox,t.oy,rot))box(Math.max(r.h,0.08),hgt,Math.max(r.w,0.08),r.y+r.h/2,base+hgt/2,r.x+r.w/2,mat);
+    const top=terrainTopLevel(t),isBld=top>0;
+    const full=V3_WALL[t.type]!=null&&!top?V3_WALL[t.type]:top*LV_H+1.0;
+    const mat=t.type==='lw'||t.type==='fs'?M.light:M.wall;
+    const rects=buildRects(t.type,t.ox,t.oy,rot);
+    if(t.type==='fs'){for(const r of rects){box(r.h,0.6,r.w,r.y+r.h/2,base+0.3,r.x+r.w/2,M.trim);box(r.h*0.5,0.3,r.w*0.5,r.y+r.h*0.25,base+0.75,r.x+r.w*0.25,M.trim);}continue;}
+    for(const r of rects){
+      const alongX=r.h>=r.w,L=alongX?r.h:r.w,T=Math.max(alongX?r.w:r.h,0.1);
+      const x0=r.y,z0=r.x,cx=r.y+r.h/2,cz=r.x+r.w/2;
+      const at=(u,y,len,hh,th,mm)=>alongX?box(len,hh,th,x0+u,y,cz,mm):box(th,hh,len,cx,y,z0+u,mm);
+      // segmenty muru o różnej wysokości: postrzępiony wierzch i wyłomy
+      const seg=0.5,nS=Math.max(1,Math.round(L/seg)),sl=L/nS;
+      let prof=rnd();
+      const minH=isBld?top*LV_H*0.72:full*0.45;
+      for(let i=0;i<nS;i++){
+        prof=Math.max(0,Math.min(1,prof+(rnd()-.5)*0.55));
+        let h=full*(0.62+0.38*prof);
+        if(rnd()<0.12)h=minH+(h-minH)*rnd()*0.4;               // wyłom
+        if(i===0||i===nS-1)h=Math.max(h,full*0.92);             // narożniki pełne
+        h=Math.max(minH,h);
+        const u=(i+0.5)*sl;
+        // okna na piętrach budynków (otwór między parapetem a nadprożem), co trzeci segment
+        let made=false;
+        if(isBld&&nS>4&&i%3===1&&i>0&&i<nS-1){
+          for(let lv=0;lv<top;lv++){
+            const s0=base+lv*LV_H+1.0,s1=base+lv*LV_H+2.3;
+            if(h>s1+0.3&&!made){at(u,(base+s0)/2,sl,s0-base,T,mat);at(u,(s1+base+h)/2,sl,base+h-s1,T,mat);made=true;}
+          }
+        }
+        if(!made)at(u,base+h/2,sl,h,T,mat);
+        // blanki na nienaruszonych odcinkach
+        if(h>full*0.9&&i%2===0)at(u,base+h+0.15,sl*0.55,0.3,T*1.15,M.trim);
+        // gruz u podnóża wyłomów
+        if(h<full*0.75){for(let k=0;k<2;k++){const sz=0.15+rnd()*0.25,off=(rnd()<.5?-1:1)*(T/2+0.2+rnd()*0.35);
+          alongX?box(sz,sz*0.7,sz,x0+u+(rnd()-.5)*sl,base+sz*0.35,cz+off,M.rub,rnd()*3):box(sz,sz*0.7,sz,cx+off,base+sz*0.35,z0+u+(rnd()-.5)*sl,M.rub,rnd()*3);}}
+      }
+      // przypory: na końcach i co ~2,5", grubsze i z daszkiem
+      const nB=Math.max(1,Math.round(L/2.5));
+      for(let k=0;k<=nB;k++){
+        const u=Math.min(L-0.18,Math.max(0.18,k*L/nB)),bh=full*(isBld?0.98:0.85)+(rnd()-.5)*0.3,bt=T*2.6+0.25;
+        at(u,base+bh/2,0.36,bh,bt,M.trim);
+        at(u,base+bh+0.08,0.46,0.16,bt+0.12,M.trim);
+        if(isBld)at(u,base+0.25,0.5,0.5,bt+0.25,M.trim);         // cokół
+      }
+    }
+    // platformy: płyty, obramowanie, podpory i balustrady na otwartych krawędziach
     for(const lv of[1,2]){
       const poly=buildPlatformShape(t,lv);if(!poly)continue;
+      const y=base+lv*LV_H;
       const sh=new THREE.Shape(poly.map(p=>new THREE.Vector2(p.y,p.x)));
-      const g=new THREE.ExtrudeGeometry(sh,{depth:0.22,bevelEnabled:false});g.rotateX(Math.PI/2);
-      const m=new THREE.Mesh(g,platMat[lv]);m.position.y=base+lv*LV_H;m.castShadow=true;m.receiveShadow=true;V3.terrG.add(m);
+      const g=new THREE.ExtrudeGeometry(sh,{depth:0.22,bevelEnabled:false});g.rotateX(Math.PI/2);g.translate(0,y,0);add(M.plat[lv],g);
+      const nearWall=(px,pz)=>rects.some(r=>px>=r.y-0.35&&px<=r.y+r.h+0.35&&pz>=r.x-0.35&&pz<=r.x+r.w+0.35);
+      for(let i=0;i<poly.length;i++){
+        const a=poly[i],b2=poly[(i+1)%poly.length];
+        const ax=a.y,az=a.x,bx=b2.y,bz=b2.x,len=Math.hypot(bx-ax,bz-az);if(len<0.2)continue;
+        const ang=Math.atan2(bz-az,bx-ax),mx=(ax+bx)/2,mz=(az+bz)/2;
+        box(len,0.12,0.12,mx,y-0.28,mz,M.metal,-ang);                   // dźwigar pod krawędzią
+        if(nearWall(mx,mz))continue;
+        // balustrada: słupki co ~1" i poręcz
+        const nP=Math.max(1,Math.round(len));
+        for(let k=0;k<=nP;k++){const f=k/nP;box(0.07,0.7,0.07,ax+(bx-ax)*f,y+0.35,az+(bz-az)*f,M.metal);}
+        box(len,0.06,0.06,mx,y+0.7,mz,M.metal,-ang);box(len,0.04,0.04,mx,y+0.38,mz,M.metal,-ang);
+      }
+      // podpory pod narożnikami, które nie stoją przy murze
+      for(const pnt of poly){const px=pnt.y,pz=pnt.x;if(nearWall(px,pz))continue;const ph=lv*LV_H-0.22;box(0.28,ph,0.28,px,base+ph/2,pz,M.trim);}
     }
   }
+  for(const[mat,list]of buckets){const m=new THREE.Mesh(v3Merged(list),mat);m.castShadow=true;m.receiveShadow=true;V3.terrG.add(m);}
 }
 function v3LabelTex(text,col,pct,act){
   const key=text+'|'+col+'|'+(pct==null?'':Math.round(pct*20))+'|'+act;
