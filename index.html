@@ -190,6 +190,48 @@ textarea:focus{outline:none;border-color:var(--ap);}
 @media (min-width:1300px){
   #tabMapa{flex:3.4;}
 }
+/* ═══════ LAPTOP: plansza na całe wolne miejsce, statystyki w prawej kolumnie, karta po najechaniu ═══════ */
+@media (min-width:860px){
+  .canvas-wrap{display:flex;align-items:center;justify-content:center;overflow:hidden;padding:6px;}
+  .canvas-wrap canvas{max-width:none;margin:0;flex-shrink:0;}
+  #tabGame .sp{position:static;width:auto;max-height:48vh;border-left:none;border-bottom:1px solid var(--border);flex-shrink:0;}
+  #tabGame .sp:not(.open){display:none;}
+  #tabGame .sp-empty{display:none!important;}
+  #tabGame .gs-wrap{flex:1;min-height:0;}
+  #tabGame .sp-head{padding:10px 36px 8px 12px;}
+  #tabGame .sp-name{font-size:17px;}
+  #tabGame .sp-band{font-size:11px;}
+  #tabGame .sp-tag{font-size:10px;}
+  #tabGame .sp-sec{padding:7px 12px;}
+  #tabGame .sp-sec-t{font-size:10px;margin-bottom:5px;}
+  #tabGame .stat-val{font-size:19px;}
+  #tabGame .stat-lbl{font-size:9px;}
+  #tabGame .stat-tip{font-size:9px;}
+  #tabGame .pts-val{font-size:17px;}
+  #tabGame .hp-label{font-size:11px;}
+  #tabGame .hp-bar-wrap{height:10px;}
+  #tabGame .hp-ctrl button{padding:3px 9px;font-size:13px;}
+  #tabGame .hp-inp{width:48px;font-size:12px;padding:2px 4px;}
+  #tabGame .hp-max{font-size:12px;}
+  #tabGame .wpn-name{font-size:12px;}
+  #tabGame .wpn-stats{font-size:11px;}
+  #tabGame .wpn-note{font-size:10px;}
+  #tabGame .react-text,#tabGame .ab-item{font-size:11px;}
+  #tabGame .tip-label,#tabGame .tip-val{font-size:10px;}
+  #tabGame .tip-label{min-width:64px;}
+}
+.hovcard{position:fixed;z-index:150;pointer-events:none;background:rgba(24,24,32,.97);border:1px solid var(--border);border-radius:8px;padding:8px 10px;min-width:190px;max-width:290px;box-shadow:0 8px 24px rgba(0,0,0,.6);font-size:11px;line-height:1.45;display:none;}
+.hovcard .hc-n{font-size:13px;font-weight:700;}
+.hovcard .hc-sub{color:var(--text2);font-size:10px;font-family:var(--f-mono);}
+.hovcard .hc-hp{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin:5px 0 4px;}
+.hovcard .hc-hp div{height:100%;}
+.hovcard .hc-st{font-family:var(--f-mono);color:var(--text);}
+.hovcard .hc-w{font-family:var(--f-mono);font-size:10px;color:var(--text2);}
+.hovcard .hc-w b{color:var(--text);font-family:var(--f-ui);font-weight:600;}
+.hovcard .hc-atk{margin-top:5px;padding-top:5px;border-top:1px solid var(--border);}
+.hovcard .hc-atk .ok{color:var(--ag);}
+.hovcard .hc-atk .no{color:var(--text2);}
+.hovcard .hc-fx{color:var(--ap);font-size:10px;}
 
 /* ═══════ BITWA Z KOMPUTEREM ═══════ */
 body.in-battle #tabMapa .toolbar,body.in-battle #legendBar,body.in-battle .gs-manual{display:none;}
@@ -276,6 +318,7 @@ body.in-battle #tabMapa .toolbar,body.in-battle #legendBar,body.in-battle .gs-ma
   <div class="roundpill" id="roundPill">R1</div>
 </header>
 
+<div class="hovcard" id="hovCard"></div>
 <div class="tabpanels">
 <!-- ═══════ TAB: MAPA ═══════ -->
 <div class="tabpanel active" id="tabMapa">
@@ -7052,7 +7095,78 @@ function fxListFor(m){
 // ═══════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════
+// ── Laptop: plansza dopasowana do wolnego miejsca (ostra: bufor płótna w rozdzielczości ekranu) ──
+let canvasK=1;
+function fitCanvas(){
+  const wrap=CV.parentElement;
+  if(window.innerWidth<860){CV.style.width='';CV.style.height='';return;}
+  const aw=wrap.clientWidth-12,ah=wrap.clientHeight-12;
+  if(aw<50||ah<50)return;
+  const sc=Math.min(aw/W,ah/H);
+  CV.style.width=Math.floor(W*sc)+'px';CV.style.height=Math.floor(H*sc)+'px';
+  const k=Math.max(1,Math.min(3,Math.round(sc*(window.devicePixelRatio||1)*4)/4));
+  if(k!==canvasK){canvasK=k;CV.width=Math.round(W*k);CV.height=Math.round(H*k);G.setTransform(k,0,0,k,0,0);draw();}
+}
+// Statystyki fightera w prawej kolumnie (nad panelem bitwy), żeby nie zabierały miejsca planszy
+function placeStatsPanel(){
+  const sp=document.getElementById('statsPanel'),tg=document.getElementById('tabGame');
+  if(window.innerWidth>=860){if(sp.parentElement!==tg)tg.prepend(sp);}
+  else{const ab=document.querySelector('#tabMapa .app-body');if(sp.parentElement!==ab)ab.appendChild(sp);}
+}
+// ── Karta fightera po najechaniu myszą ──
+function hoverCardHTML(m){
+  const db=getDB(m);if(!db)return '';
+  const col=getModelColor(m),hp=m.hp!==undefined?m.hp:db.W,pct=Math.max(0,hp/db.W);
+  const hc=pct>.6?'#50c878':pct>.3?'#f0b840':'#e05050';
+  const inB=!!(B&&B.active);
+  const tags=db.tags.filter(t=>t&&t!=='—').join(' · ');
+  let h=`<div class="hc-n" style="color:${col.main}">${db.n}</div>
+    <div class="hc-sub">${db.band}${tags?' · '+tags:''}</div>
+    <div class="hc-hp"><div style="width:${Math.round(pct*100)}%;background:${hc}"></div></div>
+    <div class="hc-st">Rany ${hp}/${db.W} · Ruch ${inB?statM(m):db.M}" · T${db.T} · ${db.P}p${m.lv?` · poziom ${m.lv}`:''}</div>`;
+  for(const w of db.wpn){const r=wpnRange(w);h+=`<div class="hc-w"><b>${w.name}</b> ${r.min?r.min+'–':''}${r.max}" · A${w.A} S${w.S} D${w.d}</div>`;}
+  const st=[];
+  if(m.activated)st.push('aktywowany');
+  if(inB&&m.group)st.push(`${GROUP_ICON[m.group]} ${GROUP_PL[m.group]}`);
+  if(m.carry!=null&&!(scen().hiddenCarry&&B&&B.human&&m.s!==B.human))st.push('💰 niesie skarb');
+  if(inB&&isEngaged(m))st.push('⚔ w zwarciu');
+  if(st.length)h+=`<div class="hc-sub" style="margin-top:4px">${st.join(' · ')}</div>`;
+  if(inB){const fx=fxListFor(m);if(fx.length)h+=`<div class="hc-fx">${fx.join(' · ')}</div>`;}
+  // Twoja aktywacja, kursor na wrogu: szansa trafienia i przewidywane obrażenia każdą bronią
+  const a=inB&&B.actorId!=null?liveModel(B.actorId):null;
+  if(a&&!isAI(a.s)&&m.s!==a.s){
+    const d=edgeDist(a,m);
+    h+=`<div class="hc-atk"><div class="hc-sub">Atak: ${nm(a)} · odległość ${d.toFixed(1)}"</div>`;
+    for(const w of getDB(a).wpn){
+      const p=profile(a,m,w),ev=evAttack(p);
+      const ok=inRange(a,m,w)&&!rangedBlock(a,m,w)&&canSee(a,m);
+      const why=!inRange(a,m,w)?'poza zasięgiem':rangedBlock(a,m,w)?'zwarcie':!canSee(a,m)?'brak widoczności':'';
+      h+=`<div class="hc-w ${ok?'ok':'no'}"><b>${w.name}</b>: trafia na ${p.th}+${p.cover?' (osłona)':''} · ~${ev.toFixed(1)} obr.${ev>=hp*0.9?' · <span style="color:#e05050">może powalić</span>':''}${why?` · ${why}`:''}</div>`;
+    }
+    h+='</div>';
+  }
+  return h;
+}
+let hovId=null;
+function updateHoverCard(e){
+  const card=document.getElementById('hovCard');
+  if(window.innerWidth<860||e.pointerType==='touch'||drag){card.style.display='none';hovId=null;return;}
+  const{cx,cy}=pos(e),m=modelAt(cx,cy);
+  if(!m){card.style.display='none';hovId=null;return;}
+  card.innerHTML=hoverCardHTML(m);hovId=m.id;
+  card.style.display='block';
+  const cw=card.offsetWidth,ch=card.offsetHeight;
+  let x=e.clientX+16,y=e.clientY+14;
+  if(x+cw>window.innerWidth-6)x=e.clientX-cw-16;
+  if(y+ch>window.innerHeight-6)y=window.innerHeight-ch-6;
+  card.style.left=x+'px';card.style.top=y+'px';
+}
+CV.addEventListener('pointermove',updateHoverCard);
+CV.addEventListener('pointerleave',()=>{document.getElementById('hovCard').style.display='none';hovId=null;});
+window.addEventListener('resize',()=>{placeStatsPanel();fitCanvas();});
+if(window.ResizeObserver)new ResizeObserver(()=>fitCanvas()).observe(CV.parentElement);
 (async function init(){
+  placeStatsPanel();fitCanvas();
   renderLegend();
   loadGhConfig();
   let loaded=false;
