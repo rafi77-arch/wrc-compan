@@ -1508,6 +1508,72 @@ function doorAt(cx,cy){
 function la(lv){if(lv===level)return 1;return lv<level?0.2:0;}
 function ma(lv){return lv===level?1:0.35;}
 
+// ═══════════════════════════════════════════════
+// TEKSTURY PROCEDURALNE (rysowane w kodzie, bez plików) — kafel 256 px = 4" planszy
+// ground: ziemia · brick: kamienne cegły · deck: metalowe płyty · rubble: gruz
+// ═══════════════════════════════════════════════
+const TEXC={};
+function texRng(seed){let a=seed>>>0;return()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};}
+// szum wartości kafelkujący się bez szwów (siatka n×n, interpolacja dwuliniowa)
+function texNoise(rnd,n){
+  const g=new Float32Array(n*n);for(let i=0;i<g.length;i++)g[i]=rnd();
+  return(x,y)=>{x=(x%1+1)%1*n;y=(y%1+1)%1*n;const x0=Math.floor(x),y0=Math.floor(y),fx=x-x0,fy=y-y0,x1=(x0+1)%n,y1=(y0+1)%n;
+    const sx=fx*fx*(3-2*fx),sy=fy*fy*(3-2*fy),a=g[y0*n+x0],b=g[y0*n+x1],c=g[y1*n+x0],d=g[y1*n+x1];
+    return a+(b-a)*sx+(c-a)*sy+(a-b-c+d)*sx*sy;};
+}
+function makeTex(kind){
+  if(TEXC[kind])return TEXC[kind];
+  const S=256,c=document.createElement('canvas');c.width=c.height=S;const g=c.getContext('2d');
+  const rnd=texRng({ground:11,brick:23,deck:37,rubble:51}[kind]||7);
+  const n1=texNoise(rnd,8),n2=texNoise(rnd,32),n3=texNoise(rnd,64);
+  const img=g.createImageData(S,S),D=img.data;
+  const px=(x,y,r,gg,b)=>{const i=(y*S+x)*4;D[i]=r;D[i+1]=gg;D[i+2]=b;D[i+3]=255;};
+  if(kind==='ground'){
+    for(let y=0;y<S;y++)for(let x=0;x<S;x++){
+      const u=x/S,v=y/S,n=n1(u,v)*0.55+n2(u,v)*0.3+n3(u,v)*0.15,sp=rnd()<0.012?18:0;
+      const L=20+n*16+sp;px(x,y,L,L+3,L+12);
+    }
+    g.putImageData(img,0,0);
+    g.strokeStyle='rgba(8,9,14,.55)';g.lineWidth=1;
+    for(let k=0;k<5;k++){let x=rnd()*S,y=rnd()*S,a=rnd()*6.28;g.beginPath();g.moveTo(x,y);for(let s2=0;s2<9;s2++){a+=(rnd()-.5)*1.1;x+=Math.cos(a)*9;y+=Math.sin(a)*9;g.lineTo(x,y);}g.stroke();}
+  }else if(kind==='brick'){
+    const bh=32,bw=64,tone={};
+    for(let y=0;y<S;y++){const row=Math.floor(y/bh),off=row%2?bw/2:0;
+      for(let x=0;x<S;x++){
+        const bx=Math.floor(((x+off)%S)/bw),key=row*8+bx;if(tone[key]==null)tone[key]=0.82+rnd()*0.3;
+        const lx=(x+off)%bw,ly=y%bh,mortar=lx<2||ly<2;
+        const n=n2(x/S,y/S)*0.6+n3(x/S,y/S)*0.4;
+        let L=mortar?88:(150+n*55)*tone[key];
+        if(!mortar&&(ly===2||lx===2))L+=22;if(!mortar&&(ly===bh-1||lx===bw-1))L-=26;
+        px(x,y,L,L,L*1.03);
+      }}
+    g.putImageData(img,0,0);
+  }else if(kind==='deck'){
+    for(let y=0;y<S;y++)for(let x=0;x<S;x++){
+      const lx=x%64,ly=y%64,seam=lx<2||ly<2,n=n2(x/S,y/S)*0.5+n3(x/S,y/S)*0.5;
+      const tread=((lx+ly)%16<2||(lx-ly+64)%16<2)?14:0;
+      let L=seam?70:150+n*45+tread;if(!seam&&(lx===2||ly===2))L+=24;
+      px(x,y,L,L,L);
+    }
+    g.putImageData(img,0,0);
+    g.fillStyle='rgba(40,40,40,.85)';
+    for(let y=0;y<S;y+=64)for(let x=0;x<S;x+=64)for(const[dx,dy]of[[8,8],[56,8],[8,56],[56,56]]){g.beginPath();g.arc(x+dx,y+dy,2.6,0,6.28);g.fill();}
+  }else{
+    for(let y=0;y<S;y++)for(let x=0;x<S;x++){const n=n1(x/S,y/S)*0.4+n2(x/S,y/S)*0.6;const L=70+n*60;px(x,y,L*1.1,L,L*0.85);}
+    g.putImageData(img,0,0);
+    for(let k=0;k<40;k++){const x=rnd()*S,y=rnd()*S,r=6+rnd()*16,L=90+rnd()*80;g.fillStyle=`rgb(${L*1.08|0},${L|0},${L*0.88|0})`;g.beginPath();
+      for(let a=0;a<6.28;a+=0.9){const rr=r*(0.7+rnd()*0.5);g.lineTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr);}g.closePath();g.fill();g.strokeStyle='rgba(20,18,15,.6)';g.stroke();}
+  }
+  TEXC[kind]=c;return c;
+}
+// Wzór do płótna 2D w skali planszy (256 px kafla = 4")
+const PATC={};
+function texPattern(kind){
+  if(PATC[kind])return PATC[kind];
+  const p=G.createPattern(makeTex(kind),'repeat');
+  if(p&&p.setTransform&&typeof DOMMatrix!=='undefined'){const k=IN*4/256;p.setTransform(new DOMMatrix([k,0,0,k,0,0]));}
+  PATC[kind]=p;return p;
+}
 function dpoly(pts,fill,stroke,dash,a=1){
   if(!pts||pts.length<2)return;
   G.globalAlpha=a;G.beginPath();G.moveTo(pts[0].cx,pts[0].cy);
@@ -1528,6 +1594,7 @@ function drawTItem(t){
     const cw=(bh*IN)/cols,ch=(bw*IN)/rows;
     const{cx:ox,cy:oy}=jToC(t.ox,t.oy);
     const r=Math.min(cw,ch)*0.35;
+    {const rp=texPattern('rubble');if(rp){G.globalAlpha=a*.6;G.fillStyle=rp;G.fillRect(ox,oy,bh*IN,bw*IN);G.globalAlpha=a;}}
     if(isSel){G.strokeStyle='#f0b840';G.lineWidth=1.5;G.setLineDash([2,2]);G.strokeRect(ox,oy,bh*IN,bw*IN);G.setLineDash([]);}
     for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){
       G.beginPath();G.arc(ox+cw*col+cw/2,oy+ch*row+ch/2,r,0,Math.PI*2);
@@ -1544,12 +1611,18 @@ function drawTItem(t){
   G.globalAlpha=a;
   for(const r of rects){
     G.fillStyle=fc;G.strokeStyle=isSel?'#f0b840':sc;G.lineWidth=isSel?2:0.75;
-    G.fillRect(r.cx,r.cy,r.cw,r.ch);G.strokeRect(r.cx,r.cy,r.cw,r.ch);
+    G.fillRect(r.cx,r.cy,r.cw,r.ch);
+    {const bp=texPattern('brick');if(bp&&type!=='lw'){G.globalAlpha=a*.35;G.fillStyle=bp;G.fillRect(r.cx,r.cy,r.cw,r.ch);G.globalAlpha=a;}}
+    G.strokeRect(r.cx,r.cy,r.cw,r.ch);
   }
   G.globalAlpha=1;
   [1,2].forEach(lvl=>{
     const p=zonePts(type,t.ox,t.oy,rot,lvl);
-    if(p)dpoly(p,lvl===1?'rgba(170,170,220,.2)':'rgba(90,90,120,.3)',lvl===1?'#7a7aaa':'#4a4a6a',lvl===1?[4,3]:[2,2],a);
+    if(p){
+      const dp=texPattern('deck');
+      if(dp)dpoly(p,dp,null,null,a*(lvl===1?.16:.22));
+      dpoly(p,lvl===1?'rgba(170,170,220,.2)':'rgba(90,90,120,.3)',lvl===1?'#7a7aaa':'#4a4a6a',lvl===1?[4,3]:[2,2],a);
+    }
   });
   if(type==='fs'&&rects.length){
     const r=rects[0];G.globalAlpha=a;
@@ -1705,6 +1778,7 @@ function drawPendingCursor(){
 
 function draw(){
   G.clearRect(0,0,W,H);G.fillStyle='#16161c';G.fillRect(0,0,W,H);
+  {const gp=texPattern('ground');if(gp){G.globalAlpha=.55;G.fillStyle=gp;G.fillRect(0,0,W,H);G.globalAlpha=1;}}
   drawGrid();drawZones();
   for(const t of terrain)drawTItem(t);
   drawObjs();drawPrev();drawPendingCursor();
@@ -7299,7 +7373,7 @@ function init3D(){
   sun.position.set(6,34,-4);sun.target.position.set(15,0,11);sun.castShadow=true;
   sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-24,right:24,top:24,bottom:-24,near:1,far:90});
   scene.add(sun,sun.target);
-  const ground=new THREE.Mesh(new THREE.PlaneGeometry(30,22),new THREE.MeshStandardMaterial({color:0x1b2130,roughness:1}));
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(30,22),new THREE.MeshStandardMaterial({color:0xb0b4c4,map:v3Tex('ground',30/4,22/4),roughness:1}));
   ground.rotation.x=-Math.PI/2;ground.position.set(15,0,11);ground.receiveShadow=true;scene.add(ground);
   const pts=[];for(let y=0;y<=30;y++)pts.push(y,0.01,0,y,0.01,22);for(let x=0;x<=22;x++)pts.push(0,0.01,x,30,0.01,x);
   const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
@@ -7335,15 +7409,28 @@ function render3D(){if(V3.ready&&V3.open)V3.R.render(V3.scene,V3.cam);}
 function schedule3D(){if(V3.pending)return;V3.pending=true;requestAnimationFrame(()=>{V3.pending=false;update3D();});}
 function clear3DGroup(g){while(g.children.length){const c=g.children.pop();c.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material&&!o.material.userData.keep){(Array.isArray(o.material)?o.material:[o.material]).forEach(mm=>mm.dispose());}});}}
 const V3_WALL={hw:3,lw:1.6,fs:0.6};
+function v3Tex(kind,rx,ry){const t=new THREE.CanvasTexture(makeTex(kind));t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);t.anisotropy=8;return t;}
+// Współrzędne tekstury z położenia w świecie (1 kafel = 4"), żeby cegły miały tę samą skalę na każdej ścianie
+function v3WorldUV(geo){
+  const p=geo.attributes.position,n=geo.attributes.normal,uv=geo.attributes.uv;
+  for(let i=0;i<p.count;i++){
+    const x=p.getX(i),y=p.getY(i),z=p.getZ(i),ax=Math.abs(n.getX(i)),ay=Math.abs(n.getY(i));
+    if(ax>0.5)uv.setXY(i,z/4,y/4);else if(ay>0.5)uv.setXY(i,x/4,z/4);else uv.setXY(i,x/4,y/4);
+  }
+  uv.needsUpdate=true;return geo;
+}
 function terrainTopLevel(t){return buildPlatformShape(t,2)?2:buildPlatformShape(t,1)?1:0;}
 function build3DTerrain(){
   clear3DGroup(V3.terrG);
   // ściany półprzezroczyste — fighterzy wewnątrz budynków i za murami pozostają widoczni
-  const wallMat=new THREE.MeshStandardMaterial({color:0x7a7e8e,roughness:.85,transparent:true,opacity:.62});
-  const lightMat=new THREE.MeshStandardMaterial({color:0x9a9eae,roughness:.85,transparent:true,opacity:.55});
-  const rubMat=new THREE.MeshStandardMaterial({color:0x5a4e40,roughness:1});
-  const platMat=[null,new THREE.MeshStandardMaterial({color:0x2e6247,roughness:.9}),new THREE.MeshStandardMaterial({color:0x6e5c26,roughness:.9})];
-  const box=(sx,sy,sz,x,y,z,mat)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;V3.terrG.add(m);};
+  if(!V3.mats){const brick=v3Tex('brick',1,1),deck=v3Tex('deck',.25,.25),rub=v3Tex('rubble',1,1);
+    V3.mats={wall:new THREE.MeshStandardMaterial({color:0xaeb2c2,map:brick,roughness:.9,transparent:true,opacity:.66}),
+      light:new THREE.MeshStandardMaterial({color:0xd0d4e2,map:brick,roughness:.9,transparent:true,opacity:.55}),
+      rub:new THREE.MeshStandardMaterial({color:0xc8b8a0,map:rub,roughness:1}),
+      plat:[null,new THREE.MeshStandardMaterial({color:0x7fc89c,map:deck,roughness:.7,metalness:.25}),new THREE.MeshStandardMaterial({color:0xe2c46c,map:deck,roughness:.7,metalness:.25})]};
+    for(const m of[V3.mats.wall,V3.mats.light,V3.mats.rub,V3.mats.plat[1],V3.mats.plat[2]])m.userData.keep=true;}
+  const wallMat=V3.mats.wall,lightMat=V3.mats.light,rubMat=V3.mats.rub,platMat=V3.mats.plat;
+  const box=(sx,sy,sz,x,y,z,mat)=>{const geo=new THREE.BoxGeometry(sx,sy,sz);geo.translate(x,y,z);v3WorldUV(geo);const m=new THREE.Mesh(geo,mat);m.castShadow=true;m.receiveShadow=true;V3.terrG.add(m);};
   for(const t of terrain){
     const base=(t.level||0)*LV_H,rot=t.rot||0;
     if(t.type==='rb'){
