@@ -413,6 +413,13 @@ body.in-battle #tabMapa .toolbar,body.in-battle #legendBar,body.in-battle .gs-ma
     <div class="gs-card" id="vsCard">
       <div class="gs-card-t">⚔ Bitwa z komputerem</div>
       <div id="vsSetup">
+        <div id="vsLastLog" style="display:none;margin-bottom:10px;">
+          <div class="bb-sub" style="margin-bottom:4px;">Log ostatniej bitwy:</div>
+          <div style="display:flex;gap:6px;">
+            <button class="bp" style="flex:1;" onclick="copyBattleLog()">📋 Kopiuj log</button>
+            <button style="flex:1;" onclick="saveBattleLog()">⬇ Zapisz (.txt)</button>
+          </div>
+        </div>
         <div class="gen-box">
           <div class="gen-t">🎲 Generator band</div>
           <div class="vs-row"><label>Strona P</label><select id="genP"></select></div>
@@ -475,7 +482,11 @@ body.in-battle #tabMapa .toolbar,body.in-battle #legendBar,body.in-battle .gs-ma
         <div id="vsFx"></div>
         <div class="gs-card-t" style="margin-top:10px;">Przebieg bitwy</div>
         <div class="blog" id="bLog"></div>
-        <button style="width:100%;margin-top:8px;color:var(--al);" onclick="endBattleManual()">✕ Zakończ bitwę</button>
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <button class="bp" style="flex:1;" onclick="copyBattleLog()" title="Cały przebieg bitwy jako tekst — do wklejenia na czacie z Claude">📋 Kopiuj log</button>
+          <button style="flex:1;" onclick="saveBattleLog()" title="Zapisz log bitwy do pliku .txt">⬇ Zapisz log (.txt)</button>
+        </div>
+        <button style="width:100%;margin-top:6px;color:var(--al);" onclick="endBattleManual()">✕ Zakończ bitwę</button>
       </div>
     </div>
     <div class="gs-card gs-manual">
@@ -2146,6 +2157,66 @@ async function copyJsonForClaude(){
   }catch(e){/* spróbuj metody zapasowej */}
   showCopyFallback(text);
 }
+// ── Log bitwy jako tekst (do wklejenia na czacie) ──
+let lastBattleLog=null;
+function htmlToText(h){
+  const d=document.createElement('div');
+  d.innerHTML=String(h).replace(/<br\s*\/?>/gi,' · ').replace(/<\/span>\s*<span/g,'</span> <span');
+  return d.textContent.replace(/\s+/g,' ').trim();
+}
+function battleLogText(){
+  if(!B)return lastBattleLog||'';
+  const pad=n=>String(n).padStart(2,'0'),d=B.startedAt||new Date();
+  const L=[];
+  L.push('=== WARCRY — log bitwy ===');
+  L.push(`Data: ${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`);
+  const sc=B.scen||scen(),mp=B.deployMap&&DEPLOY_MAPS[B.deployMap];
+  L.push(`Scenariusz: ${sc.name}${sc.set&&VC_SETS[sc.set]?' ('+VC_SETS[sc.set]+')':''} · Twist: ${B.twist?B.twist.name:'brak'} · Mapa rozstawienia: ${mp?mp.name:'—'} · Rundy: ${B.rounds} · Poziom komputera: ${({easy:'łatwy',normal:'normalny',hard:'trudny'})[B.diff]||B.diff}`);
+  const who=s=>B.human?(s===B.human?'Ty':'Komputer'):'Komputer';
+  L.push(`Strona P: ${who('p')} (${roleName('p')||'—'}) · Strona L: ${who('l')} (${roleName('l')||'—'})`);
+  const ss=B.startState;
+  for(const s of['p','l']){
+    const ms=(ss?ss.models.map(m=>({f:DB_BY_KEY[m.fk],g:m.group,s:m.s})):models.map(m=>({f:getDB(m),g:m.group,s:m.s}))).filter(x=>x.s===s&&x.f);
+    const bands=[...new Set(ms.map(x=>x.f.band))].join(', ');
+    L.push(`Banda ${s.toUpperCase()} — ${bands} (${ms.reduce((a,x)=>a+x.f.P,0)}p): `+ms.map(x=>x.f.n+(x.g?` [${GROUP_PL[x.g]}]`:'')).join(', '));
+  }
+  L.push('');
+  L.push('--- Przebieg ---');
+  for(const h of B.log)L.push(htmlToText(h));
+  L.push('');
+  L.push('--- Stan ---');
+  if(B.result){const r=B.result;L.push(`Wynik: ${r.winner?'wygrywa '+sideName(r.winner)+(B.human?(r.winner===B.human?' (Ty)':' (komputer)'):''):'remis'} · powód: ${r.note||r.reason}`);}
+  else L.push(`Bitwa w toku — runda ${B.round}/${B.rounds}`);
+  L.push(`PZ: P ${B.vp.p} : ${B.vp.l} L · powaleni wrogowie (pkt): P ${B.kills.p} : ${B.kills.l} L`);
+  L.push('Przy życiu: '+['p','l'].map(s=>s.toUpperCase()+': '+models.filter(m=>m.s===s).map(m=>`${mName(m)} ${m.hp}/${maxW(m)}`).join(', ')).join(' | '));
+  if(ss){L.push('');L.push('--- Stan początkowy (JSON, dla Claude) ---');L.push(JSON.stringify(ss));}
+  return L.join('\n');
+}
+async function copyText(text,okMsg){
+  try{await navigator.clipboard.writeText(text);sts(okMsg);return;}catch(e){}
+  try{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.position='fixed';ta.style.opacity='0';ta.style.top='0';
+    document.body.appendChild(ta);ta.focus();ta.select();
+    const ok=document.execCommand('copy');document.body.removeChild(ta);
+    if(ok){sts(okMsg);return;}
+  }catch(e){}
+  showCopyFallback(text);
+}
+function copyBattleLog(){
+  const t=B?battleLogText():lastBattleLog;
+  if(!t){sts('Brak logu bitwy.');return;}
+  copyText(t,`✓ Log bitwy skopiowany (${t.split('\n').length} wierszy) — wklej go na czacie z Claude.`);
+}
+function saveBattleLog(){
+  const t=B?battleLogText():lastBattleLog;
+  if(!t){sts('Brak logu bitwy.');return;}
+  const d=new Date(),pad=n=>String(n).padStart(2,'0');
+  const blob=new Blob([t],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download=`warcry_log_${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.txt`;a.click();URL.revokeObjectURL(url);
+  sts('✓ Zapisano log bitwy do pliku.');
+}
 function showCopyFallback(text){
   document.getElementById('copyJsonText').value=text;
   document.getElementById('copyModal').style.display='block';
@@ -2569,7 +2640,7 @@ function dieH(v,cls){return `<span class="die ${cls||''}">${v}</span>`;}
 function diceH(rolls,fn){return rolls.map(r=>dieH(r,fn?fn(r):'')).join('');}
 function logB(html){
   if(!B)return;
-  B.log.push(html);if(B.log.length>500)B.log.shift();
+  B.log.push(html);if(B.log.length>5000)B.log.shift();
   sts(html);
   if(typeof renderBattleLog==='function')renderBattleLog();
 }
@@ -6669,7 +6740,7 @@ function renderBattleUI(){
   document.body.classList.toggle('in-battle',on);
   document.getElementById('vsSetup').style.display=on?'none':'block';
   document.getElementById('vsLive').style.display=on?'block':'none';
-  if(!on){renderVsSetup();return;}
+  if(!on){const ll=document.getElementById('vsLastLog');if(ll)ll.style.display=lastBattleLog?'block':'none';renderVsSetup();return;}
   const h=B.human||'p',ai=other(h);
   document.getElementById('roundPill').textContent='R'+B.round+'/'+B.rounds;
   document.getElementById('bbInfo').innerHTML=
@@ -7103,6 +7174,10 @@ function startBattle(){
   logB(`⚔ Atakujący: <b>${sideName(B.attacker)}</b>, obrońca: <b>${sideName(B.defender)}</b>${B.roleRoll?` (rzut ${B.roleRoll.p} : ${B.roleRoll.l} — role ustalone przed bitwą)`:' (wybór w ustawieniach)'}.`);
   if(deployNote)logB('🗺 '+deployNote);
   if(window.innerWidth<860)showTab('Mapa');
+  B.startState={terrain:terrain.map(t=>({type:t.type,ox:t.ox,oy:t.oy,rot:t.rot||0,level:t.level||0})),
+    models:models.map(m=>({id:m.id,s:m.s,fk:getDB(m)?.key,x:+m.x.toFixed(2),y:+m.y.toFixed(2),lv:m.lv||0,group:m.group||undefined})),
+    objectives:objectives.map(o=>({x:+o.x.toFixed(2),y:+o.y.toFixed(2),lv:o.lv||0,kind:o.kind||undefined}))};
+  B.startedAt=new Date();
   renderBattleUI();draw();
   return runBattle();
 }
@@ -7120,11 +7195,12 @@ async function finishBattle(res){
   const h=B.human||'p',ai=other(h);
   const body=`<div class="bm-big">${why}</div>
     <div class="bm-note">${objectives.length?`PZ: ${sideName(h)} ${B.vp[h]} : ${B.vp[ai]} ${sideName(ai)}<br>`:''}Powaleni wrogowie (pkt): ${sideName(h)} ${B.kills[h]} : ${B.kills[ai]} ${sideName(ai)}<br>Rozegrane rundy: ${Math.min(B.round,B.rounds)}/${B.rounds}</div>`;
-  const v=await askChoice(title,body,[{v:'restore',l:'Przywróć mapę sprzed bitwy',cls:'exp'},{v:'keep',l:'Zostaw planszę po bitwie'}]);
+  const v=await askChoice(title,body+`<div style="margin-top:10px;display:flex;gap:6px;"><button class="bp" onclick="copyBattleLog()">📋 Kopiuj log bitwy</button><button onclick="saveBattleLog()">⬇ Zapisz log (.txt)</button></div>`,[{v:'restore',l:'Przywróć mapę sprzed bitwy',cls:'exp'},{v:'keep',l:'Zostaw planszę po bitwie'}]);
   exitBattle(v!=='keep');
 }
 function exitBattle(restore){
   if(!B)return;
+  try{lastBattleLog=battleLogText();}catch(e){}
   if(restore&&B.snapshot){
     const s=B.snapshot;
     terrain=(s.terrain||[]).map(t=>({...t,rects:buildRects(t.type,t.ox,t.oy,t.rot||0)}));
