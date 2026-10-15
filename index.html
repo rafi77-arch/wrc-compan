@@ -8084,6 +8084,8 @@ async function wyrmAttack(m,w){
   B.wyrm.dmg[m.s]+=dmg;B.vp[m.s]+=dmg;
   logB(`🎲 ${diceH(rolls,r=>isCrit(r)?'crit':(r>=p.th?'hit':'miss'))} → <b>${dmg}</b> obr. dla Gorewyrma. Łącznie: ${sideName('p')} ${B.wyrm.dmg.p} · ${sideName('l')} ${B.wyrm.dmg.l}`);
   draw();
+  // po każdej akcji ataku na gorewyrma wyłania się on na nowo (rzut K3, K6 obrażeń w 3")
+  await wyrmEmerge('po ataku');
 }
 async function humanWyrm(m){
   const ws=wyrmWeapons(m);if(!ws.length){sts('⚠ Gorewyrm poza zasięgiem.');return false;}
@@ -8288,7 +8290,7 @@ Object.assign(SCENARIOS,{
     finalScore:CARRY_FINAL},
   // ── Predator and Prey ──
   gorewyrm:{name:'Gorewyrm',set:'pnp',official:true,rounds:4,kind:'gorewyrm',
-    desc:'3 znaczniki (nieprzekraczalny teren): w środku planszy i w połowie drogi od środka do każdej krótkiej krawędzi. Na początku każdej rundy rzut K3 wskazuje znacznik, przy którym wyłania się gorewyrm — każdy fighter w 3" od niego otrzymuje K6 obrażeń. Do końca rundy gorewyrm zostaje przy tym znaczniku i może być atakowany dowolną liczbę razy zwykłą akcją ataku przez fighterów, którzy mają go w zasięgu broni (T3). Po 4 rundach wygrywa gracz, którego fighterzy zadali mu więcej obrażeń (PZ = obrażenia). (Zasada domowa: w oryginale gorewyrm wyłania się na nowo także po każdym ataku.)',
+    desc:'3 znaczniki (nieprzekraczalny teren): w środku planszy i w połowie drogi od środka do każdej krótkiej krawędzi. Na początku każdej rundy i po każdym ataku na gorewyrma rzut K3 wskazuje znacznik, przy którym się wyłania — każdy fighter w 3" od niego otrzymuje K6 obrażeń. Gorewyrm to wrogi fighter z T3 reprezentowany przez znacznik, z którego ostatnio się wyłonił (atak: klik w znacznik albo „🐉 Atak na Gorewyrma”). Po 4 rundach wygrywa gracz, którego fighterzy zadali mu więcej obrażeń (PZ = obrażenia).',
     setup:()=>{
       const pts=[BF_CENTER,{x:11,y:7.5},{x:11,y:22.5}];
       const out=pts.map((t,k)=>{const p=vcSpot(t,null,true)||{x:t.x,y:t.y,lv:0};return vcMarker(p,{wyrm:k+1,tag:'WYRM '+(k+1)});});
