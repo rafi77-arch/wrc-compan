@@ -8084,7 +8084,6 @@ async function wyrmAttack(m,w){
   B.wyrm.dmg[m.s]+=dmg;B.vp[m.s]+=dmg;
   logB(`🎲 ${diceH(rolls,r=>isCrit(r)?'crit':(r>=p.th?'hit':'miss'))} → <b>${dmg}</b> obr. dla Gorewyrma. Łącznie: ${sideName('p')} ${B.wyrm.dmg.p} · ${sideName('l')} ${B.wyrm.dmg.l}`);
   draw();
-  await wyrmEmerge('po ataku');
 }
 async function humanWyrm(m){
   const ws=wyrmWeapons(m);if(!ws.length){sts('⚠ Gorewyrm poza zasięgiem.');return false;}
@@ -8289,7 +8288,7 @@ Object.assign(SCENARIOS,{
     finalScore:CARRY_FINAL},
   // ── Predator and Prey ──
   gorewyrm:{name:'Gorewyrm',set:'pnp',official:true,rounds:4,kind:'gorewyrm',
-    desc:'3 znaczniki (nieprzekraczalny teren): w środku planszy i w połowie drogi od środka do każdej krótkiej krawędzi. Na początku każdej rundy i po każdym ataku na gorewyrma rzut K3 wskazuje znacznik, przy którym się wyłania — każdy fighter w 3" od niego otrzymuje K6 obrażeń. Gorewyrm to wrogi fighter z T3 reprezentowany przez znacznik, z którego ostatnio się wyłonił (akcja „🐉 Atak na Gorewyrma”). Po 4 rundach wygrywa gracz, którego fighterzy zadali mu więcej obrażeń (PZ = obrażenia).',
+    desc:'3 znaczniki (nieprzekraczalny teren): w środku planszy i w połowie drogi od środka do każdej krótkiej krawędzi. Na początku każdej rundy rzut K3 wskazuje znacznik, przy którym wyłania się gorewyrm — każdy fighter w 3" od niego otrzymuje K6 obrażeń. Do końca rundy gorewyrm zostaje przy tym znaczniku i może być atakowany dowolną liczbę razy zwykłą akcją ataku przez fighterów, którzy mają go w zasięgu broni (T3). Po 4 rundach wygrywa gracz, którego fighterzy zadali mu więcej obrażeń (PZ = obrażenia). (Zasada domowa: w oryginale gorewyrm wyłania się na nowo także po każdym ataku.)',
     setup:()=>{
       const pts=[BF_CENTER,{x:11,y:7.5},{x:11,y:22.5}];
       const out=pts.map((t,k)=>{const p=vcSpot(t,null,true)||{x:t.x,y:t.y,lv:0};return vcMarker(p,{wyrm:k+1,tag:'WYRM '+(k+1)});});
@@ -8322,7 +8321,8 @@ Object.assign(SCENARIOS,{
     drawUnder:()=>{
       for(const o of objectives){if(!o.wyrm)continue;const {cx,cy}=jToC(o.x,o.y),on=B.wyrm&&B.wyrm.at===o.wyrm;
         G.beginPath();G.arc(cx,cy,(3+BASE_R)*IN,0,Math.PI*2);G.strokeStyle=on?'rgba(224,80,80,.85)':'rgba(224,80,80,.3)';G.setLineDash(on?[]:[4,4]);G.lineWidth=on?2.5:1.2;G.stroke();G.setLineDash([]);
-        if(on){G.font='16px -apple-system,Arial,sans-serif';G.textAlign='center';G.fillText('🐉',cx,cy-14);}}
+        if(on){G.font='16px -apple-system,Arial,sans-serif';G.textAlign='center';G.fillText('🐉',cx,cy-14);
+          const u=B.ui;if(u&&u.kind==='action'&&!isAI(u.m.s)&&quickInfo(u).wyrm){G.beginPath();G.arc(cx,cy,18,0,Math.PI*2);G.strokeStyle='#e05050';G.lineWidth=2.5;G.setLineDash([4,3]);G.stroke();G.setLineDash([]);}}}
     },
     liveInfo:()=>`Obrażenia zadane Gorewyrmowi: ${sideName('p')} ${B.wyrm?.dmg.p||0} · ${sideName('l')} ${B.wyrm?.dmg.l||0}${B.wyrm&&B.wyrm.at?` · aktywny znacznik: ${B.wyrm.at}`:''}`},
   lofty_sanctuary:{name:'Lofty Sanctuary',set:'pnp',official:true,rounds:4,kind:'lofty',needsPlatforms:true,
@@ -9401,6 +9401,7 @@ function quickInfo(u){
       qi.move={kind,R,nodes};
     }
     if(!actionLegal(m,'attack',{}))qi.targets=[...new Set(attackOptions(m,{}).map(o=>o.t.id))];
+    qi.wyrm=scen().kind==='gorewyrm'&&!actionLegal(m,'wyrm',{});
   }
   u.qi=qi;return qi;
 }
@@ -9423,6 +9424,7 @@ function battleClick(cx,cy,e,pt){
     const qi=quickInfo(u);
     if(m&&m.id===u.m.id){activeFighterMenu(m,e?e.clientX:0,e?e.clientY:0);return;}
     if(m&&qi.targets.includes(m.id)){uiResolve({kind:'attack',bonus:null,target:m});return;}
+    if(!m&&qi.wyrm){const o=wyrmTarget(),c=pt?{jx:pt.jx,jy:pt.jy}:cToJ(mouse.x,mouse.y);if(o&&Math.hypot(c.jx-o.x,c.jy-o.y)<=1.2){uiResolve({kind:'wyrm',bonus:null});return;}}
     if(!m&&qi.move){const h=hoverNode(pt);if(h>=0){uiResolve({kind:qi.move.kind,bonus:null,dest:h});return;}}
   }
   if(u){
@@ -10181,6 +10183,7 @@ function v3Overlay(){
       lab.scale.set(0.075,0.021,1);lab.position.set(p.y,p.lv*LV_H+0.8,p.x);lab.renderOrder=12;g.add(lab);
     }
   }else V3.reachFor=null;
+  if(u.kind==='action'&&!isAI(u.m.s)&&quickInfo(u).wyrm){const o=wyrmTarget();if(o){const ring=new THREE.Mesh(new THREE.TorusGeometry(0.75,0.05,8,36),new THREE.MeshBasicMaterial({color:0xe05050}));ring.rotation.x=Math.PI/2;ring.position.set(o.y,(o.lv||0)*LV_H+0.3,o.x);g.add(ring);}}
   // obwódki
   let ids=[],col=0x50c878;
   if(u.kind==='pick')ids=models.filter(m=>m.s===u.side&&!m.activated).map(m=>m.id);
@@ -10470,18 +10473,22 @@ function build3DDynamic(){
       const t=new THREE.Mesh(new THREE.BoxGeometry(0.4,0.3,0.4),new THREE.MeshStandardMaterial({color:0xf0b840,emissive:0x6a4a08,metalness:.4,roughness:.4}));
       t.position.set(o.y,y0+0.15,o.x);t.castShadow=true;V3.dynG.add(t);continue;
     }
-    const d=new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.35,0.1,24),new THREE.MeshStandardMaterial({color:0x50c878,emissive:0x1d5a33}));
-    d.position.set(o.y,y0+0.05,o.x);V3.dynG.add(d);
+    const wy=!!o.wyrm,wOn=wy&&B&&B.wyrm&&B.wyrm.at===o.wyrm;
+    const d=new THREE.Mesh(new THREE.CylinderGeometry(wy?0.5:0.35,wy?0.55:0.35,wy?0.25:0.1,24),new THREE.MeshStandardMaterial(wy?{color:0x5a2a22,emissive:0x2a0a08,roughness:1}:{color:0x50c878,emissive:0x1d5a33}));
+    d.position.set(o.y,y0+(wy?0.12:0.05),o.x);V3.dynG.add(d);
+    if(wOn){const wm=new THREE.MeshStandardMaterial({color:0xb03a2e,emissive:0x501010,roughness:.5});
+      for(let k=0;k<5;k++){const a=k/5*Math.PI*2,h=0.6+(k%2)*0.35,c=new THREE.Mesh(new THREE.ConeGeometry(0.13,h,8),wm);c.position.set(o.y+Math.cos(a)*0.25,y0+0.2+h/2,o.x+Math.sin(a)*0.25);c.rotation.set(Math.sin(a)*0.35,0,-Math.cos(a)*0.35);c.castShadow=true;V3.dynG.add(c);}
+      const hd=new THREE.Mesh(new THREE.SphereGeometry(0.22,12,10),wm);hd.position.set(o.y,y0+1.05,o.x);hd.scale.set(1,1.4,1);V3.dynG.add(hd);}
     const ring=[];for(let k=0;k<=64;k++){const a=k/64*Math.PI*2;ring.push(o.y+Math.cos(a)*(3+BASE_R),y0+0.03,o.x+Math.sin(a)*(3+BASE_R));}
     const rg=new THREE.BufferGeometry();rg.setAttribute('position',new THREE.Float32BufferAttribute(ring,3));
-    V3.dynG.add(new THREE.Line(rg,new THREE.LineBasicMaterial({color:0x50c878,transparent:true,opacity:.55})));
+    V3.dynG.add(new THREE.Line(rg,new THREE.LineBasicMaterial({color:wy?0xe05050:0x50c878,transparent:true,opacity:wy?(wOn?.9:.35):.55})));
   }
 }
 function update3D(){
   if(!V3.ready||!V3.open)return;
   const ts=JSON.stringify(terrain.map(({rects,...r})=>r));
   if(ts!==V3.terrSig){V3.terrSig=ts;build3DTerrain();}
-  const ds=JSON.stringify([models.map(m=>[m.id,m.fk,m.s,+m.x.toFixed(2),+m.y.toFixed(2),m.lv||0,m.hp,!!m.activated,m.carry]),objectives.map(o=>[o.x,o.y,o.lv,o.kind,o.carrier]),B&&B.active?[B.activeId,B.actorId]:0]);
+  const ds=JSON.stringify([models.map(m=>[m.id,m.fk,m.s,+m.x.toFixed(2),+m.y.toFixed(2),m.lv||0,m.hp,!!m.activated,m.carry]),objectives.map(o=>[o.x,o.y,o.lv,o.kind,o.carrier]),B&&B.active?[B.activeId,B.actorId,B.wyrm&&B.wyrm.at]:0]);
   if(ds!==V3.dynSig){V3.dynSig=ds;build3DDynamic();}
   v3Overlay();render3D();
 }
