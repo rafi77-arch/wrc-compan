@@ -427,8 +427,8 @@ body.in-battle #tabMapa .toolbar,body.in-battle #legendBar,body.in-battle .gs-ma
     <div class="v3d" id="view3d">
       <div id="v3host"></div>
       <div class="v3-credits" id="v3credits"></div>
-      <div class="v3-bar"><span class="v3-hint">przeciągnij — obrót · kółko — zoom · prawy przycisk — przesuń</span>
-        <button onclick="openM3D()" title="Wczytaj własne modele 3D (GLB / STL) i przypisz je fighterom lub bandom">🧩 Modele</button><button onclick="reset3DView()" title="Widok domyślny">⌂</button><button onclick="size3D()" title="Powiększ / zmniejsz">⤢</button><button onclick="toggle3D()" title="Zamknij">✕</button></div>
+      <div class="v3-bar"><span class="v3-hint">klik — akcja (jak na planszy) · przeciągnij — obrót · kółko — zoom · prawy: przeciągnij — przesuń, klik — anuluj</span>
+        <button onclick="openM3D()" title="Wczytaj własne modele 3D (GLB / STL) i przypisz je fighterom lub bandom">🧩 Modele</button><button onclick="v3TopView()" title="Widok z góry">⬇ Z góry</button><button onclick="v3FocusActive()" title="Kamera na aktywnego fightera">🎯</button><button onclick="reset3DView()" title="Widok domyślny">⌂</button><button id="v3size" onclick="size3D()" title="Powiększ / zmniejsz">⤢ Graj w 3D</button><button onclick="toggle3D()" title="Zamknij">✕</button></div>
     </div>
     <div class="sp" id="statsPanel">
       <div class="sp-drag"></div>
@@ -9376,14 +9376,16 @@ function battleAct(kind,bonusIdx){
 function battleCancel(){if(B&&B.ui&&(B.ui.kind==='node'||(B.ui.kind==='model'&&B.ui.cancellable)))uiResolve(null);}
 
 // ── Kliknięcia na mapie w trybie bitwy ──
-function hoverNode(){
+// pt (z podglądu 3D): {jx,jy,lv,m} — punkt planszy i piętro trafione kursorem; bez pt — kursor na planszy 2D
+function hoverNode(pt){
   const u=B&&B.ui;if(!u)return -1;
-  const nodes=u.kind==='node'?u.nodes:u.kind==='action'&&quickInfo(u)&&quickInfo(u).move?quickInfo(u).move.nodes:null;
+  const nodes=u.kind==='node'?u.nodes:u.kind==='action'&&!isAI(u.m.s)&&quickInfo(u)&&quickInfo(u).move?quickInfo(u).move.nodes:null;
   if(!nodes)return -1;
-  if(u.kind==='action'&&modelAt(mouse.x,mouse.y))return -1;
-  const {jx,jy}=cToJ(mouse.x,mouse.y);
+  let jx,jy,lv;
+  if(pt){if(u.kind==='action'&&pt.m)return -1;jx=pt.jx;jy=pt.jy;lv=pt.lv;}
+  else{if(u.kind==='action'&&modelAt(mouse.x,mouse.y))return -1;({jx,jy}=cToJ(mouse.x,mouse.y));lv=level;}
   let best=-1,bd=0.8;
-  for(const i of nodes){if(nL(i)!==level)continue;const p=nPos(i),d=Math.hypot(p.x-jx,p.y-jy);if(d<bd){bd=d;best=i;}}
+  for(const i of nodes){if(nL(i)!==lv)continue;const p=nPos(i),d=Math.hypot(p.x-jx,p.y-jy);if(d<bd){bd=d;best=i;}}
   return best;
 }
 // ── Sterowanie myszą: w trakcie aktywacji klik w pole = ruch, klik we wroga = atak, klik w aktywnego fightera = menu ──
@@ -9413,23 +9415,23 @@ async function activeFighterMenu(m,x,y){
   const ch=await quickMenu(x,y,mName(m),items);
   if(ch&&B&&B.ui&&B.ui.kind==='action')battleAct(ch.kind,ch.bonus);
 }
-function battleClick(cx,cy,e){
-  mouse={x:cx,y:cy};
-  const u=B.ui,m=modelAt(cx,cy);
+function battleClick(cx,cy,e,pt){
+  if(!pt)mouse={x:cx,y:cy};
+  const u=B.ui,m=pt?pt.m:modelAt(cx,cy);
   if(e)B.lastClick={x:e.clientX,y:e.clientY};
   if(u&&u.kind==='action'){
     const qi=quickInfo(u);
     if(m&&m.id===u.m.id){activeFighterMenu(m,e?e.clientX:0,e?e.clientY:0);return;}
     if(m&&qi.targets.includes(m.id)){uiResolve({kind:'attack',bonus:null,target:m});return;}
-    if(!m&&qi.move){const h=hoverNode();if(h>=0){uiResolve({kind:qi.move.kind,bonus:null,dest:h});return;}}
+    if(!m&&qi.move){const h=hoverNode(pt);if(h>=0){uiResolve({kind:qi.move.kind,bonus:null,dest:h});return;}}
   }
   if(u){
     if(u.kind==='pick'&&m&&m.s===u.side&&!m.activated){uiResolve(m);return;}
     if(u.kind==='model'&&m&&u.ids.includes(m.id)){uiResolve(m);return;}
     if(u.kind==='node'){
-      const h=hoverNode();
+      const h=hoverNode(pt);
       if(h>=0){uiResolve(h);return;}
-      if(!m){sts('⚠ Tego miejsca nie da się osiągnąć'+(u.byLv.some((n,l)=>n&&l!==level)?' na tym poziomie — przełącz widok poziomu.':'.'));return;}
+      if(!m){sts('⚠ Tego miejsca nie da się osiągnąć'+(!pt&&u.byLv.some((n,l)=>n&&l!==level)?' na tym poziomie — przełącz widok poziomu.':'.'));return;}
     }
   }
   if(m){sel={...m,_type:'model'};showStats(m);draw();}
@@ -10066,7 +10068,7 @@ function toggle3D(){
   document.getElementById('btn3d').classList.toggle('connected',V3.open);
   if(V3.open){if(!init3D()){V3.open=false;document.getElementById('view3d').style.display='none';return;}resize3D();V3.terrSig='';V3.dynSig='';update3D();m3dLoadAll();}
 }
-function size3D(){V3.big=!V3.big;document.getElementById('view3d').classList.toggle('big',V3.big);resize3D();}
+function size3D(){V3.big=!V3.big;document.getElementById('view3d').classList.toggle('big',V3.big);document.getElementById('v3size').textContent=V3.big?'⤡ Mniejsze okno':'⤢ Graj w 3D';resize3D();}
 function reset3DView(){Object.assign(V3.orb,{th:0,ph:0.85,r:34,tx:15,tz:11.5});place3DCam();render3D();}
 function init3D(){
   if(V3.ready)return true;
@@ -10084,19 +10086,27 @@ function init3D(){
   sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-24,right:24,top:24,bottom:-24,near:1,far:90});
   scene.add(sun,sun.target);
   const ground=new THREE.Mesh(new THREE.PlaneGeometry(30,22),new THREE.MeshStandardMaterial({color:0xb0b4c4,map:v3Tex('ground',30/4,22/4),roughness:1}));
-  ground.rotation.x=-Math.PI/2;ground.position.set(15,0,11);ground.receiveShadow=true;scene.add(ground);
+  ground.rotation.x=-Math.PI/2;ground.position.set(15,0,11);ground.receiveShadow=true;scene.add(ground);ground.userData.pickLevel=0;V3.ground=ground;V3.pickSurf=[ground];V3.hits=[];
   const pts=[];for(let y=0;y<=30;y++)pts.push(y,0.01,0,y,0.01,22);for(let x=0;x<=22;x++)pts.push(0,0.01,x,30,0.01,x);
   const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
   scene.add(new THREE.LineSegments(gg,new THREE.LineBasicMaterial({color:0x2a3242})));
-  V3.R=R;V3.scene=scene;V3.cam=cam;V3.terrG=new THREE.Group();V3.dynG=new THREE.Group();scene.add(V3.terrG,V3.dynG);
+  V3.R=R;V3.scene=scene;V3.cam=cam;V3.terrG=new THREE.Group();V3.dynG=new THREE.Group();V3.ovG=new THREE.Group();scene.add(V3.terrG,V3.dynG,V3.ovG);
+  V3.ray=new THREE.Raycaster();
   V3.orb={th:0,ph:0.85,r:34,tx:15,tz:11.5};
   // sterowanie kamerą myszą: lewy — obrót, prawy — przesunięcie, kółko — zoom
   const el=R.domElement;let drag=null;
   el.addEventListener('contextmenu',e=>e.preventDefault());
-  el.addEventListener('pointerdown',e=>{drag={b:e.button,x:e.clientX,y:e.clientY};el.setPointerCapture(e.pointerId);el.style.cursor='grabbing';});
-  el.addEventListener('pointerup',e=>{drag=null;el.style.cursor='grab';});
+  // krótkie kliknięcie bez ruchu myszy = akcja w grze; przeciągnięcie = kamera
+  el.addEventListener('pointerdown',e=>{drag={b:e.button,x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY,moved:0};el.setPointerCapture(e.pointerId);});
+  el.addEventListener('pointerup',e=>{
+    const d=drag;drag=null;el.style.cursor='grab';
+    if(d&&d.moved<6){if(d.b===0)v3Click(e);else if(d.b===2){closeQuickMenu();if(B&&B.active)battleCancel();}}
+  });
+  el.addEventListener('pointerleave',()=>{V3.hoverPt=null;document.getElementById('hovCard').style.display='none';v3Overlay();render3D();});
   el.addEventListener('pointermove',e=>{
-    if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;const o=V3.orb;
+    if(!drag){v3Hover(e);return;}
+    const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;drag.moved=Math.max(drag.moved,Math.hypot(e.clientX-drag.x0,e.clientY-drag.y0));
+    if(drag.moved<6)return;el.style.cursor='grabbing';const o=V3.orb;
     if(drag.b===2||e.shiftKey){const k=o.r*0.0016,c=Math.cos(o.th),s=Math.sin(o.th);o.tx-=(dx*c+dy*s)*k;o.tz-=(-dx*s+dy*c)*k;o.tx=Math.max(-5,Math.min(35,o.tx));o.tz=Math.max(-5,Math.min(27,o.tz));}
     else{o.th-=dx*0.008;o.ph=Math.max(0.12,Math.min(1.45,o.ph-dy*0.006));}
     place3DCam();render3D();
@@ -10116,6 +10126,75 @@ function resize3D(){
   V3.R.setSize(w,hh,false);V3.cam.aspect=w/hh;V3.cam.updateProjectionMatrix();render3D();
 }
 function render3D(){if(V3.ready&&V3.open)V3.R.render(V3.scene,V3.cam);}
+// ── Gra w 3D: kursor → figurka albo pole planszy (podłoże / platforma), te same akcje co na planszy 2D ──
+function v3Pick(e){
+  V3.scene.updateMatrixWorld();
+  const r=V3.R.domElement.getBoundingClientRect();
+  V3.ray.setFromCamera(new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),V3.cam);
+  const hm=V3.ray.intersectObjects(V3.hits||[],false)[0];
+  const m=hm?models.find(x=>x.id===hm.object.userData.modelId)||null:null;
+  const hs=V3.ray.intersectObjects(V3.pickSurf||[],false)[0];
+  if(!hs&&!m)return null;
+  const P=hs?hs.point:hm.point,lv=hs?(hs.object.userData.pickLevel||0):(m.lv||0);
+  return {m,jx:P.z,jy:P.x,lv};
+}
+function v3Click(e){
+  if(!V3.ready)return;const pt=v3Pick(e);if(!pt)return;
+  if(B&&B.active){battleClick(0,0,e,pt);v3Overlay();render3D();return;}
+  if(pt.m){sel={...pt.m,_type:'model'};showStats(pt.m);draw();}
+}
+let v3HoverPending=null;
+function v3Hover(e){
+  if(v3HoverPending){v3HoverPending=e;return;}v3HoverPending=e;
+  requestAnimationFrame(()=>{
+    const ev=v3HoverPending;v3HoverPending=null;if(!V3.ready||!V3.open)return;
+    const pt=v3Pick(ev);V3.hoverPt=pt;
+    const card=document.getElementById('hovCard');
+    if(pt&&pt.m){card.innerHTML=hoverCardHTML(pt.m);card.style.display='block';const cw=card.offsetWidth,ch=card.offsetHeight;let x=ev.clientX+16,y=ev.clientY+14;if(x+cw>window.innerWidth-6)x=ev.clientX-cw-16;if(y+ch>window.innerHeight-6)y=window.innerHeight-ch-6;card.style.left=x+'px';card.style.top=y+'px';}
+    else card.style.display='none';
+    v3Overlay();render3D();
+  });
+}
+// Nakładki: zasięg ruchu (na właściwych piętrach), ścieżka z odległością, obwódki fighterów do wyboru i celów ataku
+function v3Overlay(){
+  if(!V3.ready)return;const g=V3.ovG;
+  while(g.children.length){const c=g.children.pop();if(c.userData.cached)continue;c.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material&&!o.material.userData.keep)o.material.dispose();});}
+  const u=B&&B.active?B.ui:null;if(!u){V3.reachFor=null;return;}
+  const qm=u.kind==='action'&&!isAI(u.m.s)?quickInfo(u).move:null;
+  const R=u.kind==='node'?u.R:qm?qm.R:null,nodes=u.kind==='node'?u.nodes:qm?qm.nodes:null;
+  if(nodes){
+    if(V3.reachFor!==u){
+      if(V3.reachMesh){V3.reachMesh.geometry.dispose();V3.reachMesh.material.dispose();}
+      const s=GS*0.92,geo=new THREE.PlaneGeometry(s,s);geo.rotateX(-Math.PI/2);
+      const im=new THREE.InstancedMesh(geo,new THREE.MeshBasicMaterial({color:R.mode==='disengage'?0xf0b840:0x50c878,transparent:true,opacity:qm?.22:.34,depthWrite:false}),nodes.length);
+      const mt=new THREE.Matrix4();nodes.forEach((i,k)=>{const p=nPos(i);mt.makeTranslation(p.y,p.lv*LV_H+0.04,p.x);im.setMatrixAt(k,mt);});
+      im.userData.cached=true;im.renderOrder=2;V3.reachMesh=im;V3.reachFor=u;
+    }
+    g.add(V3.reachMesh);
+    const h=V3.hoverPt?hoverNode(V3.hoverPt):-1;
+    if(h>=0){
+      const path=pathNodes(R,h).map(k=>{const p=nPos(k);return new THREE.Vector3(p.y,p.lv*LV_H+0.12,p.x);});
+      g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(path),new THREE.LineBasicMaterial({color:0xf0b840,depthTest:false})));
+      const p=nPos(h),ring=new THREE.Mesh(new THREE.TorusGeometry(BASE_R,0.04,8,28),new THREE.MeshBasicMaterial({color:0xf0b840,depthTest:false}));
+      ring.rotation.x=Math.PI/2;ring.position.set(p.y,p.lv*LV_H+0.1,p.x);ring.renderOrder=11;g.add(ring);
+      const lab=new THREE.Sprite(new THREE.SpriteMaterial({map:v3LabelTex(R.dist[h].toFixed(1)+'"','#f0b840',null,false),depthTest:false,sizeAttenuation:false}));
+      lab.scale.set(0.075,0.021,1);lab.position.set(p.y,p.lv*LV_H+0.8,p.x);lab.renderOrder=12;g.add(lab);
+    }
+  }else V3.reachFor=null;
+  // obwódki
+  let ids=[],col=0x50c878;
+  if(u.kind==='pick')ids=models.filter(m=>m.s===u.side&&!m.activated).map(m=>m.id);
+  else if(u.kind==='model'){ids=u.ids;const a=liveModel(B.actorId);col=null;}
+  else if(u.kind==='action'&&!isAI(u.m.s)){ids=quickInfo(u).targets;col=0xe05050;}
+  for(const id of ids){
+    const m=models.find(x=>x.id===id);if(!m)continue;
+    const a=liveModel(B.actorId),c=col!=null?col:(a&&a.s===m.s?0x50c878:0xe05050);
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(BASE_R+0.28,0.045,8,36),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.9}));
+    ring.rotation.x=Math.PI/2;ring.position.set(m.y,(m.lv||0)*LV_H+0.08,m.x);g.add(ring);
+  }
+}
+function v3TopView(){Object.assign(V3.orb,{th:0,ph:0.12,r:30});place3DCam();render3D();}
+function v3FocusActive(){const a=B&&B.active?liveModel(B.actorId??B.activeId):null;if(!a){sts('Brak aktywnego fightera.');return;}Object.assign(V3.orb,{tx:a.y,tz:a.x,r:Math.min(V3.orb.r,14)});place3DCam();render3D();}
 function schedule3D(){if(V3.pending)return;V3.pending=true;requestAnimationFrame(()=>{V3.pending=false;update3D();});}
 function clear3DGroup(g){while(g.children.length){const c=g.children.pop();c.traverse(o=>{if(o.geometry&&!o.geometry.userData.keep)o.geometry.dispose();if(o.material&&!o.material.userData.keep){(Array.isArray(o.material)?o.material:[o.material]).forEach(mm=>mm.dispose());}});}}
 const V3_WALL={hw:3,lw:1.6,fs:0.6};
@@ -10231,7 +10310,9 @@ function build3DTerrain(){
       for(const pnt of poly){const px=pnt.y,pz=pnt.x;if(nearWall(px,pz))continue;const ph=lv*LV_H-0.22;box(0.28,ph,0.28,px,base+ph/2,pz,M.trim);}
     }
   }
-  for(const[mat,list]of buckets){const m=new THREE.Mesh(v3Merged(list),mat);m.castShadow=true;m.receiveShadow=true;V3.terrG.add(m);}
+  V3.pickSurf=[V3.ground];
+  for(const[mat,list]of buckets){const m=new THREE.Mesh(v3Merged(list),mat);m.castShadow=true;m.receiveShadow=true;V3.terrG.add(m);
+    const lv=mat===M.plat[1]?1:mat===M.plat[2]?2:0;if(lv){m.userData.pickLevel=lv;V3.pickSurf.push(m);}}
 }
 function v3LabelTex(text,col,pct,act){
   const key=text+'|'+col+'|'+(pct==null?'':Math.round(pct*20))+'|'+act;
@@ -10351,13 +10432,13 @@ function v3TargetH(db){
   return H*(arch==='grot'?0.62:arch==='ratling'?0.72:arch==='squig'?0.8:1)*(hero?1.1:1)*(db.W<=8?0.85:1);
 }
 function build3DDynamic(){
-  clear3DGroup(V3.dynG);
+  clear3DGroup(V3.dynG);V3.hits=[];
   const inB=!!(B&&B.active);
   for(const m of models){
     const db=getDB(m);if(!db)continue;
     const col=getModelColor(m),act=!!m.activated,y0=(m.lv||0)*LV_H;
     const op=act?0.5:1,tr=act;
-    const grp=new THREE.Group();grp.position.set(m.y,y0,m.x);
+    const grp=new THREE.Group();grp.position.set(m.y,y0,m.x);grp.userData.modelId=m.id;
     const baseM=new THREE.Mesh(new THREE.CylinderGeometry(BASE_R,BASE_R*1.05,0.14,28),new THREE.MeshStandardMaterial({color:col.dark||'#222',transparent:tr,opacity:op}));
     baseM.position.y=0.07;baseM.castShadow=true;grp.add(baseM);
     // obwódka podstawki w kolorze strony (jak na planszy 2D), pancerz w kolorze bandy
@@ -10377,6 +10458,9 @@ function build3DDynamic(){
     const lab=new THREE.Sprite(new THREE.SpriteMaterial({map:v3LabelTex(db.n.length>18?db.n.slice(0,17)+'…':db.n,col.main,inB||hp<db.W?hp/db.W:null,act),depthTest:false,depthWrite:false,sizeAttenuation:false}));
     // etykieta o stałej wielkości na ekranie (czytelna z daleka, nie zasłania figurek z bliska)
     lab.scale.set(0.085,0.024,1);lab.position.y=figH+0.35;lab.renderOrder=10;grp.add(lab);
+    // niewidzialne pole trafienia kursorem (większe niż figurka — łatwiej kliknąć z daleka)
+    const hit=new THREE.Mesh(new THREE.CylinderGeometry(BASE_R*1.7,BASE_R*1.7,figH+0.3,10),V3.hitMat||(V3.hitMat=Object.assign(new THREE.MeshBasicMaterial({visible:false}),{userData:{keep:true}})));
+    hit.position.y=(figH+0.3)/2;hit.userData.modelId=m.id;V3.hits.push(hit);grp.add(hit);
     V3.dynG.add(grp);
   }
   for(const o of objectives){
@@ -10399,7 +10483,7 @@ function update3D(){
   if(ts!==V3.terrSig){V3.terrSig=ts;build3DTerrain();}
   const ds=JSON.stringify([models.map(m=>[m.id,m.fk,m.s,+m.x.toFixed(2),+m.y.toFixed(2),m.lv||0,m.hp,!!m.activated,m.carry]),objectives.map(o=>[o.x,o.y,o.lv,o.kind,o.carrier]),B&&B.active?[B.activeId,B.actorId]:0]);
   if(ds!==V3.dynSig){V3.dynSig=ds;build3DDynamic();}
-  render3D();
+  v3Overlay();render3D();
 }
 // ═══════════════════════════════════════════════
 // MODELE 3D UŻYTKOWNIKA (GLB / STL) — wczytywane z dysku, zapamiętane w przeglądarce (IndexedDB)
