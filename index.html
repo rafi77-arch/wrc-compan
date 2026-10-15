@@ -490,7 +490,7 @@ body.in-battle #tabMapa .toolbar,body.in-battle #legendBar,body.in-battle .gs-ma
         <div class="bb-sub" style="margin-top:6px;">Bandy, teren i cele (Objective) bierzemy z mapy. Rozstaw modele w edytorze przed startem — po bitwie możesz przywrócić mapę.</div>
         <button class="exp vs-start" onclick="startBattle()">⚔ Rozpocznij bitwę</button>
         <details class="vs-rules"><summary>Zasady w tej wersji</summary><ul>
-          <li><b>Runda:</b> obie strony rzucają 6 kośćmi. Więcej singli = inicjatywa (remis → roll-off). Dublety, triplety i quady to kości zdolności (wartość = oczko). Każda strona dostaje 1 dziką kość na rundę — podnosi Double→Triple lub Triple→Quad; niewykorzystana przepada.</li>
+          <li><b>Runda:</b> obie strony rzucają 6 kośćmi. Więcej singli = inicjatywa (remis → roll-off). Dublety, triplety i quady to kości zdolności (wartość = oczko). Każda strona dostaje 1 dziką kość na rundę. Po rzucie, przed ustaleniem inicjatywy, dziką kością można dodać 1 single (do inicjatywy), zrobić z singla dublet, z dubletu tryplet albo z tripletu quad; niewykorzystana przechodzi na następną rundę.</li>
           <li><b>Aktywacje</b> naprzemiennie, zaczyna strona z inicjatywą. Fighter ma 2 akcje (Ruch, Atak, Odskok, Czekaj) i może użyć 1 zdolności.</li>
           <li><b>Ruch:</b> do Move cali. Wejście poziom wyżej kosztuje 3", zeskok nic, ale grozi obrażeniami (K6: 1 → 3 obr., 2–3 → 1 obr.). Ruch kończy się po wejściu w 1" od wroga. FLY przelatuje nad ścianami i nie płaci za wysokość.</li>
           <li><b>Odskok</b> (gdy wróg jest w 1"): do 3", bez wspinania, koniec dalej niż 1" od wrogów.</li>
@@ -6169,28 +6169,80 @@ function rollInitiativeFor(){
   }
   return {dice,singles,ab};
 }
+// ── Dzikie kości: każda strona dostaje 1 na rundę (+ dodatkowe z twistów); niewykorzystane przechodzą na kolejną rundę.
+// Po rzucie inicjatywy, przed ustaleniem kto zaczyna, dziką kością można: dodać 1 single (do inicjatywy),
+// zrobić z singla dublet, z dubletu tryplet albo z tripletu quad.
+function wildOptions(st){
+  const o=[{v:{k:'single'},l:'➕ Dodatkowy single (do inicjatywy)',sub:`singles: ${st.singles} → ${st.singles+1}`}];
+  for(const v of[...new Set(st.sv)].sort((a,b)=>b-a))o.push({v:{k:'pair',val:v},l:`🎲 Single ${v} → dublet ${v}`,sub:`singles −1, nowa kość zdolności D${v}`});
+  for(const d of st.ab)if(d.type!=='Q')o.push({v:{k:'up',val:d.val,from:d.type},l:`⬆ ${d.type==='D'?'Dublet':'Tryplet'} ${d.val} → ${d.type==='D'?'tryplet':'quad'} ${d.val}`,sub:`${d.type}${d.val} → ${d.type==='D'?'T':'Q'}${d.val}`});
+  return o;
+}
+function applyWild(st,ch){
+  if(ch.k==='single'){st.singles++;st.extraS=(st.extraS||0)+1;return `dodatkowy single (singles: ${st.singles})`;}
+  if(ch.k==='pair'){const i=st.sv.indexOf(ch.val);st.sv.splice(i,1);st.singles--;st.ab.push({type:'D',val:ch.val,used:false});return `single ${ch.val} → dublet D${ch.val}`;}
+  const d=st.ab.find(x=>x.val===ch.val&&x.type===ch.from);d.type=d.type==='D'?'T':'Q';return `${ch.from}${ch.val} → ${d.type}${ch.val}`;
+}
+// AI: quad > tryplet > inicjatywa (gdy może ją zmienić) > dublet; inaczej zachowuje kość na kolejną rundę
+function aiWildChoice(st,opp){
+  const opts=wildOptions(st);let best=null,bv=1.0;
+  for(const o of opts){
+    let v=0;const c=o.v;
+    if(c.k==='up')v=(c.from==='T'?3:2)+c.val*0.05;
+    else if(c.k==='pair')v=1.15+c.val*0.02;
+    else v=(st.singles<=opp.singles&&st.singles+1>=opp.singles)?1.8:0.3;
+    if(v>bv){bv=v;best=c;}
+  }
+  return best;
+}
+function initState(r){
+  const cnt={};r.dice.forEach(v=>cnt[v]=(cnt[v]||0)+1);
+  return {dice:r.dice,singles:r.singles,sv:Object.entries(cnt).filter(([v,c])=>c===1).map(([v])=>+v),ab:r.ab.map(d=>({...d}))};
+}
 async function initiativePhase(){
   chk();
   B.phase='init';
   const res={p:rollInitiativeFor(),l:rollInitiativeFor()};
+  const st={p:initState(res.p),l:initState(res.l)};
+  const carried={p:B.wild.p||0,l:B.wild.l||0};
+  for(const s of['p','l'])B.wild[s]=carried[s]+1+((B.extraWild&&B.extraWild[s])||0);
+  B.extraWild={p:0,l:0};
+  logB(`━━ <b>Runda ${B.round}/${B.rounds}</b> ━━`);
+  const rollLine=s=>`${sideName(s)}: ${diceH(res[s].dice)} — singles: ${st[s].singles}, kości zdolności: ${st[s].ab.length?st[s].ab.map(d=>d.type+d.val).join(', '):'brak'} · dzikie kości: ${B.wild[s]}${carried[s]?` (w tym ${carried[s]} z poprzedniej rundy)`:''}`;
+  logB(rollLine('p'));logB(rollLine('l'));
+  // komputer decyduje pierwszy (widać jego wybór), potem gracz
+  const order=B.human?[other(B.human),B.human]:['p','l'];
+  for(const s of order){
+    while(B.wild[s]>0){
+      let ch;
+      if(isAI(s))ch=aiWildChoice(st[s],st[other(s)]);
+      else{
+        const me=st[s],op=st[other(s)];
+        const body=`<div class="bm-side"><b>Twój rzut</b><div>${diceH(me.dice)}</div><div class="bm-note">Singles: <b>${me.singles}</b> · Kości zdolności: ${me.ab.length?me.ab.map(d=>`<span class="adie ${d.type}">${d.type}${d.val}</span>`).join(' '):'brak'}</div></div>`
+          +`<div class="bm-side"><b>${sideName(other(s))}</b><div class="bm-note">Singles: <b>${op.singles}</b> · Kości zdolności: ${op.ab.length?op.ab.map(d=>`<span class="adie ${d.type}">${d.type}${d.val}</span>`).join(' '):'brak'}</div></div>`
+          +`<div class="bm-note">Masz <b>${B.wild[s]}</b> ${B.wild[s]===1?'dziką kość':'dzikie kości'} ★. Niewykorzystana przechodzi na następną rundę.</div>`;
+        ch=await askChoice(`Runda ${B.round}/${B.rounds} — dzika kość`,body,wildOptions(me).concat([{v:null,l:'Zachowaj na następną rundę',cls:'exp'}]));
+        chk();
+      }
+      if(!ch)break;
+      B.wild[s]--;
+      logB(`★ ${sideName(s)} używa dzikiej kości: ${applyWild(st[s],ch)}.`);
+    }
+  }
   let init;
-  if(res.p.singles!==res.l.singles)init=res.p.singles>res.l.singles?'p':'l';
+  if(st.p.singles!==st.l.singles)init=st.p.singles>st.l.singles?'p':'l';
   else{
     let a,b;do{a=d6();b=d6();}while(a===b);
     init=a>b?'p':'l';
     res.rolloff={p:a,l:b};
   }
-  for(const s of['p','l']){B.dice[s]=res[s].ab.map(d=>({...d,id:++B.dieId}));B.wild[s]=1+((B.extraWild&&B.extraWild[s])||0);}
-  const extraW=B.extraWild&&(B.extraWild.p||B.extraWild.l);B.extraWild={p:0,l:0};
+  for(const s of['p','l'])B.dice[s]=st[s].ab.map(d=>({...d,id:++B.dieId}));
   B.init=init;
-  const line=s=>`${sideName(s)}: ${diceH(res[s].dice)} — singles: ${res[s].singles}, kości zdolności: ${B.dice[s].length?B.dice[s].map(d=>d.type+d.val).join(', '):'brak'}`;
-  logB(`━━ <b>Runda ${B.round}/${B.rounds}</b> ━━`);
-  logB(line('p'));logB(line('l'));
-  if(res.rolloff)logB(`Remis singli — roll-off: ${sideName('p')} ${res.rolloff.p}, ${sideName('l')} ${res.rolloff.l}`);
-  logB(`🏁 Inicjatywę ma: <b>${sideName(init)}</b>. Każda strona dostaje 1 dziką kość${extraW?` (dodatkowe: ${sideName('p')} ${B.wild.p-1}, ${sideName('l')} ${B.wild.l-1})`:''}.`);
+  if(res.rolloff)logB(`Remis singli (${st.p.singles}) — roll-off: ${sideName('p')} ${res.rolloff.p}, ${sideName('l')} ${res.rolloff.l}`);
+  logB(`🏁 Inicjatywę ma: <b>${sideName(init)}</b> (singles ${st.p.singles} : ${st.l.singles}). Kości zdolności — ${['p','l'].map(s=>`${sideName(s)}: ${B.dice[s].length?B.dice[s].map(d=>d.type+d.val).join(', '):'brak'}`).join(' · ')}${B.wild.p||B.wild.l?` · zachowane dzikie kości: ${sideName('p')} ${B.wild.p}, ${sideName('l')} ${B.wild.l}`:''}.`);
   renderBattleUI();
   if(B.human){
-    const fmt=s=>`<div class="bm-side"><b>${sideName(s)}</b><div>${diceH(res[s].dice)}</div><div class="bm-note">Singles: ${res[s].singles} · Kości zdolności: ${B.dice[s].length?B.dice[s].map(d=>`<span class="adie ${d.type}">${d.type}${d.val}</span>`).join(' '):'brak'} · Dzika kość: 1</div></div>`;
+    const fmt=s=>`<div class="bm-side"><b>${sideName(s)}</b><div>${diceH(res[s].dice)}</div><div class="bm-note">Singles: ${st[s].singles} · Kości zdolności: ${B.dice[s].length?B.dice[s].map(d=>`<span class="adie ${d.type}">${d.type}${d.val}</span>`).join(' '):'brak'} · Zachowane dzikie kości: ${B.wild[s]}</div></div>`;
     await askChoice(`Runda ${B.round}/${B.rounds} — inicjatywa`,fmt(B.human)+fmt(other(B.human))+(res.rolloff?`<div class="bm-note">Remis singli — roll-off ${res.rolloff[B.human]} : ${res.rolloff[other(B.human)]}</div>`:'')+`<div class="bm-big">Zaczyna: <b>${sideName(init)}</b></div>`,[{v:1,l:'Dalej',cls:'exp'}]);
     chk();
   }
@@ -6254,7 +6306,7 @@ async function endOfRound(){
   if(scen().afterScore)await scen().afterScore();
   models.forEach(m=>{m.activated=false;m.waiting=false;m.reactedRound=false;m.actionsLeft=2;});
   B.fx=B.fx.filter(e=>e.until==='battle'||e.until==='nextAct');
-  B.dice={p:[],l:[]};B.wild={p:0,l:0};
+  B.dice={p:[],l:[]}; // dzikie kości zostają — przechodzą na następną rundę
 }
 function decideWinner(){
   const vp=B.vp,k=B.kills;
@@ -6296,7 +6348,6 @@ function dieOptions(side,type){
     if(d.used)continue;
     const gap=tier[type]-tier[d.type];
     if(gap===0)res.push({die:d,wild:0,val:d.val});
-    else if(gap>0&&B.wild[side]>=gap)res.push({die:d,wild:gap,val:d.val});
   }
   return res;
 }
