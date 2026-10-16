@@ -348,7 +348,7 @@ body.in-battle #tabMapa .toolbar,body.in-battle #legendBar,body.in-battle .gs-ma
 <div class="hovcard" id="hovCard"></div>
 <div class="m3d-ov" id="m3dModal"><div class="m3d-box">
   <div class="m3d-hdr"><b>🧩 Modele 3D (GLB / STL)</b><button onclick="closeM3D()">✕</button></div>
-  <div class="m3d-help">Wczytaj pliki <b>.glb</b> (z kolorami i teksturami, np. ze Sketchfab: „Download 3D Model” → glTF/GLB) albo <b>.stl</b> (do druku — dostaną kolor bandy). Ciężkie modele STL są automatycznie upraszczane. Modele zostają <b>tylko w tej przeglądarce</b> — nie trafiają do pliku gry ani do repozytorium. Gdy nazwa pliku zawiera nazwę fightera lub bandy, przypisanie ustawi się samo.</div>
+  <div class="m3d-help">Wczytaj pliki <b>.glb</b> (z kolorami i teksturami, np. ze Sketchfab: „Download 3D Model” → glTF/GLB) albo <b>.stl</b> (do druku — dostaną kolor bandy). Ciężkie modele STL są automatycznie upraszczane. Modele zostają <b>tylko w tej przeglądarce</b> — nie trafiają do pliku gry ani do repozytorium. Gdy nazwa pliku zawiera nazwę fightera lub bandy (albo „gorewyrm”), przypisanie ustawi się samo. Model można też przypisać <b>Gorewyrmowi</b> — pojawi się przy znaczniku, z którego się wyłonił.</div>
   <label class="m3d-file">📂 Wybierz pliki…<input type="file" id="m3dFile" accept=".glb,.stl" multiple onchange="m3dAddFiles([...this.files]);this.value='';"></label>
   <div id="m3dStatus" class="m3d-help"></div>
   <div id="m3dList"></div>
@@ -10529,7 +10529,13 @@ function build3DDynamic(){
     const wy=!!o.wyrm,wOn=wy&&B&&B.wyrm&&B.wyrm.at===o.wyrm;
     const d=new THREE.Mesh(new THREE.CylinderGeometry(wy?0.5:0.35,wy?0.55:0.35,wy?0.25:0.1,24),new THREE.MeshStandardMaterial(wy?{color:0x5a2a22,emissive:0x2a0a08,roughness:1}:{color:0x50c878,emissive:0x1d5a33}));
     d.position.set(o.y,y0+(wy?0.12:0.05),o.x);V3.dynG.add(d);
-    if(wOn){const wm=new THREE.MeshStandardMaterial({color:0xb03a2e,emissive:0x501010,roughness:.5});
+    const wRec=wOn?M3D.list.find(r=>r.target==='wyrm'&&M3D.objs[r.id]):null;
+    if(wRec){
+      // model gorewyrma wgrany przez gracza — wyłania się przy aktywnym znaczniku, zwrócony do najbliższego fightera
+      const inst=m3dMake(wRec,{main:'#b03a2e'},1,false,2.4);
+      if(inst){inst.position.set(o.y,y0+0.2,o.x);let ne=null,nd=1e9;for(const f of models){const d=Math.hypot(f.x-o.x,f.y-o.y);if(d<nd){nd=d;ne=f;}}
+        if(ne)inst.rotation.y=Math.atan2(ne.y-o.y,ne.x-o.x)+(inst.userData.yaw||0);V3.dynG.add(inst);}
+    }else if(wOn){const wm=new THREE.MeshStandardMaterial({color:0xb03a2e,emissive:0x501010,roughness:.5});
       for(let k=0;k<5;k++){const a=k/5*Math.PI*2,h=0.6+(k%2)*0.35,c=new THREE.Mesh(new THREE.ConeGeometry(0.13,h,8),wm);c.position.set(o.y+Math.cos(a)*0.25,y0+0.2+h/2,o.x+Math.sin(a)*0.25);c.rotation.set(Math.sin(a)*0.35,0,-Math.cos(a)*0.35);c.castShadow=true;V3.dynG.add(c);}
       const hd=new THREE.Mesh(new THREE.SphereGeometry(0.22,12,10),wm);hd.position.set(o.y,y0+1.05,o.x);hd.scale.set(1,1.4,1);V3.dynG.add(hd);}
     const ring=[];for(let k=0;k<=64;k++){const a=k/64*Math.PI*2;ring.push(o.y+Math.cos(a)*(3+BASE_R),y0+0.03,o.x+Math.sin(a)*(3+BASE_R));}
@@ -10586,6 +10592,7 @@ async function m3dBuild(rec){
   if(rec.kind==='stl'){
     let geo=new THREE.STLLoader().parse(rec.data);
     const before=geo.attributes.position.count/3;geo=m3dSimplify(geo,24000);rec.origTris=Math.round(before);
+    geo.computeVertexNormals(); // część plików STL ma zerowe lub błędne normalne — model byłby czarny
     geo.userData.keep=true;inner=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:0x999999}));
   }else{
     const gltf=await new Promise((res,rej)=>new THREE.GLTFLoader().parse(rec.data,'',res,rej));
@@ -10604,6 +10611,7 @@ function m3dNorm(t){return String(t||'').toLowerCase().normalize('NFD').replace(
 // Automatyczne przypisanie po nazwie pliku: najpierw najdłuższa pasująca nazwa fightera, potem banda
 function m3dAutoTarget(fname){
   const f=m3dNorm(fname.replace(/\.(glb|stl)$/i,''));let best=null,bl=0;
+  if(/gorewyrm|wyrm|worm/.test(f))return 'wyrm';
   for(const d of DB){for(const c of[d.n,d.key]){const n=m3dNorm(c);if(n.length>=4&&f.includes(n)&&n.length>bl){best='f:'+d.key;bl=n.length;}}}
   if(best)return best;
   for(const b of BANDS){const n=m3dNorm(b.split(' — ')[0].split(' (')[0]);if(n.length>=4&&f.includes(n))return 'b:'+b;}
@@ -10615,13 +10623,17 @@ function m3dFor(db){
 // Egzemplarz modelu dla fightera (null — użyj figurki z brył)
 function m3dInstance(db,col,op,tr){
   const rec=m3dFor(db);if(!rec)return null;
-  const o=M3D.objs[rec.id],inst=o.root.clone(true);
+  return m3dMake(rec,col,op,tr,v3TargetH(db));
+}
+// Egzemplarz dowolnego rekordu: kolor (dla STL / barwy), przezroczystość, docelowa wysokość w calach
+function m3dMake(rec,col,op,tr,baseH){
+  const o=M3D.objs[rec.id];if(!o)return null;const inst=o.root.clone(true);
   inst.traverse(n=>{
     if(!n.isMesh)return;n.castShadow=true;
     if(o.kind==='stl'){n.material=new THREE.MeshStandardMaterial({color:col.main,roughness:.5,metalness:.25,transparent:tr,opacity:op});}
     else if(tr||rec.tint){n.material=[].concat(n.material).map(mm=>{const c=mm.clone();c.userData={};if(rec.tint&&c.color)c.color.lerp(new THREE.Color(col.main),0.55);if(tr){c.transparent=true;c.opacity=op;}return c;});if(n.material.length===1)n.material=n.material[0];}
   });
-  const H=v3TargetH(db)*(rec.scale||1);
+  const H=baseH*(rec.scale||1);
   inst.scale.setScalar(H);inst.userData.h=H;inst.userData.yaw=(rec.yaw||0)*Math.PI/180;
   return inst;
 }
@@ -10655,7 +10667,7 @@ async function m3dChange(id,field,val){
 function renderM3D(){
   const el=document.getElementById('m3dList');if(!el)return;
   if(!M3D.list.length){el.innerHTML='<div class="m3d-help">Brak wczytanych modeli — fighterzy mają figurki z brył.</div>';return;}
-  const opts=sel=>{let h=`<option value=""${!sel?' selected':''}>— nieprzypisany —</option><optgroup label="Cała banda">`;
+  const opts=sel=>{let h=`<option value=""${!sel?' selected':''}>— nieprzypisany —</option><option value="wyrm"${sel==='wyrm'?' selected':''}>🐉 Gorewyrm (scenariusz Gorewyrm)</option><optgroup label="Cała banda">`;
     for(const b of BANDS)h+=`<option value="b:${b.replace(/"/g,'&quot;')}"${sel==='b:'+b?' selected':''}>${b}</option>`;h+='</optgroup>';
     for(const b of BANDS){h+=`<optgroup label="${b.replace(/"/g,'&quot;')}">`;for(const d of DB.filter(x=>x.band===b))h+=`<option value="f:${d.key}"${sel==='f:'+d.key?' selected':''}>${d.n}</option>`;h+='</optgroup>';}
     return h;};
