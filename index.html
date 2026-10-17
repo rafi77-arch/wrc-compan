@@ -9463,7 +9463,7 @@ function hoverNode(pt){
 function quickInfo(u){
   if(!u||u.kind!=='action')return null;
   if(u.qi)return u.qi;
-  const m=u.m,qi={move:null,targets:[]};
+  const m=u.m,qi={move:null,targets:[],shots:[]};
   if(B.actLeft>0){
     const kind=!actionLegal(m,'move',{})?'move':!actionLegal(m,'disengage',{})?'disengage':null;
     if(kind){
@@ -9471,7 +9471,11 @@ function quickInfo(u){
       for(let i=0;i<NN;i++)if(reachable(R,i)&&moveRestrictOK(i,{},m)&&i!==R.start)nodes.push(i);
       qi.move={kind,R,nodes};
     }
-    if(!actionLegal(m,'attack',{}))qi.targets=[...new Set(attackOptions(m,{}).map(o=>o.t.id))];
+    if(!actionLegal(m,'attack',{})){
+      const ao=attackOptions(m,{});qi.targets=[...new Set(ao.map(o=>o.t.id))];
+      // linie strzału: odległość i czy do celu sięga tylko broń do walki wręcz
+      qi.shots=qi.targets.map(id=>{const t=liveModel(id),ws=ao.filter(o=>o.t.id===id);return {id,d:edgeDist(m,t),melee:ws.every(o=>isMelee(o.w))};});
+    }
     qi.wyrm=scen().kind==='gorewyrm'&&!actionLegal(m,'wyrm',{});
   }
   u.qi=qi;return qi;
@@ -9584,8 +9588,25 @@ function drawBattleUnder(){
     G.strokeStyle='rgba(224,80,80,.55)';G.lineWidth=2;G.setLineDash([6,4]);G.stroke();G.setLineDash([]);
   }
 }
+// Linia od aktywnego fightera do przeciwnika, którego może teraz zaatakować
+function drawShotLine(m,t,s){
+  const a=jToC(m.x,m.y),b=jToC(t.x,t.y),dx=b.cx-a.cx,dy=b.cy-a.cy,L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L;
+  const x1=a.cx+ux*19,y1=a.cy+uy*19,x2=b.cx-ux*20,y2=b.cy-uy*20;if(L<40)return;
+  const col=s.melee?'240,184,64':'224,80,80';
+  G.globalAlpha=(m.lv||0)===level||(t.lv||0)===level?1:0.45;
+  G.strokeStyle=`rgba(${col},.85)`;G.lineWidth=2;G.setLineDash([7,4]);
+  G.beginPath();G.moveTo(x1,y1);G.lineTo(x2,y2);G.stroke();G.setLineDash([]);
+  G.fillStyle=`rgba(${col},.95)`;G.beginPath();G.moveTo(x2,y2);G.lineTo(x2-ux*9-uy*5,y2-uy*9+ux*5);G.lineTo(x2-ux*9+uy*5,y2-uy*9-ux*5);G.closePath();G.fill();
+  const txt=s.d.toFixed(1)+'"',mx=(x1+x2)/2,my=(y1+y2)/2;
+  G.font='bold 11px -apple-system,Arial,sans-serif';const tw2=G.measureText(txt).width+10;
+  G.fillStyle='rgba(16,16,22,.85)';G.beginPath();G.roundRect?G.roundRect(mx-tw2/2,my-8,tw2,16,5):G.rect(mx-tw2/2,my-8,tw2,16);G.fill();
+  G.strokeStyle=`rgba(${col},.9)`;G.lineWidth=1;G.stroke();
+  G.fillStyle='#fff';G.textAlign='center';G.textBaseline='middle';G.fillText(txt,mx,my+0.5);G.textBaseline='alphabetic';
+  G.globalAlpha=1;
+}
 function drawBattleOver(){
   const u=B.ui;
+  if(u&&u.kind==='action'&&!isAI(u.m.s))for(const s of quickInfo(u).shots){const t=liveModel(s.id);if(t)drawShotLine(u.m,t,s);}
   for(const m of models){
     const {cx,cy}=jToC(m.x,m.y);
     G.globalAlpha=ma(m.lv||0);
@@ -10265,6 +10286,17 @@ function v3Overlay(){
   if(u.kind==='pick')ids=models.filter(m=>m.s===u.side&&!m.activated).map(m=>m.id);
   else if(u.kind==='model'){ids=u.ids;const a=liveModel(B.actorId);col=null;}
   else if(u.kind==='action'&&!isAI(u.m.s)){ids=quickInfo(u).targets;col=0xe05050;
+    for(const s of quickInfo(u).shots){
+      const t=liveModel(s.id);if(!t)continue;const m=u.m,c=s.melee?0xf0b840:0xe05050;
+      const p1=new THREE.Vector3(m.y,(m.lv||0)*LV_H+EYE,m.x),p2=new THREE.Vector3(t.y,(t.lv||0)*LV_H+EYE,t.x);
+      // linia z kresek (cienkie walce), bo zwykłe linie WebGL mają zawsze 1 piksel
+      const dir=p2.clone().sub(p1),L=dir.length(),n=Math.max(1,Math.floor(L/0.55)),q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),dir.clone().normalize());
+      const geo=new THREE.CylinderGeometry(0.035,0.035,0.34,6),im=new THREE.InstancedMesh(geo,new THREE.MeshBasicMaterial({color:c,depthTest:false,transparent:true,opacity:.9}),n),mt=new THREE.Matrix4(),one=new THREE.Vector3(1,1,1);
+      for(let k=0;k<n;k++)im.setMatrixAt(k,mt.compose(p1.clone().lerp(p2,(k+0.5)/n),q,one));
+      im.renderOrder=10;g.add(im);
+      const lab=new THREE.Sprite(new THREE.SpriteMaterial({map:v3DistTex(s.d.toFixed(1)+'"',s.melee?'#f0b840':'#e05050'),depthTest:false,sizeAttenuation:false}));
+      lab.scale.set(0.05,0.022,1);lab.position.copy(p1).lerp(p2,0.5);lab.position.y+=0.25;lab.renderOrder=12;g.add(lab);
+    }
     if(switchAllowed(u.m))for(const m of models)if(m.s===u.m.s&&m.id!==u.m.id&&!m.activated){const r=new THREE.Mesh(new THREE.TorusGeometry(BASE_R+0.25,0.03,8,36),new THREE.MeshBasicMaterial({color:0x50c878,transparent:true,opacity:.45}));r.rotation.x=Math.PI/2;r.position.set(m.y,(m.lv||0)*LV_H+0.08,m.x);g.add(r);}}
   for(const id of ids){
     const m=models.find(x=>x.id===id);if(!m)continue;
@@ -10393,6 +10425,15 @@ function build3DTerrain(){
   V3.pickSurf=[V3.ground];
   for(const[mat,list]of buckets){const m=new THREE.Mesh(v3Merged(list),mat);m.castShadow=true;m.receiveShadow=true;V3.terrG.add(m);
     const lv=mat===M.plat[1]?1:mat===M.plat[2]?2:0;if(lv){m.userData.pickLevel=lv;V3.pickSurf.push(m);}}
+}
+// Mała etykieta odległości (linie strzału)
+function v3DistTex(text,col){
+  const key='d|'+text+'|'+col;if(V3.tex[key])return V3.tex[key];
+  const c=document.createElement('canvas');c.width=128;c.height=56;const g=c.getContext('2d');
+  g.fillStyle='rgba(16,16,22,.85)';g.beginPath();g.roundRect?g.roundRect(3,3,122,50,10):g.rect(3,3,122,50);g.fill();
+  g.strokeStyle=col;g.lineWidth=3;g.stroke();
+  g.fillStyle='#fff';g.font='bold 32px -apple-system,Arial,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(text,64,30,112);
+  const tx=new THREE.CanvasTexture(c);tx.anisotropy=4;V3.tex[key]=tx;return tx;
 }
 function v3LabelTex(text,col,pct,act){
   const key=text+'|'+col+'|'+(pct==null?'':Math.round(pct*20))+'|'+act;
