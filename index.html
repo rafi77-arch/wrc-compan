@@ -3984,9 +3984,16 @@ const BAND_COLORS = {
 function getBandColor(band){
   return BAND_COLORS[band] || { main:'#888888', dark:'#222222', label:band };
 }
+// Ta sama banda po obu stronach: strona L dostaje jaśniejszy odcień, żeby nie wyglądała jak drużyna P
+const MIRROR_COL={};
+function mirrorColor(c){
+  if(MIRROR_COL[c.main])return MIRROR_COL[c.main];
+  const mix=(h,f)=>'#'+[1,3,5].map(i=>Math.round(parseInt(h.slice(i,i+2),16)*(1-f)+255*f).toString(16).padStart(2,'0')).join('');
+  return MIRROR_COL[c.main]={main:mix(c.main,0.5),dark:mix(c.dark,0.25),label:c.label+' — strona L'};
+}
 function getModelColor(m){
   const db = getDB(m);
-  if(db) return getBandColor(db.band);
+  if(db){const c=getBandColor(db.band);return m.s==='l'&&models.some(o=>o.s==='p'&&getDB(o)?.band===db.band)?mirrorColor(c):c;}
   // fallback by side if fighter unknown
   return m.s==='p' ? BAND_COLORS["Phobos Strike Team"] : BAND_COLORS["Legionaries of Chaos"];
 }
@@ -9604,6 +9611,8 @@ function drawShotLine(m,t,s){
   G.fillStyle='#fff';G.textAlign='center';G.textBaseline='middle';G.fillText(txt,mx,my+0.5);G.textBaseline='alphabetic';
   G.globalAlpha=1;
 }
+// Kolor obwódki strony: wróg gracza na czerwono; w grze komputer kontra komputer P niebieska, L czerwona
+function sideIsFoe(s){return B&&B.human?s!==B.human:s==='l';}
 function drawBattleOver(){
   const u=B.ui;
   if(u&&u.kind==='action'&&!isAI(u.m.s))for(const s of quickInfo(u).shots){const t=liveModel(s.id);if(t)drawShotLine(u.m,t,s);}
@@ -9611,7 +9620,7 @@ function drawBattleOver(){
     const {cx,cy}=jToC(m.x,m.y);
     G.globalAlpha=ma(m.lv||0);
     G.beginPath();G.arc(cx,cy,13,0,Math.PI*2);
-    G.strokeStyle=isAI(m.s)?'rgba(224,80,80,.9)':'rgba(74,158,255,.9)';G.lineWidth=1.5;G.stroke();
+    G.strokeStyle=sideIsFoe(m.s)?'rgba(224,80,80,.9)':'rgba(74,158,255,.9)';G.lineWidth=1.5;G.stroke();
     if(m.id===B.activeId||m.id===B.actorId){G.beginPath();G.arc(cx,cy,18,0,Math.PI*2);G.strokeStyle='#f0b840';G.lineWidth=3;G.stroke();}
     if(isEngaged(m)){G.beginPath();G.arc(cx-12,cy+12,8.5,0,Math.PI*2);G.fillStyle='#d23c3c';G.fill();G.strokeStyle='#fff';G.lineWidth=1.5;G.stroke();G.fillStyle='#fff';G.font='bold 12px -apple-system,Arial,sans-serif';G.textAlign='center';G.textBaseline='middle';G.fillText('⚔',cx-12,cy+12.5);G.textBaseline='alphabetic';}
     if(m.carry!=null&&!(scen().hiddenCarry&&B.human&&m.s!==B.human)){G.beginPath();G.arc(cx+11,cy+11,6,0,Math.PI*2);G.fillStyle='#f0b840';G.fill();G.fillStyle='#18181e';G.font='bold 8px -apple-system,Arial,sans-serif';G.textAlign='center';G.fillText('$',cx+11,cy+14);}
@@ -10360,11 +10369,22 @@ function build3DTerrain(){
     const full=V3_WALL[t.type]!=null&&!top?V3_WALL[t.type]:top*LV_H+1.0;
     const mat=t.type==='lw'||t.type==='fs'?M.light:M.wall;
     const rects=buildRects(t.type,t.ox,t.oy,rot);
+    // drzwi (współrzędne mapy) — otwarte zostawiają przejście w murze, zamknięte rysujemy jako metalowe skrzydło
+    const doors3=getDoorsWithState(t).map(d=>{const a=cToJ(d.ax,d.ay),b=cToJ(d.bx,d.by);return {ax:a.jx,ay:a.jy,bx:b.jx,by:b.jy,open:d.open};});
     if(t.type==='fs'){for(const r of rects){box(r.h,0.6,r.w,r.y+r.h/2,base+0.3,r.x+r.w/2,M.trim);box(r.h*0.5,0.3,r.w*0.5,r.y+r.h*0.25,base+0.75,r.x+r.w*0.25,M.trim);}continue;}
     for(const r of rects){
       const alongX=r.h>=r.w,L=alongX?r.h:r.w,T=Math.max(alongX?r.w:r.h,0.1);
       const x0=r.y,z0=r.x,cx=r.y+r.h/2,cz=r.x+r.w/2;
       const at=(u,y,len,hh,th,mm)=>alongX?box(len,hh,th,x0+u,y,cz,mm):box(th,hh,len,cx,y,z0+u,mm);
+      // przedziały drzwi wzdłuż muru (u od początku odcinka), jak w siatce ruchu
+      const dIv=[];
+      for(const d of doors3){
+        const pa=alongX?Math.abs(d.ax-(r.x+r.w/2)):Math.abs(d.ay-(r.y+r.h/2)),pb=alongX?Math.abs(d.bx-(r.x+r.w/2)):Math.abs(d.by-(r.y+r.h/2));
+        if(pa>T/2+0.05||pb>T/2+0.05)continue;
+        const ua=alongX?d.ay-r.y:d.ax-r.x,ub=alongX?d.by-r.y:d.bx-r.x,u0=Math.max(0,Math.min(ua,ub)),u1=Math.min(L,Math.max(ua,ub));
+        if(u1-u0>0.05)dIv.push({u0,u1,open:d.open});
+      }
+      const doorAt=u=>dIv.find(d=>u>d.u0-1e-6&&u<d.u1+1e-6);
       // segmenty muru o różnej wysokości: postrzępiony wierzch i wyłomy
       const seg=0.5,nS=Math.max(1,Math.round(L/seg)),sl=L/nS;
       let prof=rnd();
@@ -10376,6 +10396,13 @@ function build3DTerrain(){
         if(i===0||i===nS-1)h=Math.max(h,full*0.92);             // narożniki pełne
         h=Math.max(minH,h);
         const u=(i+0.5)*sl;
+        const dr=doorAt(u);
+        if(dr){
+          const dh=Math.min(2.2,h-0.2);
+          if(!dr.open)at(u,base+dh/2,sl,dh,T*0.6,M.metal);
+          if(h-dh>0.25)at(u,base+dh+(h-dh)/2,sl,h-dh,T,mat);           // nadproże nad drzwiami
+          continue;
+        }
         // okna na piętrach budynków (otwór między parapetem a nadprożem), co trzeci segment
         let made=false;
         if(isBld&&nS>4&&i%3===1&&i>0&&i<nS-1){
@@ -10395,6 +10422,7 @@ function build3DTerrain(){
       const nB=Math.max(1,Math.round(L/2.5));
       for(let k=0;k<=nB;k++){
         const u=Math.min(L-0.18,Math.max(0.18,k*L/nB)),bh=full*(isBld?0.98:0.85)+(rnd()-.5)*0.3,bt=T*2.6+0.25;
+        if(dIv.some(d=>u>d.u0-0.3&&u<d.u1+0.3))continue;             // przypora nie zasłania drzwi
         at(u,base+bh/2,0.36,bh,bt,M.trim);
         at(u,base+bh+0.08,0.46,0.16,bt+0.12,M.trim);
         if(isBld)at(u,base+0.25,0.5,0.5,bt+0.25,M.trim);         // cokół
@@ -10563,7 +10591,7 @@ function build3DDynamic(){
     const baseM=new THREE.Mesh(new THREE.CylinderGeometry(BASE_R,BASE_R*1.05,0.14,28),new THREE.MeshStandardMaterial({color:col.dark||'#222',transparent:tr,opacity:op}));
     baseM.position.y=0.07;baseM.castShadow=true;grp.add(baseM);
     // obwódka podstawki w kolorze strony (jak na planszy 2D), pancerz w kolorze bandy
-    const sideC=inB?(isAI(m.s)?'#e05050':'#4a9eff'):col.main;
+    const sideC=inB?(sideIsFoe(m.s)?'#e05050':'#4a9eff'):col.main;
     const rim=new THREE.Mesh(new THREE.TorusGeometry(BASE_R,0.04,8,32),new THREE.MeshStandardMaterial({color:sideC,emissive:sideC,emissiveIntensity:.45,transparent:tr,opacity:op}));
     rim.rotation.x=Math.PI/2;rim.position.y=0.14;grp.add(rim);
     const fig=m3dInstance(db,col,op,tr)||v3Figure(m,db,col,op);fig.position.y=0.14;
