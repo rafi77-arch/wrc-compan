@@ -6260,29 +6260,40 @@ async function combatPhase(){
     B.turn=turn;renderBattleUI();
     let m;
     if(isAI(turn)){B.thinking=true;renderBattleUI();await pause(250);m=aiPickFighter(turn);B.thinking=false;}
-    else m=await uiPickFighter(turn);
+    else{const pre=B.preselect!=null?liveModel(B.preselect):null;B.preselect=null;m=pre&&pre.s===turn&&!pre.activated?pre:await uiPickFighter(turn);}
     chk();
     if(!m||!liveModel(m.id))continue;
-    await activate(m);
-    if(B.inspireNext!=null){const n=liveModel(B.inspireNext);B.inspireNext=null;if(n&&!n.activated&&n.s===m.s){logB(`🎺 Inspiring Presence: od razu aktywacja ${nm(n)}.`);await activate(n);}}
+    const ar=await activate(m);
+    if(ar&&ar.switch){B.preselect=ar.to;continue;} // ta sama strona wybiera innego fightera
+    if(B.inspireNext!=null){const n=liveModel(B.inspireNext);B.inspireNext=null;if(n&&!n.activated&&n.s===m.s){logB(`🎺 Inspiring Presence: od razu aktywacja ${nm(n)}.`);await activate(n,{inspired:true});}}
     turn=other(turn);
   }
 }
-async function activate(m){
+async function activate(m,opts){
   chk();
+  // stan sprzed aktywacji — do cofnięcia, gdy gracz zmieni fightera, zanim cokolwiek zrobi
+  const pen0=m.reactPenalty||0,fxGone=B.fx.filter(e=>e.until==='nextAct'&&e.src===m.id);
   B.activeId=m.id;B.actorId=m.id;
   B.actLeft=Math.max(0,2-(m.reactPenalty||0));m.reactPenalty=0;
   B.abilityUsed=false;B.bonus=[];B.killedThisAct=false;B.movedThisAct=false;B.actAtk={};
+  B.actStart=B.actLeft;B.canSwitch=!isAI(m.s)&&!(opts&&opts.inspired);
   B.fx=B.fx.filter(e=>!(e.until==='nextAct'&&e.src===m.id));
   logB(`▶ ${sideName(m.s)}: aktywacja ${nm(m)}${B.actLeft<2?` (${B.actLeft} akcja — reakcja przed aktywacją)`:''}`);
+  const logLen=B.log.length;let res=null;
   if(!isAI(m.s)&&(m.lv||0)!==level)setLevel(m.lv||0);
   renderBattleUI();draw();
   try{
     if(scen().canAct&&!scen().canAct(m))logB(`⛓ ${nm(m)} nie może działać w tej aktywacji (${scen().canActWhy||'warunek zwycięstwa'}).`);
     else if(isAI(m.s))await aiActivation(m);
-    else await humanActivation(m);
+    else res=await humanActivation(m);
   }finally{
-    if(B&&!B.aborted){
+    if(B&&!B.aborted&&res&&res.switch){
+      // rezygnacja z aktywacji: fighter wraca do puli nieaktywowanych, wpis o aktywacji znika z logu
+      m.reactPenalty=pen0;B.fx.push(...fxGone);
+      if(B.log.length===logLen){B.log.pop();renderBattleLog();}else logB(`↺ ${sideName(m.s)}: zmiana fightera — ${nm(m)} nie wykonał akcji.`);
+      B.activeId=null;B.actorId=null;B.bonus=[];B.ui=null;B.canSwitch=false;
+      renderBattleUI();draw();
+    }else if(B&&!B.aborted){
       const rk=B.fx.find(e=>e.stat==='RECKLESS'&&e.model===m.id);
       B.fx=B.fx.filter(e=>!(e.until==='act'&&e.actOf===m.id));
       m.activated=true;m.actionsLeft=0;
@@ -6293,7 +6304,10 @@ async function activate(m){
       if(tw().endActivation&&liveModel(m.id))await tw().endActivation(m);
     }
   }
+  return res;
 }
+// Czy gracz może jeszcze zrezygnować z aktywacji tego fightera (nic nie zrobił: żadnej akcji ani zdolności)
+function switchAllowed(m){return !!(B&&B.canSwitch&&B.activeId===m.id&&!B.abilityUsed&&B.actLeft===B.actStart&&!B.bonus.length&&!B.movedThisAct&&models.some(x=>x.s===m.s&&x.id!==m.id&&!x.activated));}
 function controlOf(o){
   const cnt={p:0,l:0};
   for(const m of models)if(!(o.excl&&o.excl.includes(m.id))&&Math.hypot(m.x-o.x,m.y-o.y,((m.lv||0)-(o.lv||0))*LV_H)-BASE_R<=3)cnt[m.s]++;
@@ -9333,6 +9347,7 @@ async function humanActivation(m){
     if(B.actLeft<=0&&!B.bonus.length&&!abil)return;
     const ch=await uiAction(m);
     chk();
+    if(ch&&ch.kind==='switch'){if(switchAllowed(m))return {switch:true,to:ch.target!=null?ch.target:null};continue;}
     if(!ch||ch.kind==='end')return;
     if(ch.kind==='ability'){await humanUseAbility(m);continue;}
     const restrict=ch.bonus!=null?(B.bonus[ch.bonus].restrict||{}):{};
@@ -9426,6 +9441,9 @@ function battleAct(kind,bonusIdx){
   if(!B||!B.ui)return;
   if(B.ui.kind==='action')uiResolve({kind,bonus:bonusIdx==null?null:bonusIdx});
 }
+function battleSwitch(targetId){
+  if(B&&B.ui&&B.ui.kind==='action'&&switchAllowed(B.ui.m))uiResolve({kind:'switch',target:targetId==null?null:targetId});
+}
 function battleCancel(){if(B&&B.ui&&(B.ui.kind==='node'||(B.ui.kind==='model'&&B.ui.cancellable)))uiResolve(null);}
 
 // ── Kliknięcia na mapie w trybie bitwy ──
@@ -9465,8 +9483,10 @@ async function activeFighterMenu(m,x,y){
   if(scen().kind==='gorewyrm'&&B.actLeft>0&&!actionLegal(m,'wyrm',{}))items.push({v:{kind:'wyrm'},l:'🐉 Atak na Gorewyrma'});
   B.bonus.forEach((b,i)=>b.types.forEach(t=>{if(!actionLegal(m,t,b.restrict||{}))items.push({v:{kind:t,bonus:i},l:'＋ '+ACT_PL[t]+' (dodatkowa)'});}));
   if(B.actLeft>0&&!actionLegal(m,'wait',{}))items.push({v:{kind:'wait'},l:'⏸ Czekaj'});
+  if(switchAllowed(m))items.push({v:{kind:'switch'},l:'↺ Zmień fightera'});
   items.push({v:{kind:'end'},l:'✓ Koniec aktywacji'});
   const ch=await quickMenu(x,y,mName(m),items);
+  if(ch&&ch.kind==='switch'){battleSwitch(null);return;}
   if(ch&&B&&B.ui&&B.ui.kind==='action')battleAct(ch.kind,ch.bonus);
 }
 function battleClick(cx,cy,e,pt){
@@ -9476,6 +9496,7 @@ function battleClick(cx,cy,e,pt){
   if(u&&u.kind==='action'){
     const qi=quickInfo(u);
     if(m&&m.id===u.m.id){activeFighterMenu(m,e?e.clientX:0,e?e.clientY:0);return;}
+    if(m&&m.s===u.m.s&&!m.activated&&switchAllowed(u.m)){battleSwitch(m.id);return;}
     if(m&&qi.targets.includes(m.id)){uiResolve({kind:'attack',bonus:null,target:m});return;}
     if(!m&&qi.wyrm){const o=wyrmTarget(),c=pt?{jx:pt.jx,jy:pt.jy}:cToJ(mouse.x,mouse.y);if(o&&Math.hypot(c.jx-o.x,c.jy-o.y)<=1.2){uiResolve({kind:'wyrm',bonus:null});return;}}
     if(!m&&qi.move){const h=hoverNode(pt);if(h>=0){uiResolve({kind:qi.move.kind,bonus:null,dest:h});return;}}
@@ -9576,6 +9597,7 @@ function drawBattleOver(){
     {const sc=scen(),pr=protectedIds(sc);if((sc===SCENARIOS.assassinate||sc.protect)&&(pr.p===m.id||pr.l===m.id)){G.font='12px -apple-system,Arial,sans-serif';G.textAlign='center';G.fillText(sc.protect==='marked'?'🩸':'👑',cx,cy-15);}
       const tb=tw().badge&&tw().badge(m);if(tb){G.font='12px -apple-system,Arial,sans-serif';G.textAlign='center';G.fillText(tb,cx+12,cy-13);}
       const bd=sc.badge&&sc.badge(m);if(bd){G.font='12px -apple-system,Arial,sans-serif';G.textAlign='center';G.fillText(bd,cx-12,cy-13);}}
+    if(u&&u.kind==='action'&&!isAI(u.m.s)&&m.s===u.m.s&&m.id!==u.m.id&&!m.activated&&switchAllowed(u.m)){G.beginPath();G.arc(cx,cy,17,0,Math.PI*2);G.strokeStyle='rgba(80,200,120,.45)';G.lineWidth=1.5;G.setLineDash([2,4]);G.stroke();G.setLineDash([]);}
     if(u&&u.kind==='pick'&&m.s===u.side&&!m.activated){G.beginPath();G.arc(cx,cy,18,0,Math.PI*2);G.strokeStyle='#50c878';G.lineWidth=2;G.setLineDash([4,3]);G.stroke();G.setLineDash([]);}
     if(u&&u.kind==='action'&&!isAI(u.m.s)&&quickInfo(u).targets.includes(m.id)){G.beginPath();G.arc(cx,cy,18,0,Math.PI*2);G.strokeStyle='rgba(224,80,80,.85)';G.lineWidth=2;G.setLineDash([4,3]);G.stroke();G.setLineDash([]);}
     if(u&&u.kind==='model'&&u.ids.includes(m.id)){const actor=liveModel(B.actorId);G.beginPath();G.arc(cx,cy,18,0,Math.PI*2);G.strokeStyle=actor&&actor.s===m.s?'#50c878':'#e05050';G.lineWidth=2.5;G.setLineDash([4,3]);G.stroke();G.setLineDash([]);}
@@ -9632,8 +9654,9 @@ function renderBattleUI(){
     B.bonus.forEach((b,i)=>b.types.forEach(t=>{html+=btn(t,'＋'+ACT_PL[t],i,b.restrict||{});}));
     const ab=!B.abilityUsed&&usableAbilities(m).length;
     html+=`<button class="bp" ${B.abilityUsed?'disabled title="Już użyto zdolności"':''} onclick="battleAct('ability')">✨ Zdolność${ab?'':' ·'}</button>`;
+    if(switchAllowed(m))html+=`<button onclick="battleSwitch(null)" title="Fighter nic jeszcze nie zrobił — możesz wybrać innego">↺ Zmień fightera</button>`;
     html+=`<button class="exp" onclick="battleAct('end')">✓ Koniec aktywacji</button>`;
-    html+=`<span class="bb-sub bb-hint">Myszą: klik w zielone pole — ruch · we wroga w czerwonej obwódce — atak · w swojego fightera — menu · prawy przycisk — anuluj</span>`;
+    html+=`<span class="bb-sub bb-hint">${switchAllowed(m)?'Dopóki fighter nic nie zrobił, klik w innego swojego fightera zmienia wybór · ':''}Myszą: klik w zielone pole — ruch · we wroga w czerwonej obwódce — atak · w swojego fightera — menu · prawy przycisk — anuluj</span>`;
   }else if(u.kind==='node'){
     const lv=u.byLv.map((n,l)=>n?`poz.${l}: ${n}`:'').filter(Boolean).join(', ');
     html=`<span class="bb-msg">${u.prompt} <span class="bb-sub">(${lv})</span></span><button onclick="battleCancel()">✕ Anuluj</button>`;
@@ -10241,7 +10264,8 @@ function v3Overlay(){
   let ids=[],col=0x50c878;
   if(u.kind==='pick')ids=models.filter(m=>m.s===u.side&&!m.activated).map(m=>m.id);
   else if(u.kind==='model'){ids=u.ids;const a=liveModel(B.actorId);col=null;}
-  else if(u.kind==='action'&&!isAI(u.m.s)){ids=quickInfo(u).targets;col=0xe05050;}
+  else if(u.kind==='action'&&!isAI(u.m.s)){ids=quickInfo(u).targets;col=0xe05050;
+    if(switchAllowed(u.m))for(const m of models)if(m.s===u.m.s&&m.id!==u.m.id&&!m.activated){const r=new THREE.Mesh(new THREE.TorusGeometry(BASE_R+0.25,0.03,8,36),new THREE.MeshBasicMaterial({color:0x50c878,transparent:true,opacity:.45}));r.rotation.x=Math.PI/2;r.position.set(m.y,(m.lv||0)*LV_H+0.08,m.x);g.add(r);}}
   for(const id of ids){
     const m=models.find(x=>x.id===id);if(!m)continue;
     const a=liveModel(B.actorId),c=col!=null?col:(a&&a.s===m.s?0x50c878:0xe05050);
